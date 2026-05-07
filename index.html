@@ -138,7 +138,7 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 .flbl-blue{font-size:10px;color:var(--blue);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;display:block;}
 
 /* Price block */
-.tblock{background:var(--s1);border:1.5px solid var(--br);border-radius:var(--rs);padding:16px;margin-bottom:10px;position:relative;}
+.tblock{background:var(--s1);border:1.5px solid var(--br);border-radius:var(--rs);padding:16px;margin-bottom:10px;position:relative;display:block;}
 .tblock.auto{border-color:rgba(251,191,36,0.35);background:rgba(251,191,36,0.03);}
 .tblock.bahn{border-color:rgba(52,211,153,0.35);background:rgba(52,211,153,0.03);}
 .tblock.flug{border-color:rgba(96,165,250,0.35);background:rgba(96,165,250,0.03);}
@@ -429,7 +429,7 @@ select.invalid ~ .field-warn{display:block;}
      SCREEN 1 – EINGABE
 ════════════════════════════════════════════ -->
 <div class="screen active" id="s-form">
-  <div class="version-badge">v 07.05.2026 19:49</div>
+  <div class="version-badge">v 07.05.2026 20:13</div>
 
   <!-- Route -->
   <div class="card">
@@ -798,7 +798,7 @@ select.invalid ~ .field-warn{display:block;}
 
 
   <!-- BAHN -->
-  <div class="tblock bahn">
+  <div class="tblock bahn" data-transport="bahn">
     <div class="tblock-hdr"><span style="font-size:20px">🚆</span><span style="font-size:14px;font-weight:700">Deutsche Bahn</span><span style="font-size:11px;color:var(--muted)" id="bahn-persons-hint"></span><span class="cost-badge" id="bahn-cost-badge">—</span></div>
     <!-- Kombinierter Hin+Rück Parser -->
     <div class="paste-box" style="border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.04);margin-bottom:16px">
@@ -848,7 +848,7 @@ select.invalid ~ .field-warn{display:block;}
   </div>
 
   <!-- FLUG -->
-  <div class="tblock flug">
+  <div class="tblock flug" data-transport="flug">
     <div class="tblock-hdr"><span style="font-size:20px">✈️</span><span style="font-size:14px;font-weight:700">Flug + Transfer</span><span style="font-size:11px;color:var(--muted)" id="flug-persons-hint"></span><span class="cost-badge" id="flug-cost-badge">—</span></div>
     <!-- Kombinierter Hin+Rück Parser -->
     <div class="paste-box" style="border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.04);margin-bottom:16px">
@@ -921,7 +921,7 @@ select.invalid ~ .field-warn{display:block;}
   <input type="hidden" id="flug-rueck-arr-station" value="">
 
   <!-- AUTO -->
-  <div class="tblock auto" style="position:relative">
+  <div class="tblock auto" data-transport="auto" style="position:relative">
     <div class="tblock-hdr"><span style="font-size:20px">🚗</span><span style="font-size:14px;font-weight:700">Auto</span><span class="cost-badge" id="auto-cost-badge">—</span></div>
     <label class="flbl">Gesamtkosten Hin + Rück (€)</label>
     <input class="inpsm req-field" type="number" id="auto-kosten" min="0" step="0.01" placeholder="z.B. 84.00  (0 = Firmenwagen / kostenlos)" style="max-width:300px">
@@ -3037,23 +3037,11 @@ function updateTransportTiles(){
 }
 
 function applyTransportVisibility(){
-  var types = ['bahn','flug','auto'];
-  var anyActive = false;
-  types.forEach(function(type){
-    var el = document.querySelector('.tblock.'+type);
+  ['bahn','flug','auto'].forEach(function(type){
+    var el = document.querySelector('[data-transport="'+type+'"]');
     if(!el) return;
-    var show = !!state.transports[type];
-    if(show) anyActive = true;
-    el.style.cssText = el.style.cssText
-      .replace(/display\s*:[^;]+;?/gi,'')
-      .replace(/visibility\s*:[^;]+;?/gi,'');
-    el.style.display = show ? 'block' : 'none';
+    el.style.display = state.transports[type] ? 'block' : 'none';
   });
-  // Safety: if nothing active, show bahn
-  if(!anyActive){
-    var bahnEl = document.querySelector('.tblock.bahn');
-    if(bahnEl){ bahnEl.style.display='block'; state.transports.bahn=true; }
-  }
 }
 
 // ── Easter Egg ───────────────────────────────────────────────────────────────
@@ -3278,7 +3266,7 @@ var origZielSelect = null; // patched below after inpZiel listener setup
 updateHotelUI();
 updateAutoOverlay();
 rebuildDestSelect();
-setTimeout(function(){ applyTransportVisibility(); }, 0);
+applyTransportVisibility();
 </script>
 
 <div class="ee-toast" id="ee-toast"></div>
