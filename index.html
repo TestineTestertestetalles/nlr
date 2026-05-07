@@ -429,7 +429,7 @@ select.invalid ~ .field-warn{display:block;}
      SCREEN 1 – EINGABE
 ════════════════════════════════════════════ -->
 <div class="screen active" id="s-form">
-  <div class="version-badge">v 07.05.2026 20:31</div>
+  <div class="version-badge">v 07.05.2026 20:35</div>
 
   <!-- Route -->
   <div class="card">
@@ -1835,6 +1835,7 @@ function getMissingInBlock(prefix){
 }
 
 document.getElementById("btn-s1").addEventListener("click",()=>{
+  try{
   // Only update startText from field (zielText set by CDD or nominatim)
   if(inpStart.value) state.startText=inpStart.value;
   // Only update zielText from inp-ziel if manual section is open and has a value
@@ -1891,6 +1892,11 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   applyTransportVisibility();
   syncStartTransferToPage2('all');
   showScreen("s-prices");
+  }catch(e){
+    var err=document.getElementById("err-s1");
+    if(err){err.innerHTML="<strong>JS-Fehler:</strong> "+e.message+" ("+e.constructor.name+")";err.classList.add("show");}
+    console.error("btn-s1 error:",e);
+  }
 });
 
 // ── Screen 2 → 3 ─────────────────────────────────────────────────────────────
