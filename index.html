@@ -401,17 +401,6 @@ select.invalid ~ .field-warn{display:block;}
 /* ── Version badge ── */
 .version-badge{font-size:10px;color:rgba(148,163,184,0.5);text-align:right;
   margin-bottom:6px;font-family:'DM Mono',monospace;letter-spacing:0.04em;}
-/* ── DB Bahn deeplink ── */
-.db-section{background:var(--s2);border-radius:8px;padding:14px 16px;margin-bottom:12px;}
-.db-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
-.db-route-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
-.db-station{font-size:14px;font-weight:700;color:var(--text);}
-.db-arrow{color:var(--muted);font-size:16px;}
-.db-meta{font-size:12px;color:var(--muted);margin-bottom:10px;}
-.db-link-btn{display:block;width:100%;padding:11px;background:rgba(220,38,38,0.12);border:1.5px solid rgba(220,38,38,0.4);border-radius:8px;color:#fca5a5;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;}
-.db-link-btn:hover{background:rgba(220,38,38,0.22);}
-.db-price-row{display:flex;align-items:center;gap:10px;}
-.db-price-label{font-size:12px;color:var(--muted);white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -440,7 +429,7 @@ select.invalid ~ .field-warn{display:block;}
      SCREEN 1 – EINGABE
 ════════════════════════════════════════════ -->
 <div class="screen active" id="s-form">
-  <div class="version-badge">v 07.05.2026 21:08</div>
+  <div class="version-badge">v 07.05.2026 21:16</div>
 
   <!-- Route -->
   <div class="card">
@@ -657,478 +646,58 @@ select.invalid ~ .field-warn{display:block;}
   </div>
 
 
-  <div class="err" id="err-s1"></div>
-  <button class="btnp" id="btn-s1">Verbindungssuche →</button>
-</div>
-
-<!-- ════════════════════════════════════════════
-     SCREEN 3 – PREISE
-════════════════════════════════════════════ -->
-<div class="screen" id="s-prices">
-  <button class="backbtn" data-back="s-form">← Zurück</button>
-  <div class="rpill" id="rpill-prices"></div>
-  <div style="height:8px"></div>
-  <div class="hint" style="margin-bottom:10px">Klicken Sie auf „Bei Omio suchen", suchen Sie Ihre Verbindung und fügen Sie den Teilen-Text auf der nächsten Seite ein.</div>
-  <a class="btn-omio" href="https://www.omio.at" target="_blank" rel="noopener noreferrer">👉 Bei Omio suchen ↗</a>
-
-  <!-- Omio Anleitung -->
-  <!-- Omio Info Card -->
-  <div class="omio-info-card">
-    <button class="omio-info-toggle" id="omio-info-toggle" onclick="toggleOmioInfo()">
-      <span>💡 Was ist Omio und wie nutze ich es?</span>
-      <span class="chevron">▼</span>
-    </button>
-    <div class="omio-info-body" id="omio-info-body">
-      <div class="omio-info-section">
-        <h4>🔍 Was ist Omio?</h4>
-        <p>Omio ist eine <strong>kostenlose Reisesuchmaschine</strong>, die Verbindungen per Bahn, Flug und Bus vergleicht — ähnlich wie Google Flights, aber auch für Bahnreisen. Einfach Start, Ziel und Datum eingeben.</p>
-      </div>
-      <div class="omio-info-section">
-        <h4>🎯 Warum nutzen wir Omio?</h4>
-        <p>Omio zeigt <strong>aktuelle Preise und genaue Fahrzeiten</strong> für alle Verbindungen. Mit dem Teilen-Button lassen sich alle Informationen als Text kopieren — und das Tool trägt sie automatisch ein, ohne dass Sie alles von Hand tippen müssen.</p>
-      </div>
-      <div class="omio-info-section">
-        <h4>📋 Wo finde ich den Kopieren-Button?</h4>
-        <p>Nachdem Sie Hin- und Rückverbindung gewählt haben, erscheint rechts die Reisezusammenfassung. Dort finden Sie den Abschnitt <strong>„Reist du mit jemandem zusammen?"</strong> — daneben ist ein Symbol mit <strong>zwei übereinanderliegenden Blättern</strong> (Kopieren-Symbol). Einen Klick darauf, und der Text ist in der Zwischenablage.</p>
-      </div>
-      <div class="omio-info-section">
-        <h4>⚡ Kurzanleitung</h4>
-        <p><strong>1.</strong> omio.at öffnen &nbsp;→&nbsp; <strong>2.</strong> Start, Ziel &amp; Datum eingeben &nbsp;→&nbsp; <strong>3.</strong> „Zug" oder „Flug" wählen &nbsp;→&nbsp; <strong>4.</strong> Hin- und Rückverbindung auswählen &nbsp;→&nbsp; <strong>5.</strong> Kopier-Symbol klicken &nbsp;→&nbsp; <strong>6.</strong> Text unten einfügen</p>
-      </div>
-    </div>
-  </div>
-
-  <button class="guide-toggle" id="guide-toggle-btn" onclick="toggleGuide()">
-    <span>📖 Wie kopiere ich die Verbindung aus Omio?</span>
-    <span class="chevron">▼</span>
-  </button>
-  <div class="guide-box" id="guide-box">
-    <div class="guide-tabs">
-      <button class="guide-tab active" id="tab-bahn" onclick="switchGuideTab('bahn')">🚆 Bahn</button>
-      <button class="guide-tab flug" id="tab-flug" onclick="switchGuideTab('flug')">✈️ Flug</button>
+  <!-- ── DB Bahn Suche ─────────────────────────────────────── -->
+  <div class="card" id="db-bahn-card" style="display:none">
+    <div class="ctitle">
+      <span class="cdot" style="background:#ef4444"></span>
+      🚆 Deutsche Bahn — Verbindung suchen
     </div>
 
-    <!-- BAHN -->
-  <div class="tblock bahn" data-transport="bahn">
-    <div class="tblock-hdr">
-      <span style="font-size:20px">🚆</span>
-      <span style="font-size:14px;font-weight:700">Deutsche Bahn</span>
-      <span id="bahn-persons-hint" style="font-size:11px;color:var(--muted)"></span>
-      <span class="cost-badge" id="bahn-cost-badge">—</span>
-    </div>
-
-    <div class="db-section">
-      <div class="db-section-title">↗ Hinreise</div>
-      <div class="db-route-row">
-        <span class="db-station" id="db-bahn-hin-from">—</span>
-        <span class="db-arrow">→</span>
-        <span class="db-station" id="db-bahn-hin-to">—</span>
+    <!-- Hinreise -->
+    <div class="db-section" style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">↗ Hinreise</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:700;color:var(--text)" id="db-hin-from">—</span>
+        <span style="color:var(--muted);font-size:16px">→</span>
+        <span style="font-size:14px;font-weight:700;color:var(--text)" id="db-hin-to">—</span>
       </div>
-      <div class="db-meta" id="db-bahn-hin-meta">—</div>
-      <a class="db-link-btn" id="db-bahn-hin-link" href="#" target="_blank" rel="noopener">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px" id="db-hin-meta">—</div>
+      <a id="db-hin-link" href="#" target="_blank" rel="noopener"
+        style="display:block;width:100%;padding:11px;background:rgba(220,38,38,0.12);border:1.5px solid rgba(220,38,38,0.4);border-radius:8px;color:#fca5a5;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">
         🔗 Hinreise bei Deutsche Bahn suchen ↗
       </a>
-      <div class="db-price-row">
-        <label class="db-price-label">Preis Hinreise (€/Person):</label>
-        <input class="inpsm req-field" type="number" id="bahn-hin-price"
-          min="0" step="0.01" placeholder="z. B. 49"
-          style="max-width:100px" oninput="updateBahnBadge()">
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="font-size:12px;color:var(--muted);white-space:nowrap">Preis Hinreise (€/Person):</label>
+        <input class="inpsm" type="number" id="bahn-hin-price" min="0" step="0.01"
+          placeholder="z. B. 49" style="max-width:100px">
       </div>
     </div>
 
+    <!-- Rückreise -->
     <div class="db-section">
-      <div class="db-section-title">↙ Rückreise</div>
-      <div class="db-route-row">
-        <span class="db-station" id="db-bahn-rueck-from">—</span>
-        <span class="db-arrow">→</span>
-        <span class="db-station" id="db-bahn-rueck-to">—</span>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">↙ Rückreise</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:700;color:var(--text)" id="db-rueck-from">—</span>
+        <span style="color:var(--muted);font-size:16px">→</span>
+        <span style="font-size:14px;font-weight:700;color:var(--text)" id="db-rueck-to">—</span>
       </div>
-      <div class="db-meta" id="db-bahn-rueck-meta">—</div>
-      <a class="db-link-btn" id="db-bahn-rueck-link" href="#" target="_blank" rel="noopener">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px" id="db-rueck-meta">—</div>
+      <a id="db-rueck-link" href="#" target="_blank" rel="noopener"
+        style="display:block;width:100%;padding:11px;background:rgba(220,38,38,0.12);border:1.5px solid rgba(220,38,38,0.4);border-radius:8px;color:#fca5a5;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">
         🔗 Rückreise bei Deutsche Bahn suchen ↗
       </a>
-      <div class="db-price-row">
-        <label class="db-price-label">Preis Rückreise (€/Person):</label>
-        <input class="inpsm req-field" type="number" id="bahn-rueck-price"
-          min="0" step="0.01" placeholder="z. B. 39"
-          style="max-width:100px" oninput="updateBahnBadge()">
-      </div>
-    </div>
-
-    <div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:10px;padding-top:12px">
-      <label class="flbl" style="margin-bottom:8px">🎫 Sitzplatzreservierung (5,50 € je Fahrt)</label>
-      <div class="cb-row" id="seat-hin-cb"><input type="checkbox" id="seat-hin">
-        <div><div class="cb-label">↗ Hinreise</div><div class="cb-note">Sitzplatz reservieren</div></div>
-        <span class="cb-price" id="seat-hin-price">—</span>
-      </div>
-      <div class="cb-row" id="seat-rueck-cb"><input type="checkbox" id="seat-rueck">
-        <div><div class="cb-label">↙ Rückreise</div><div class="cb-note">Sitzplatz reservieren</div></div>
-        <span class="cb-price" id="seat-rueck-price">—</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="font-size:12px;color:var(--muted);white-space:nowrap">Preis Rückreise (€/Person):</label>
+        <input class="inpsm" type="number" id="bahn-rueck-price" min="0" step="0.01"
+          placeholder="z. B. 39" style="max-width:100px">
       </div>
     </div>
   </div>
 
-  <!-- FLUG -->
-    <!-- FLUG -->
-    <div class="guide-content" id="guide-flug">
-      <div class="guide-step">
-        <div class="guide-num flug">1</div>
-        <div class="guide-step-icon">🔍</div>
-        <div class="guide-step-body">
-          <div class="guide-step-title">Start, Ziel &amp; Datum eingeben</div>
-          <div class="guide-step-desc">Auf omio.at Abflugort und Ziel sowie Hin- und Rückflugdatum eingeben.</div>
-        </div>
-      </div>
-      <div class="guide-step">
-        <div class="guide-num flug">2</div>
-        <div class="guide-step-icon">✈️</div>
-        <div class="guide-step-body">
-          <div class="guide-step-title">„Flug" als Verkehrsmittel wählen</div>
-          <div class="guide-step-desc">Im oberen Filter-Bereich auf <strong>„Flug"</strong> klicken, damit nur Flugverbindungen angezeigt werden.</div>
-        </div>
-      </div>
-      <div class="guide-step">
-        <div class="guide-num flug">3</div>
-        <div class="guide-step-icon">↗</div>
-        <div class="guide-step-body">
-          <div class="guide-step-title">Hinflug auswählen</div>
-          <div class="guide-step-desc">Passenden Hinflug anklicken und bestätigen.</div>
-        </div>
-      </div>
-      <div class="guide-step">
-        <div class="guide-num flug">4</div>
-        <div class="guide-step-icon">↙</div>
-        <div class="guide-step-body">
-          <div class="guide-step-title">Rückflug auswählen</div>
-          <div class="guide-step-desc">Im nächsten Schritt den passenden Rückflug wählen.</div>
-        </div>
-      </div>
-      <div class="guide-step">
-        <div class="guide-num flug">5</div>
-        <div class="guide-step-icon">📋</div>
-        <div class="guide-step-body">
-          <div class="guide-step-title">Text kopieren &amp; hier einfügen</div>
-          <div class="guide-step-desc">Rechts in der Reisezusammenfassung bei <strong>„Reist du mit jemandem zusammen?"</strong> auf das <strong>Kopier-Symbol</strong> klicken → kopierten Text auf Seite 2 ins Einfügefeld einfügen.</div>
-        </div>
-      </div>
-      <div class="guide-tip">💡 <span>Tipp: Flugzeiten und Preis werden automatisch erkannt. Transferzeiten zum/vom Flughafen bitte manuell eintragen.</span></div>
-    </div>
-  </div>
-
-  <div class="slbl">Preise &amp; Zeiten eintragen</div>
-  <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Preise, Abfahrts- und Ankunftszeiten aus Omio eintragen. Felder leer = Option wird nicht verglichen.</p>
-
-  <div style="font-size:12px;padding:9px 13px;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:var(--rs);margin-bottom:14px;color:rgba(221,214,254,0.97);line-height:1.6">
-    💡 <strong>Kombination Bahn &amp; Flug:</strong> Trage bei Bahn <em>oder</em> Flug jeweils mindestens einen Preis (Hin <em>oder</em> Rück) ein — das Tool erkennt automatisch alle sinnvollen Kombinationen.
-  </div>
-
-
-
-  <!-- BAHN -->
-  <div class="tblock bahn" data-transport="bahn">
-    <div class="tblock-hdr"><span style="font-size:20px">🚆</span><span style="font-size:14px;font-weight:700">Deutsche Bahn</span><span style="font-size:11px;color:var(--muted)" id="bahn-persons-hint"></span><span class="cost-badge" id="bahn-cost-badge">—</span></div>
-    <!-- Kombinierter Hin+Rück Parser -->
-    <div class="paste-box" style="border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.04);margin-bottom:16px">
-      <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">📋 Omio-Text einfügen (Hin- und/oder Rückreise)</div>
-      <textarea id="bahn-combined-paste" placeholder="Omio-Text einfügen – Hin- UND Rückreise:&#10;Abreise: Bremen Hbf am 25.5.2026 um 06:44&#10;Ankunft: Stuttgart Hbf am 25.5.2026 um 12:11&#10;Abreise: Stuttgart Hbf am 28.5.2026 um 15:49&#10;Ankunft: Bremen Hbf am 28.5.2026 um 21:14&#10;Aktueller Preis für 1 Reisegast: 160 €&#10;&#10;Oder nur Hinreise:&#10;Abreise: Bremen Hbf am 25.5.2026 um 06:44&#10;Ankunft: Stuttgart Hbf am 25.5.2026 um 12:11&#10;Aktueller Preis für 1 Reisegast: 90 €" style="min-height:90px"></textarea>
-      <button class="btn-parse" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.4);color:var(--gold)" onclick="parseOmioCombined('bahn')">Zeiten &amp; Preis auslesen →</button>
-      <div class="parse-result" id="bahn-combined-parse-result"></div>
-    </div>
-    <!-- Hin -->
-    <div style="margin-bottom:16px">
-      <div class="tleg-lbl">↗ Hinreise</div>
-      <div class="g3">
-        <div><label class="flbl">Abfahrt</label><input class="inpsm req-field" type="time" id="bahn-hin-dep"></div>
-        <div><label class="flbl">Ankunft</label><input class="inpsm req-field" type="time" id="bahn-hin-arr"></div>
-        <div><label class="flbl">Preis €</label><input class="inpsm req-field" type="number" id="bahn-hin-price" min="0" step="0.01" placeholder="—"></div>
-      </div>
-      <div class="g2" style="margin-top:8px">
-        <div><label class="flbl-blue">Weg von Zuhause zum Bahnhof (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="bahn-hin-ts" min="0" step="1" placeholder="0"></div>
-        <div><label class="flbl-blue">Weg vom Bahnhof zum Ziel (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="bahn-hin-te" min="0" step="1" placeholder="0"></div>
-      </div>
-      <div style="font-size:11px;color:var(--orange);margin-top:6px;padding:6px 10px;background:rgba(251,146,60,0.07);border-radius:6px;border:1px solid rgba(251,146,60,0.2)">
-        ⏱ Zusätzlich werden automatisch <strong>15 Minuten</strong> Puffer für die Fahrt zum Bahnhof aufgeschlagen (Unpünktlichkeit, Orientierung, Ticketkauf).
-      </div>
-    </div>
-    <!-- Rück -->
-    <div>
-      <div class="tleg-lbl">↙ Rückreise</div>
-      <div class="g3">
-        <div><label class="flbl">Abfahrt</label><input class="inpsm req-field" type="time" id="bahn-rueck-dep"></div>
-        <div><label class="flbl">Ankunft</label><input class="inpsm req-field" type="time" id="bahn-rueck-arr"></div>
-        <div><label class="flbl">Preis €</label><input class="inpsm req-field" type="number" id="bahn-rueck-price" min="0" step="0.01" placeholder="—"></div>
-      </div>
-      <div class="g2" style="margin-top:8px">
-        <div><label class="flbl-blue">Weg zum Rückfahrt-Bahnhof (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="bahn-rueck-ts" min="0" step="1" placeholder="0"></div>
-        <div><label class="flbl-blue">Weg vom Heimatbahnhof nach Hause (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="bahn-rueck-te" min="0" step="1" placeholder="0"></div>
-      </div>
-      <div style="font-size:11px;color:var(--orange);margin-top:6px;padding:6px 10px;background:rgba(251,146,60,0.07);border-radius:6px;border:1px solid rgba(251,146,60,0.2)">
-        ⏱ Zusätzlich werden automatisch <strong>15 Minuten</strong> Puffer für den Weg zum Bahnhof aufgeschlagen (Unpünktlichkeit, Orientierung).
-      </div>
-    </div>
-    <!-- Sitzplatz -->
-    <div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:10px;padding-top:12px">
-      <label class="flbl" style="margin-bottom:8px">🎫 Sitzplatzreservierung (5,50 € je Fahrt)</label>
-      <div class="cb-row" id="seat-hin-cb"><input type="checkbox" id="seat-hin"><div><div class="cb-label">↗ Hinreise</div><div class="cb-note">Sitzplatz reservieren</div></div><span class="cb-price" id="seat-hin-price">—</span></div>
-      <div class="cb-row" id="seat-rueck-cb"><input type="checkbox" id="seat-rueck"><div><div class="cb-label">↙ Rückreise</div><div class="cb-note">Sitzplatz reservieren</div></div><span class="cb-price" id="seat-rueck-price">—</span></div>
-    </div>
-  </div>
-
-  <!-- FLUG -->
-  <div class="tblock flug" data-transport="flug">
-    <div class="tblock-hdr"><span style="font-size:20px">✈️</span><span style="font-size:14px;font-weight:700">Flug + Transfer</span><span style="font-size:11px;color:var(--muted)" id="flug-persons-hint"></span><span class="cost-badge" id="flug-cost-badge">—</span></div>
-    <!-- Kombinierter Hin+Rück Parser -->
-    <div class="paste-box" style="border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.04);margin-bottom:16px">
-      <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">📋 Omio-Text einfügen (Hin- und/oder Rückflug)</div>
-      <textarea id="flug-combined-paste" placeholder="Gesamten Omio-Teilen-Text hier einfügen (Hin- UND Rückflug)…" style="min-height:90px"></textarea>
-      <button class="btn-parse" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.4);color:var(--gold)" onclick="parseOmioCombined('flug')">Zeiten &amp; Preis auslesen →</button>
-      <div class="parse-result" id="flug-combined-parse-result"></div>
-    </div>
-    <!-- Hin -->
-    <div style="margin-bottom:16px">
-      <div class="tleg-lbl">↗ Hinflug</div>
-      <div class="g3">
-        <div><label class="flbl">Abflug</label><input class="inpsm req-field" type="time" id="flug-hin-dep"></div>
-        <div><label class="flbl">Landung</label><input class="inpsm req-field" type="time" id="flug-hin-arr"></div>
-        <div><label class="flbl">Preis €</label><input class="inpsm req-field" type="number" id="flug-hin-price" min="0" step="0.01" placeholder="—"></div>
-      </div>
-      <div class="g2" style="margin-top:8px">
-        <div><label class="flbl-blue">Weg zum Flughafen (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="flug-hin-ts" min="0" step="1" placeholder="0"></div>
-        <div><label class="flbl-blue">Weg vom Flughafen zum Ziel (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="flug-hin-te" min="0" step="1" placeholder="0"></div>
-      </div>
-      <div style="font-size:11px;color:var(--orange);margin-top:6px;padding:6px 10px;background:rgba(251,146,60,0.07);border-radius:6px;border:1px solid rgba(251,146,60,0.2)">
-        ⏱ Zusätzlich werden automatisch <strong>90 Minuten</strong> für Sicherheitskontrolle, Weg zum Gate und Boarding aufgeschlagen.
-      </div>
-    </div>
-    <!-- Rück -->
-    <div>
-      <div class="tleg-lbl">↙ Rückflug</div>
-      <div class="g3">
-        <div><label class="flbl">Abflug</label><input class="inpsm req-field" type="time" id="flug-rueck-dep"></div>
-        <div><label class="flbl">Landung</label><input class="inpsm req-field" type="time" id="flug-rueck-arr"></div>
-        <div><label class="flbl">Preis €</label><input class="inpsm req-field" type="number" id="flug-rueck-price" min="0" step="0.01" placeholder="—"></div>
-      </div>
-      <div class="g2" style="margin-top:8px">
-        <div><label class="flbl-blue">Weg zum Rückflug-Flughafen (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="flug-rueck-ts" min="0" step="1" placeholder="0"></div>
-        <div><label class="flbl-blue">Weg vom Heimatflughafen nach Hause (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="flug-rueck-te" min="0" step="1" placeholder="0"></div>
-      </div>
-      <div style="font-size:11px;color:var(--orange);margin-top:6px;padding:6px 10px;background:rgba(251,146,60,0.07);border-radius:6px;border:1px solid rgba(251,146,60,0.2)">
-        ⏱ Zusätzlich werden automatisch <strong>90 Minuten</strong> für Sicherheitskontrolle, Weg zum Gate und Boarding aufgeschlagen.
-      </div>
-    </div>
-    <!-- Gepäck -->
-    <div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:10px;padding-top:12px">
-      <label class="flbl" style="margin-bottom:8px">🧳 Gepäck aufgeben (20,00 € je Flug)</label>
-      <div class="cb-row" id="bag-hin-cb"><input type="checkbox" id="bag-hin"><div><div class="cb-label">↗ Hinflug</div><div class="cb-note">Aufgegebenes Gepäck</div></div><span class="cb-price" id="bag-hin-price">—</span></div>
-      <div class="cb-row" id="bag-rueck-cb"><input type="checkbox" id="bag-rueck"><div><div class="cb-label">↙ Rückflug</div><div class="cb-note">Aufgegebenes Gepäck</div></div><span class="cb-price" id="bag-rueck-price">—</span></div>
-    </div>
-  </div>
-
-  <!-- Hotel S3 -->
-  <!-- Work-time fields: selects needed by ovWorkRow + calcRes (hidden, populated by overview) -->
-  <select id="bahn-hin-work" style="display:none"></select>
-  <select id="bahn-rueck-work" style="display:none"></select>
-  <select id="flug-hin-work" style="display:none"></select>
-  <select id="flug-rueck-work" style="display:none"></select>
-  <select id="auto-work-hin" style="display:none"></select>
-  <select id="auto-work-rueck" style="display:none"></select>
-
-  <!-- Gate work-time virtual fields (used by overview work table) -->
-  <input type="hidden" id="flug-hin-gate-work" value="0">
-  <input type="hidden" id="flug-rueck-gate-work" value="0">
-
-  <!-- Hidden station name fields populated by parser -->
-  <input type="hidden" id="bahn-hin-dep-station" value="">
-  <input type="hidden" id="bahn-hin-arr-station" value="">
-  <input type="hidden" id="bahn-rueck-dep-station" value="">
-  <input type="hidden" id="bahn-rueck-arr-station" value="">
-  <input type="hidden" id="flug-hin-dep-station" value="">
-  <input type="hidden" id="flug-hin-arr-station" value="">
-  <input type="hidden" id="flug-rueck-dep-station" value="">
-  <input type="hidden" id="flug-rueck-arr-station" value="">
-
-  <!-- AUTO -->
-  <div class="tblock auto" data-transport="auto" style="position:relative">
-    <div class="tblock-hdr"><span style="font-size:20px">🚗</span><span style="font-size:14px;font-weight:700">Auto</span><span class="cost-badge" id="auto-cost-badge">—</span></div>
-    <label class="flbl">Gesamtkosten Hin + Rück (€)</label>
-    <input class="inpsm req-field" type="number" id="auto-kosten" min="0" step="0.01" placeholder="z.B. 84.00  (0 = Firmenwagen / kostenlos)" style="max-width:300px">
-    <div id="auto-km-hint" style="font-size:11px;color:var(--muted);margin-top:5px;display:none"></div>
-    <!-- Hinreise transfer -->
-    <div style="margin-top:12px">
-      <div class="tleg-lbl">↗ Hinreise – Transferzeiten</div>
-      <div class="g2">
-        <div><label class="flbl-blue">Weg von Zuhause zum Fuhrpark (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="auto-tr-hs" min="0" step="1" placeholder="0"></div>
-        <div><label class="flbl-blue">Weg vom Fuhrpark zum Startpunkt (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="auto-tr-he" min="0" step="1" placeholder="0" style="display:none"><span style="font-size:12px;color:rgba(148,163,184,0.7);padding:8px 0;display:block">Kein Ziel-Transfer nötig</span></div>
-      </div>
-      <div style="font-size:11px;color:var(--orange);margin-top:6px;padding:6px 10px;background:rgba(251,146,60,0.07);border-radius:6px;border:1px solid rgba(251,146,60,0.2)">
-        ⏱ Zusätzlich werden automatisch <strong>10 Minuten</strong> für das Übernahmeprozedere am Fuhrpark aufgeschlagen.
-      </div>
-    </div>
-    <!-- Rückreise transfer -->
-    <div style="margin-top:10px">
-      <div class="tleg-lbl">↙ Rückreise – Transferzeiten</div>
-      <div class="g2">
-        <div><label class="flbl-blue">Weg zum Fahrzeug (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="auto-tr-rs" min="0" step="1" placeholder="0"></div>
-        <div><label class="flbl-blue">Weg vom Ziel zum Fuhrpark (min)</label><input class="inpsm inpsm-blue req-field" type="number" id="auto-tr-re" min="0" step="1" placeholder="0"></div>
-      </div>
-      <div style="font-size:11px;color:var(--orange);margin-top:6px;padding:6px 10px;background:rgba(251,146,60,0.07);border-radius:6px;border:1px solid rgba(251,146,60,0.2)">
-        ⏱ Zusätzlich werden automatisch <strong>20 Minuten</strong> für Tanken und Abgabeprozedere am Fuhrpark aufgeschlagen.
-      </div>
-    </div>
-    <!-- Auto work section moved to page 3 -->
-    <!-- No-licence overlay -->
-    <div class="no-licence-banner" id="auto-overlay">
-      <div style="font-size:28px">🚫</div>
-      <div style="font-size:13px;font-weight:700;color:var(--red)">Nicht verfügbar</div>
-      <div style="font-size:11px;color:var(--muted);max-width:200px;line-height:1.5">Kein gültiger Führerschein vorhanden. Auto-Option ausgeschlossen.</div>
-    </div>
-  </div>  <div class="err" id="err-s3"></div>
-  <div style="height:6px"></div>
-  <button class="btnp" id="btn-s3">Reiseübersicht anzeigen →</button>
+  <div class="err" id="err-s1"></div>
+  <button class="btnp" id="btn-s1" style="display:none">Weiter →</button>
 </div>
 
-<!-- ════════════════════════════════════════════
-     SCREEN 3 – ÜBERSICHT
-════════════════════════════════════════════ -->
-<div class="screen" id="s-overview">
-  <button class="backbtn" data-back="s-prices">← Preise anpassen</button>
-  <div class="rpill" id="rpill-overview"></div>
-
-  <div class="slbl">Reiseübersicht</div>
-  <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">
-    Bitte prüfen Sie die erfassten Informationen. Preise und Hotelkosten können hier direkt angepasst werden.
-  </p>
-
-  <!-- Reisezeitraum + Hotel -->
-  <div class="card" style="margin-bottom:10px">
-    <div class="ctitle"><span class="cdot" style="background:var(--gold)"></span>📅 Reisezeitraum</div>
-    <div id="ov-zeitraum" style="font-size:14px;line-height:2;color:var(--text)"></div>
-    <!-- Hotel inline (shown only when nights > 0) -->
-    <div id="ov-hotel" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--br)">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:13px;font-weight:600;color:var(--text)">🏨</span>
-        <span id="ov-hotel-chip" style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;color:var(--gold)"></span>
-        <span style="color:var(--muted)">×</span>
-        <input class="inpsm" type="number" id="ov-hotel-price" min="0" step="1" style="max-width:80px"
-          oninput="document.getElementById('hotel-price').value=this.value;state.hotelPrice=parseFloat(this.value)||0;updateHotelUI();updateOvHotel()">
-        <span style="font-size:12px;color:var(--muted)">€ / Nacht</span>
-        <span class="hotel-total" id="ov-hotel-total" style="margin-left:4px"></span>
-        <!-- Info tooltip -->
-        <span style="position:relative;display:inline-block;margin-left:4px">
-          <button onclick="var el=document.getElementById('hotel-info-box');el.style.display=el.style.display==='none'?'block':'none'"
-            style="background:rgba(255,255,255,0.06);border:1px solid var(--br);border-radius:50%;width:18px;height:18px;cursor:pointer;color:var(--muted);font-size:10px;font-weight:700;line-height:1;padding:0">?</button>
-          <div id="hotel-info-box" style="display:none;position:absolute;left:0;top:24px;z-index:50;width:260px;background:#1a1a2e;border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:12px;font-size:12px;color:var(--text);line-height:1.6;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
-            <strong style="color:var(--gold)">💡 Hinweis zum Hotelpreis</strong><br><br>
-            Der voreingestellte Wert von <strong>100 € pro Nacht</strong> ist ein grober Orientierungswert.<br><br>
-            Bitte tragen Sie den tatsächlichen Preis Ihrer Unterkunft ein, damit die Gesamtkosten korrekt berechnet werden.
-          </div>
-        </span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Reisemittel (dynamisch befüllt) -->
-  <div id="ov-transport-container"></div>
-
-  <!-- Hotel moved into Reisezeitraum card -->
-
-  <!-- 💼 Arbeitszeit-Abfrage auf Seite 3 -->
-  <div class="card" style="margin-bottom:10px">
-    <div class="ctitle"><span class="cdot" style="background:var(--purple)"></span> 💼 Arbeiten während der Reise</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Kann während der Reise produktiv gearbeitet werden? (z.&thinsp;B. Unterlagen sichten, Präsentationen erstellen, Konzepte erarbeiten, LinkedIn Learning)</p>
-    <div class="work-grid">
-      <div class="prio-tile" data-work="yes" id="work-tile-yes">
-        <div class="prio-tile-icon">✅</div>
-        <div class="prio-tile-label">Ja, möglich</div>
-        <div class="prio-tile-sub">Reisezeit = Arbeitszeit</div>
-      </div>
-      <div class="prio-tile active" data-work="no" id="work-tile-no">
-        <div class="prio-tile-icon">🚫</div>
-        <div class="prio-tile-label">Nein, nicht möglich</div>
-        <div class="prio-tile-sub">Reine Reisezeit</div>
-      </div>
-    </div>
-    <p id="work-travel-hint" style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5;display:none"></p>
-    <!-- Arbeitszeit-Tabelle erscheint hier wenn Ja gewählt -->
-    <div id="ov-work-section" style="display:none;margin-top:14px;padding-top:12px;border-top:1px solid var(--br)">
-      <div id="ov-work-container"></div>
-    </div>
-  </div>
-
-  <div style="height:10px"></div>
-  <button class="btnp" id="btn-s-overview">Beste Reiseoption berechnen →</button>
-</div>
-
-<!-- ════════════════════════════════════════════
-     SCREEN 4 – ERGEBNISSE
-════════════════════════════════════════════ -->
-<div class="screen" id="s-results">
-
-  <!-- Print header -->
-  <div class="print-header" id="print-header"></div>
-
-  <button class="backbtn no-print" data-back="s-prices">← Preise anpassen</button>
-
-  <!-- Optimierungsziel auf Ergebnisseite -->
-  <div class="card no-print" style="margin-bottom:14px;padding:16px 18px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-      <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em">🎯 Optimierungsziel</span>
-      <div style="margin-left:auto;position:relative">
-        <button id="prio-info-btn" style="background:rgba(255,255,255,0.06);border:1px solid var(--br);border-radius:50%;width:22px;height:22px;cursor:pointer;color:var(--muted);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center" onclick="var b=document.getElementById('prio-info-box');b.style.display=b.style.display==='none'?'block':'none'" >?</button>
-        <div id="prio-info-box" style="display:none;position:absolute;right:0;top:28px;z-index:50;width:280px;background:#1a1a2e;border:1px solid rgba(251,191,36,0.3);border-radius:10px;padding:14px;font-size:12px;color:var(--text);line-height:1.6;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
-          <strong style="color:var(--gold)">🎯 Optimierungsziel – Berechnungslogik</strong><br><br>
-          Jede Reiseoption erhält einen <strong>Effizienz-Score</strong>. Die Option mit dem <em>niedrigsten Score</em> gewinnt.<br><br>
-          Der Score berechnet sich aus:<br>
-          <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:11px">Score = (Kosten ÷ Gewicht_K) + (Reisezeit_min ÷ Gewicht_Z)</code><br><br>
-          <strong style="color:#fbbf24">💶 Günstigste:</strong><br>
-          Kosten-Gewicht 10 · Zeit-Gewicht 120 → Kosten dominieren stark<br><br>
-          <strong style="color:#fbbf24">⚖️ Ausgewogen (Standard):</strong><br>
-          Kosten-Gewicht 20 · Zeit-Gewicht 60 → ausgeglichene Bewertung<br><br>
-          <strong style="color:#fbbf24">⚡ Schnellste:</strong><br>
-          Kosten-Gewicht 40 · Zeit-Gewicht 30 → Reisezeit dominiert stark<br><br>
-          <span style="color:var(--muted);font-size:11px">Automatische Puffer: Flug +90 Min. (Sicherheit/Gate/Boarding) · Bahn +15 Min./Strecke (Bahnhof) · Auto +10 Min. Hin (Übernahme) / +20 Min. Rück (Abgabe/Tanken). Hotelkosten fließen in alle Optionen gleich ein.</span>
-        </div>
-      </div>
-    </div>
-    <div class="prio-grid" id="prio-grid-results">
-      <div class="prio-tile" data-prio-r="cost"><div class="prio-tile-icon">💶</div><div class="prio-tile-label">Günstigste</div><div class="prio-tile-sub">Kosten zählen</div></div>
-      <div class="prio-tile active" data-prio-r="balanced"><div class="prio-tile-icon">⚖️</div><div class="prio-tile-label">Ausgewogen</div><div class="prio-tile-sub">Kosten &amp; Zeit</div></div>
-      <div class="prio-tile" data-prio-r="time"><div class="prio-tile-icon">⚡</div><div class="prio-tile-label">Schnellste</div><div class="prio-tile-sub">Zeit zählt</div></div>
-    </div>
-  </div>
-  <div class="card no-print" id="cost-view-card" style="display:none;margin-bottom:14px;padding:16px 18px">
-    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">💰 Kostenansicht</div>
-    <div class="cost-view-grid">
-      <div class="cost-view-tile active" id="cv-perperson" onclick="setCostView('perperson')">
-        <div class="prio-tile-icon">👤</div>
-        <div class="prio-tile-label">Je Person</div>
-        <div class="prio-tile-sub">Kosten pro Kopf</div>
-      </div>
-      <div class="cost-view-tile" id="cv-total" onclick="setCostView('total')">
-        <div class="prio-tile-icon">👥</div>
-        <div class="prio-tile-label">Alle Reisenden</div>
-        <div class="prio-tile-sub">Gesamtkosten</div>
-      </div>
-    </div>
-  </div>
-  <div class="rpill no-print" id="rpill-results"></div>
-  <div class="recom no-print" id="recom-box">
-    <span style="font-size:20px">💡</span>
-    <div class="recom-text" id="recom-text"></div>
-  </div>
-  <div id="results-container"></div>
-
-  <!-- Print footer -->
-  <div class="print-footer" id="print-footer"></div>
-
-  <div class="no-print" style="margin-top:16px;text-align:center;font-size:11px;color:#444;line-height:1.8" id="results-footnote"></div>
-  <div style="height:12px"></div>
-  <button class="btn-print no-print" onclick="window.print()">🖨 Als PDF speichern / Drucken</button>
-  <div style="height:8px"></div>
-  <button class="btnp ghost no-print" id="btn-new-search">Neue Suche</button>
-</div>
-
-</div><!-- #app -->
 
 <script>
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -1194,7 +763,7 @@ function fillWorkSel(selId,maxMin){
 function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
-  if(id === "s-prices"){ applyTransportVisibility(); buildDbLinks(); }
+  if(id === "s-prices") applyTransportVisibility();
   const idx={"s-form":0,"s-prices":1,"s-overview":2,"s-results":3}[id]||0;
   document.querySelectorAll(".sdot").forEach((d,i)=>{
     d.classList.toggle("done",i<idx);
@@ -1643,31 +1212,37 @@ async function calcAndSetMinutes(type, toLat, toLon){
 }
 
 
-// ── DB Bahn deeplink builder ─────────────────────────────────────────────────
+// ── DB Bahn deeplink ──────────────────────────────────────────────────────────
 function toDbDate(d){
   if(!d) return '';
   var p=d.split('-');
-  return p.length===3 ? p[2]+'.'+p[1]+'.'+p[0] : d;
+  return p.length===3?p[2]+'.'+p[1]+'.'+p[0]:d;
 }
-function buildDbLinks(){
-  var fromSt = (startTransfer.bahn && startTransfer.bahn.station) || state.startText || '—';
-  var dest = state.zielDest;
-  var toSt = dest ? (dest.bahnStation || dest.name) : (state.zielText || '—');
-  var e = encodeURIComponent;
-  var setEl = function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-  var setHref = function(id,v){ var el=document.getElementById(id); if(el) el.href=v; };
-  setEl('db-bahn-hin-from', fromSt);
-  setEl('db-bahn-hin-to', toSt);
-  setEl('db-bahn-hin-meta', state.hD ? toDbDate(state.hD)+' · Ankunft: '+state.hT+' Uhr' : '—');
-  setEl('db-bahn-rueck-from', toSt);
-  setEl('db-bahn-rueck-to', fromSt);
-  setEl('db-bahn-rueck-meta', state.rD ? toDbDate(state.rD)+' · Abfahrt: '+state.rT+' Uhr' : '—');
-  if(state.hD) setHref('db-bahn-hin-link',
+
+function buildAndShowDb(){
+  var fromSt=(startTransfer.bahn&&startTransfer.bahn.station)||state.startText||'—';
+  var dest=state.zielDest;
+  var toSt=dest?(dest.bahnStation||dest.name):(state.zielText||'—');
+  var e=encodeURIComponent;
+
+  var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+  var href=function(id,v){var el=document.getElementById(id);if(el)el.href=v;};
+
+  set('db-hin-from',fromSt); set('db-hin-to',toSt);
+  set('db-hin-meta',state.hD?toDbDate(state.hD)+' · Ankunft: '+state.hT+' Uhr':'—');
+  set('db-rueck-from',toSt); set('db-rueck-to',fromSt);
+  set('db-rueck-meta',state.rD?toDbDate(state.rD)+' · Abfahrt: '+state.rT+' Uhr':'—');
+
+  if(state.hD) href('db-hin-link',
     'https://www.bahn.de/buchung/fahrplan/suche#ld=&so='+e(fromSt)+'&zo='+e(toSt)
     +'&hd='+toDbDate(state.hD)+'&hza=A&ar='+state.hT+'&s=true');
-  if(state.rD) setHref('db-bahn-rueck-link',
+  if(state.rD) href('db-rueck-link',
     'https://www.bahn.de/buchung/fahrplan/suche#ld=&so='+e(toSt)+'&zo='+e(fromSt)
     +'&hd='+toDbDate(state.rD)+'&hza=D&ab='+state.rT+'&s=true');
+
+  var card=document.getElementById('db-bahn-card');
+  if(card) card.style.display='block';
+  window.scrollTo(0,card?card.offsetTop-20:0);
 }
 
 // ── Setup autocomplete ────────────────────────────────────────────────────────
@@ -1891,7 +1466,6 @@ function getMissingInBlock(prefix){
 }
 
 document.getElementById("btn-s1").addEventListener("click",()=>{
-  try{
   // Only update startText from field (zielText set by CDD or nominatim)
   if(inpStart.value) state.startText=inpStart.value;
   // Only update zielText from inp-ziel if manual section is open and has a value
@@ -1945,10 +1519,7 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   var phf=document.getElementById("flug-persons-hint");
   if(phf) phf.textContent=state.persons>1?" (Preis pro Person)":"";
   updateHotelUI();
-  applyTransportVisibility();
-  syncStartTransferToPage2('all');
-  showScreen("s-prices");
-  }catch(e){var errEl=document.getElementById('err-s1');if(errEl){errEl.innerHTML='<b>Fehler:</b> '+e.message;errEl.classList.add('show');}console.error(e);}
+  buildAndShowDb();
 });
 
 // ── Screen 2 → 3 ─────────────────────────────────────────────────────────────
@@ -3326,7 +2897,6 @@ updateAutoOverlay();
 rebuildDestSelect();
 applyTransportVisibility();
 </script>
-
 <div class="ee-toast" id="ee-toast"></div>
 </body>
 </html>
