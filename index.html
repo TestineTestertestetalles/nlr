@@ -382,6 +382,16 @@ input.req-field:focus{
 .pt-fuhrpark-inp{width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
   border-radius:4px;padding:2px 5px;font-size:10px;color:rgba(241,245,249,0.85);
   font-family:inherit;text-align:center;margin-top:3px;}
+/* ── Station selection dropdown in tile ── */
+.pt-station-select{width:100%;background:#0f2318;border:1px solid rgba(52,211,153,0.4);
+  border-radius:5px;padding:4px 6px;font-size:10px;color:#d1fae5;font-family:inherit;
+  margin-top:4px;cursor:pointer;max-width:100%;word-wrap:break-word;}
+.transport-tile.active.bahn .pt-station-select{border-color:rgba(52,211,153,0.5);}
+.transport-tile.active.flug .pt-station-select{background:#0a1628;border-color:rgba(96,165,250,0.5);color:#bfdbfe;}
+.transport-tile.active.auto .pt-station-select{background:#1a1200;border-color:rgba(251,191,36,0.5);color:#fef08a;}
+.pt-station-select option{background:#0a1a0e;color:#d1fae5;}
+.transport-tile.active.flug .pt-station-select option{background:#0a1628;color:#bfdbfe;}
+.transport-tile.active.auto .pt-station-select option{background:#1a1200;color:#fef08a;}
 </style>
 </head>
 <body>
@@ -557,7 +567,11 @@ input.req-field:focus{
       <div class="transport-tile active bahn" id="tt-bahn" onclick="toggleTransportTile('bahn')">
         <div class="pt-icon">🚆</div>
         <div class="pt-label">Bahn</div>
-        <div class="pt-station" id="tt-bahn-station">—</div>
+        <select class="pt-station-select" id="tt-bahn-station"
+          onclick="event.stopPropagation()"
+          onchange="onSelectStation('bahn',this)">
+          <option value="">— suche läuft… —</option>
+        </select>
         <div class="pt-time-wrap">
           <input class="pt-time-inp" id="tt-bahn-min" type="number" min="0" max="999"
             placeholder="—" title="Minuten von Zuhause zum Bahnhof"
@@ -570,7 +584,11 @@ input.req-field:focus{
       <div class="transport-tile active flug" id="tt-flug" onclick="toggleTransportTile('flug')">
         <div class="pt-icon">✈️</div>
         <div class="pt-label">Flug</div>
-        <div class="pt-station" id="tt-flug-station">—</div>
+        <select class="pt-station-select" id="tt-flug-station"
+          onclick="event.stopPropagation()"
+          onchange="onSelectStation('flug',this)">
+          <option value="">— suche läuft… —</option>
+        </select>
         <div class="pt-time-wrap">
           <input class="pt-time-inp" id="tt-flug-min" type="number" min="0" max="999"
             placeholder="—" title="Minuten von Zuhause zum Flughafen"
@@ -583,10 +601,27 @@ input.req-field:focus{
       <div class="transport-tile auto" id="tt-auto" onclick="toggleTransportTile('auto')">
         <div class="pt-icon">🚗</div>
         <div class="pt-label">Auto</div>
-        <input class="pt-fuhrpark-inp" id="tt-auto-name" type="text"
-          placeholder="Fuhrpark" title="Name des Fuhrparks"
+        <select class="pt-station-select" id="tt-auto-name"
           onclick="event.stopPropagation()"
-          onchange="updateStartTransfer('auto-name',this.value)">
+          onchange="onSelectStation('auto',this)">
+          <option value="">Fuhrpark wählen…</option>
+          <option value="Berlin, Brandenburg">Berlin (Berlin)</option>
+          <option value="Bremen">Bremen (Bremen)</option>
+          <option value="Dresden, Sachsen">Dresden (Sachsen)</option>
+          <option value="Düsseldorf">Düsseldorf (NRW)</option>
+          <option value="Erfurt">Erfurt (Thüringen)</option>
+          <option value="Hamburg">Hamburg (Hamburg)</option>
+          <option value="Hannover">Hannover (Niedersachsen)</option>
+          <option value="Kiel">Kiel (Schleswig-Holstein)</option>
+          <option value="Magdeburg">Magdeburg (Sachsen-Anhalt)</option>
+          <option value="Mainz">Mainz (Rheinland-Pfalz)</option>
+          <option value="München">München (Bayern)</option>
+          <option value="Potsdam">Potsdam (Brandenburg)</option>
+          <option value="Saarbrücken">Saarbrücken (Saarland)</option>
+          <option value="Schwerin">Schwerin (Mecklenburg-Vorpommern)</option>
+          <option value="Stuttgart">Stuttgart (Baden-Württemberg)</option>
+          <option value="Wiesbaden">Wiesbaden (Hessen)</option>
+        </select>
         <div class="pt-time-wrap">
           <input class="pt-time-inp" id="tt-auto-min" type="number" min="0" max="999"
             placeholder="—" title="Minuten von Zuhause zum Fuhrpark"
@@ -1273,6 +1308,14 @@ var _origInpZielCallback = null;
 // ── Start transfer auto-lookup ────────────────────────────────────────────────
 var startTransfer = {bahn: {station:'', minutes:0}, flug: {station:'', minutes:0}, auto: {name:'Fuhrpark', minutes:0}};
 
+function onSelectStation(type, selectEl){
+  var name = selectEl.value;
+  if(!name) return;
+  if(type === 'bahn') startTransfer.bahn.station = name;
+  if(type === 'flug') startTransfer.flug.station = name;
+  if(type === 'auto') startTransfer.auto.name = name;
+}
+
 function updateStartTransfer(type, val){
   if(type === 'auto-name'){
     startTransfer.auto.name = val;
@@ -1308,7 +1351,7 @@ function syncStartTransferToPage2(type){
 async function lookupStartStation(geo){
   if(!geo || !geo.lat) return;
   var lat = geo.lat, lon = geo.lon;
-  var RADIUS = 25000; // 25 km
+  var RADIUS = 100000; // 100 km
 
   // Helper: haversine distance in km
   function haversine(lat1,lon1,lat2,lon2){
@@ -1318,12 +1361,28 @@ async function lookupStartStation(geo){
   }
 
   // Helper: update tile with name + distance
-  function setTile(stationElId, stationName, distKm){
+  function setTile(stationElId, stations){
     var el = document.getElementById(stationElId);
     if(!el) return;
-    el.textContent = distKm !== null
-      ? stationName + ' · ' + distKm.toFixed(1) + ' km'
-      : stationName;
+    // stations = array of {name, dist} sorted ascending
+    el.innerHTML = '';
+    if(!stations || !stations.length){
+      var opt = document.createElement('option');
+      opt.value = ''; opt.textContent = '— Kein Ergebnis in 100 km —';
+      el.appendChild(opt);
+      return;
+    }
+    var placeholder = document.createElement('option');
+    placeholder.value = ''; placeholder.textContent = '— Auswählen —';
+    el.appendChild(placeholder);
+    stations.forEach(function(s){
+      var opt = document.createElement('option');
+      opt.value = s.name;
+      opt.textContent = s.name + ' · ' + s.dist.toFixed(1) + ' km';
+      el.appendChild(opt);
+    });
+    // Auto-select first (closest)
+    if(stations.length) el.value = stations[0].name;
   }
 
   try{
@@ -1374,21 +1433,12 @@ async function lookupStartStation(geo){
     stations.sort(function(a,b){ return a.dist-b.dist; });
     airports.sort(function(a,b){ return a.dist-b.dist; });
 
-    if(stations.length){
-      var st = stations[0];
-      startTransfer.bahn.station = st.name;
-      setTile('tt-bahn-station', st.name, st.dist);
-    } else {
-      setTile('tt-bahn-station', 'Kein Bahnhof in 25 km', null);
-    }
-
-    if(airports.length){
-      var ap = airports[0];
-      startTransfer.flug.station = ap.name;
-      setTile('tt-flug-station', ap.name, ap.dist);
-    } else {
-      setTile('tt-flug-station', 'Kein Flughafen in 25 km', null);
-    }
+    // Populate dropdowns sorted by distance
+    setTile('tt-bahn-station', stations);
+    setTile('tt-flug-station', airports);
+    // Set default (closest) in startTransfer
+    if(stations.length) startTransfer.bahn.station = stations[0].name;
+    if(airports.length) startTransfer.flug.station = airports[0].name;
 
   } catch(e){
     console.warn('Overpass lookup failed:', e);
@@ -2277,7 +2327,12 @@ document.getElementById("btn-new-search").addEventListener("click",()=>{
   });
   inpStart.value="";inpZiel.value="";
   startTransfer={bahn:{station:'',minutes:0},flug:{station:'',minutes:0},auto:{name:'Fuhrpark',minutes:0}};
-  ['tt-bahn-station','tt-flug-station'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='—';});
+  ['tt-bahn-station','tt-flug-station'].forEach(function(id){
+    var e=document.getElementById(id);
+    if(e){ e.innerHTML='<option value="">— suche läuft… —</option>'; }
+  });
+  var autoSel=document.getElementById('tt-auto-name');
+  if(autoSel) autoSel.value='';
   ['tt-bahn-min','tt-flug-min','tt-auto-min'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   var an=document.getElementById('tt-auto-name');if(an)an.value='';
   var cddTxt=document.getElementById('cdd-selected-text');
