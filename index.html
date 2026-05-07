@@ -562,7 +562,7 @@ input.req-field:focus{
   <!-- Transport selector -->
   <div class="card" style="margin-bottom:10px">
     <div class="ctitle"><span class="cdot" style="background:var(--purple)"></span>🚀 Welche Reisemittel stehen zur Verfügung?</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Wähle die am Start-/Zielort verfügbaren Möglichkeiten aus: Gibt es einen Flughafen, Bahnhof oder Fuhrpark in der Nähe?</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Wähle die am Startbahnhof bzw. Flughafen oder Fuhrpark ab dem deine Reise beginnen soll — die Entfernung in Minuten wird automatisch berechnet, sobald ein Abfahrtspunkt ausgewählt wurde.</p>
     <div style="display:flex;gap:8px">
       <div class="transport-tile active bahn" id="tt-bahn" onclick="toggleTransportTile('bahn')">
         <div class="pt-icon">🚆</div>
@@ -1313,7 +1313,14 @@ function onSelectStation(type, selectEl){
   if(!name) return;
   if(type === 'bahn') startTransfer.bahn.station = name;
   if(type === 'flug') startTransfer.flug.station = name;
-  if(type === 'auto') startTransfer.auto.name = name;
+  if(type === 'auto'){ startTransfer.auto.name = name; return; }
+  // Get coords from selected option's dataset
+  var selOpt = selectEl.options[selectEl.selectedIndex];
+  var toLat = parseFloat(selOpt.dataset.lat);
+  var toLon = parseFloat(selOpt.dataset.lon);
+  if(toLat && toLon){
+    calcAndSetMinutes(type, toLat, toLon);
+  }
 }
 
 function updateStartTransfer(type, val){
@@ -1372,26 +1379,38 @@ async function lookupStartStation(geo){
       el.appendChild(opt);
       return;
     }
+    var MAX = 15;
+    var list = stations.slice(0, MAX);
+    var total = stations.length;
     var placeholder = document.createElement('option');
-    placeholder.value = ''; placeholder.textContent = '— Auswählen —';
+    placeholder.value = '';
+    placeholder.textContent = total > 1
+      ? '↕ ' + total + (total > MAX ? '+' : '') + ' Optionen — hier ändern'
+      : '— Auswählen —';
     el.appendChild(placeholder);
-    stations.forEach(function(s){
+    list.forEach(function(s){
       var opt = document.createElement('option');
       opt.value = s.name;
+      opt.dataset.lat = s.lat || '';
+      opt.dataset.lon = s.lon || '';
       opt.textContent = s.name + ' · ' + s.dist.toFixed(1) + ' km';
       el.appendChild(opt);
     });
-    // Auto-select first (closest)
-    if(stations.length) el.value = stations[0].name;
+    // Auto-select closest + store coords on element for OSRM
+    if(list.length){
+      el.value = list[0].name;
+      el.dataset.autoLat = list[0].lat || '';
+      el.dataset.autoLon = list[0].lon || '';
+    }
   }
 
   try{
     // Overpass query: nearest railway=station AND aeroway=aerodrome within 25km
-    // Bahnhöfe: train=yes (RE/S-Bahn/IC/ICE), kein Tourismus/Museum
+    // Bahnhöfe: railway=station, kein Tourismus/Museum/Miniatur
     // Flughäfen: nur mit IATA-Code = Linienflugbetrieb
-    var query = '[out:json][timeout:15];('
-      + 'node["railway"="station"]["train"="yes"]["usage"!="tourism"]["usage"!="military"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'way["railway"="station"]["train"="yes"]["usage"!="tourism"]["usage"!="military"](around:'+RADIUS+','+lat+','+lon+');'
+    var query = '[out:json][timeout:20];('
+      + 'node["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'way["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS+','+lat+','+lon+');'
       + 'node["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
       + 'way["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
       + ');out center;';
@@ -1418,14 +1437,20 @@ async function lookupStartStation(geo){
       seen[name] = true;
       var dist = haversine(lat, lon, elLat, elLon);
       if(el.tags.railway === 'station'){
-        // Overpass already filtered train=yes + no tourism — safe to add
-        stations.push({name:name, dist:dist});
+        // Exclude subway, light_rail, monorail, miniature
+        var stype = el.tags.station || '';
+        var usage  = el.tags.usage  || '';
+        if(stype === 'subway' || stype === 'light_rail' || stype === 'monorail') return;
+        if(usage === 'tourism' || usage === 'military') return;
+        // Exclude tram-only stations
+        if(el.tags.tram === 'yes' && el.tags.train !== 'yes' && el.tags.subway !== 'yes') return;
+        stations.push({name:name, dist:dist, lat:elLat, lon:elLon});
       } else if(el.tags.aeroway === 'aerodrome'){
         // Overpass already filtered iata tag — only scheduled airports
         // Show IATA code in name if available
         var iata = el.tags.iata || '';
         var displayName = iata ? name + ' (' + iata + ')' : name;
-        airports.push({name:displayName, dist:dist});
+        airports.push({name:displayName, dist:dist, lat:elLat, lon:elLon});
       }
     });
 
@@ -1436,9 +1461,15 @@ async function lookupStartStation(geo){
     // Populate dropdowns sorted by distance
     setTile('tt-bahn-station', stations);
     setTile('tt-flug-station', airports);
-    // Set default (closest) in startTransfer
-    if(stations.length) startTransfer.bahn.station = stations[0].name;
-    if(airports.length) startTransfer.flug.station = airports[0].name;
+    // Set default (closest) in startTransfer + calc OSRM drive time
+    if(stations.length){
+      startTransfer.bahn.station = stations[0].name;
+      calcAndSetMinutes('bahn', stations[0].lat, stations[0].lon);
+    }
+    if(airports.length){
+      startTransfer.flug.station = airports[0].name;
+      calcAndSetMinutes('flug', airports[0].lat, airports[0].lon);
+    }
 
   } catch(e){
     console.warn('Overpass lookup failed:', e);
@@ -1451,10 +1482,94 @@ async function lookupStartStation(geo){
   }
 }
 
+
+// ── Fuhrpark: find nearest Landeshauptstadt ───────────────────────────────────
+var FUHRPARK_STAEDTE = [
+  {name:'Berlin',       lat:52.5200, lon:13.4050},
+  {name:'Bremen',       lat:53.0793, lon:8.8017},
+  {name:'Dresden',      lat:51.0504, lon:13.7373},
+  {name:'Düsseldorf',   lat:51.2217, lon:6.7762},
+  {name:'Erfurt',       lat:50.9848, lon:11.0299},
+  {name:'Hamburg',      lat:53.5753, lon:10.0153},
+  {name:'Hannover',     lat:52.3759, lon:9.7320},
+  {name:'Kiel',         lat:54.3233, lon:10.1228},
+  {name:'Magdeburg',    lat:52.1316, lon:11.6391},
+  {name:'Mainz',        lat:49.9929, lon:8.2473},
+  {name:'München',      lat:48.1351, lon:11.5820},
+  {name:'Potsdam',      lat:52.3906, lon:13.0645},
+  {name:'Saarbrücken',  lat:49.2354, lon:6.9969},
+  {name:'Schwerin',     lat:53.6288, lon:11.4148},
+  {name:'Stuttgart',    lat:48.7758, lon:9.1829},
+  {name:'Wiesbaden',    lat:50.0782, lon:8.2398},
+];
+
+function updateFuhrparkDropdown(geo){
+  if(!geo || !geo.lat) return;
+  var sel = document.getElementById('tt-auto-name');
+  if(!sel) return;
+  // Calculate distances to all Fuhrpark cities
+  var dists = FUHRPARK_STAEDTE.map(function(s){
+    return {name:s.name, dist:haversineGlobal(geo.lat, geo.lon, s.lat, s.lon)};
+  });
+  dists.sort(function(a,b){ return a.dist - b.dist; });
+  // Rebuild options
+  sel.innerHTML = '';
+  var ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = '↕ ' + dists.length + ' Standorte — hier ändern';
+  sel.appendChild(ph);
+  dists.forEach(function(d){
+    var opt = document.createElement('option');
+    opt.value = d.name;
+    opt.textContent = d.name + ' · ' + d.dist.toFixed(0) + ' km';
+    sel.appendChild(opt);
+  });
+  // Select nearest
+  if(dists.length){ sel.value = dists[0].name; startTransfer.auto.name = dists[0].name; }
+}
+
+function haversineGlobal(lat1,lon1,lat2,lon2){
+  var R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// ── OSRM Routing: drive time from start to station ───────────────────────────
+async function getOsrmDriveMinutes(fromLat, fromLon, toLat, toLon){
+  try{
+    var url = 'https://router.project-osrm.org/route/v1/driving/'
+      + fromLon + ',' + fromLat + ';'
+      + toLon + ',' + toLat
+      + '?overview=false&steps=false';
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if(data.code === 'Ok' && data.routes && data.routes[0]){
+      return Math.round(data.routes[0].duration / 60); // seconds → minutes
+    }
+  } catch(e){
+    console.warn('OSRM routing failed:', e);
+  }
+  return null;
+}
+
+async function calcAndSetMinutes(type, toLat, toLon){
+  if(!state.startGeo || !state.startGeo.lat || !toLat || !toLon) return;
+  var minInp = document.getElementById(type === 'bahn' ? 'tt-bahn-min' : 'tt-flug-min');
+  if(!minInp) return;
+  minInp.placeholder = '…';
+  var mins = await getOsrmDriveMinutes(state.startGeo.lat, state.startGeo.lon, toLat, toLon);
+  if(mins !== null){
+    minInp.value = mins;
+    minInp.dispatchEvent(new Event('change'));
+  } else {
+    minInp.placeholder = '—';
+  }
+}
+
 // ── Setup autocomplete ────────────────────────────────────────────────────────
 const inpStart=document.getElementById("inp-start");
 const inpZiel=document.getElementById("inp-ziel");
-inpStart.addEventListener("input",()=>{state.startGeo=null;inpStart.classList.remove("invalid");nominatim(inpStart.value,"drop-start",h=>{state.startText=h.short;state.startGeo=h;inpStart.value=h.short;updateAutoKmHint();lookupStartStation(h);});});
+inpStart.addEventListener("input",()=>{state.startGeo=null;inpStart.classList.remove("invalid");nominatim(inpStart.value,"drop-start",h=>{state.startText=h.short;state.startGeo=h;inpStart.value=h.short;updateAutoKmHint();lookupStartStation(h);updateFuhrparkDropdown(h);});});
 inpZiel.addEventListener("input",()=>{state.zielGeo=null;inpZiel.classList.remove("invalid");nominatim(inpZiel.value,"drop-ziel",h=>{
   state.zielText=h.short;state.zielGeo=h;inpZiel.value=h.short;
   updateAutoKmHint(); state.zielText=h.short;
