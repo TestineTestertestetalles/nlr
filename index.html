@@ -332,13 +332,15 @@ input.req-field:focus{
 .dest-save-btn:hover{background:rgba(167,139,250,0.2);}
 .dest-applied{font-size:11px;color:rgba(110,231,183,0.8);margin-top:6px;display:none;}
 /* ── Custom destination dropdown ── */
-.cdd-wrap{position:relative;width:100%;}
-.cdd-trigger{width:100%;background:#0f2318;border:1.5px solid #34d399;border-radius:6px;
-  padding:9px 36px 9px 12px;font-size:13px;color:#d1fae5;font-family:inherit;
+.cdd-wrap{position:relative;width:100%;margin-bottom:6px;}
+.cdd-trigger{width:100%;border:1.5px solid rgba(251,191,36,0.6)!important;
+  background:rgba(251,191,36,0.09);border-radius:6px;
+  padding:9px 36px 9px 12px;font-size:13px;color:var(--text);font-family:inherit;
   cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;
   user-select:none;}
-.cdd-trigger:hover{border-color:#6ee7b7;}
-.cdd-trigger .cdd-arrow{font-size:10px;color:#6ee7b7;flex-shrink:0;transition:transform 0.2s;}
+.cdd-trigger:hover{border-color:rgba(251,191,36,0.9)!important;}
+.cdd-trigger .cdd-placeholder{color:rgba(241,245,249,0.38);}
+.cdd-trigger .cdd-arrow{font-size:10px;color:var(--gold);flex-shrink:0;transition:transform 0.2s;}
 .cdd-trigger.open .cdd-arrow{transform:rotate(180deg);}
 .cdd-menu{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:200;
   background:#0a1a0e;border:1.5px solid #34d399;border-radius:6px;
@@ -349,7 +351,8 @@ input.req-field:focus{
   border-bottom:1px solid rgba(52,211,153,0.08);}
 .cdd-option:last-child{border-bottom:none;}
 .cdd-option:hover,.cdd-option.selected{background:rgba(52,211,153,0.12);color:#6ee7b7;}
-.cdd-search{width:100%;background:#0a1a0e;border:none;border-bottom:1px solid rgba(52,211,153,0.2);
+.cdd-search{width:100%;background:#0a1a0e;border:none;
+  border-bottom:1px solid rgba(52,211,153,0.2);
   padding:8px 12px;font-size:13px;color:#d1fae5;font-family:inherit;outline:none;}
 .cdd-search::placeholder{color:rgba(110,231,183,0.4);}
 /* ── New destination form ── */
@@ -368,7 +371,7 @@ input.req-field:focus{
 .transport-tile.active .pt-station{color:rgba(203,213,225,0.85);}
 .transport-tile .pt-time-wrap{margin-top:4px;display:flex;align-items:center;justify-content:center;gap:3px;}
 .pt-time-inp{width:64px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
-  border-radius:4px;padding:2px 4px;font-size:11px;font-weight:700;color:inherit;
+  border-radius:4px;padding:4px 6px;font-size:13px;font-weight:700;color:inherit;
   font-family:inherit;text-align:center;}
 .transport-tile.active.bahn .pt-time-inp{color:#34d399;border-color:rgba(52,211,153,0.35);}
 .transport-tile.active.flug .pt-time-inp{color:#60a5fa;border-color:rgba(96,165,250,0.35);}
@@ -395,6 +398,7 @@ input.req-field:focus{
 .field-wrap{position:relative;}
 input.invalid ~ .field-warn,
 select.invalid ~ .field-warn{display:block;}
+/* ── Version badge ── */
 .version-badge{font-size:10px;color:rgba(148,163,184,0.5);text-align:right;
   margin-bottom:6px;font-family:'DM Mono',monospace;letter-spacing:0.04em;}
 </style>
@@ -425,7 +429,7 @@ select.invalid ~ .field-warn{display:block;}
      SCREEN 1 – EINGABE
 ════════════════════════════════════════════ -->
 <div class="screen active" id="s-form">
-  <div class="version-badge">v 07.05.2026 20:19</div>
+  <div class="version-badge">v 07.05.2026 20:13</div>
 
   <!-- Route -->
   <div class="card">
@@ -447,12 +451,12 @@ select.invalid ~ .field-warn{display:block;}
         <div class="divl"></div>
       </div>
       <div>
-        <label class="flbl">Zielort</label>
+        <label class="flbl">Reiseziel</label>
 
     <!-- Custom destination dropdown (primary) -->
     <div class="cdd-wrap" id="cdd-wrap">
       <div class="cdd-trigger" id="cdd-trigger" onclick="toggleCdd()">
-        <span id="cdd-selected-text" style="color:rgba(110,231,183,0.5)">— Ziel aus Datenbank wählen —</span>
+        <span id="cdd-selected-text" class="cdd-placeholder">— Ziel aus Datenbank wählen —</span>
         <span class="cdd-arrow">▼</span>
       </div>
       <div class="cdd-menu" id="cdd-menu">
@@ -470,7 +474,7 @@ select.invalid ~ .field-warn{display:block;}
         ➕ Neues Ziel hinzufügen
       </div>
 
-      <label class="flbl">Stadtname (für die Liste)</label>
+      <label class="flbl">Reiseziel (erscheint in der Auswahlliste)</label>
       <input class="inpsm" type="text" id="dest-manual-name"
         placeholder="z. B. Stuttgart" style="margin-bottom:10px">
 
@@ -568,23 +572,75 @@ select.invalid ~ .field-warn{display:block;}
   <!-- Transport selector -->
   <div class="card" style="margin-bottom:10px">
     <div class="ctitle"><span class="cdot" style="background:var(--purple)"></span>🚀 Welche Reisemittel stehen zur Verfügung?</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Wähle die am Startbahnhof bzw. Flughafen oder Fuhrpark ab dem deine Reise beginnen soll</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Wähle die am Startbahnhof bzw. Flughafen oder Fuhrpark ab dem deine Reise beginnen soll — die Entfernung in Minuten wird automatisch berechnet, sobald ein Abfahrtspunkt ausgewählt wurde.</p>
     <div style="display:flex;gap:8px">
       <div class="transport-tile active bahn" id="tt-bahn" onclick="toggleTransportTile('bahn')">
         <div class="pt-icon">🚆</div>
         <div class="pt-label">Bahn</div>
+        <select class="pt-station-select" id="tt-bahn-station"
+          onclick="event.stopPropagation()"
+          onchange="onSelectStation('bahn',this)">
+          <option value="">— suche läuft… —</option>
+        </select>
+        <div class="pt-time-wrap">
+          <input class="pt-time-inp" id="tt-bahn-min" type="number" min="0" max="999"
+            placeholder="—" title="Minuten von Zuhause zum Bahnhof"
+            onclick="event.stopPropagation()"
+            onchange="updateStartTransfer('bahn',this.value)">
+          <span class="pt-time-lbl">min</span>
+        </div>
         <div class="pt-check">✓</div>
       </div>
       <div class="transport-tile active flug" id="tt-flug" onclick="toggleTransportTile('flug')">
         <div class="pt-icon">✈️</div>
         <div class="pt-label">Flug</div>
+        <select class="pt-station-select" id="tt-flug-station"
+          onclick="event.stopPropagation()"
+          onchange="onSelectStation('flug',this)">
+          <option value="">— suche läuft… —</option>
+        </select>
+        <div class="pt-time-wrap">
+          <input class="pt-time-inp" id="tt-flug-min" type="number" min="0" max="999"
+            placeholder="—" title="Minuten von Zuhause zum Flughafen"
+            onclick="event.stopPropagation()"
+            onchange="updateStartTransfer('flug',this.value)">
+          <span class="pt-time-lbl">min</span>
+        </div>
         <div class="pt-check">✓</div>
       </div>
       <div class="transport-tile auto" id="tt-auto" onclick="toggleTransportTile('auto')">
         <div class="pt-icon">🚗</div>
         <div class="pt-label">Auto</div>
-        <div class="pt-check">✓</div>
+        <select class="pt-station-select" id="tt-auto-name"
+          onclick="event.stopPropagation()"
+          onchange="onSelectStation('auto',this)">
+          <option value="">Fuhrpark wählen…</option>
+          <option value="Berlin, Brandenburg">Berlin (Berlin)</option>
+          <option value="Bremen">Bremen (Bremen)</option>
+          <option value="Dresden, Sachsen">Dresden (Sachsen)</option>
+          <option value="Düsseldorf">Düsseldorf (NRW)</option>
+          <option value="Erfurt">Erfurt (Thüringen)</option>
+          <option value="Hamburg">Hamburg (Hamburg)</option>
+          <option value="Hannover">Hannover (Niedersachsen)</option>
+          <option value="Kiel">Kiel (Schleswig-Holstein)</option>
+          <option value="Magdeburg">Magdeburg (Sachsen-Anhalt)</option>
+          <option value="Mainz">Mainz (Rheinland-Pfalz)</option>
+          <option value="München">München (Bayern)</option>
+          <option value="Potsdam">Potsdam (Brandenburg)</option>
+          <option value="Saarbrücken">Saarbrücken (Saarland)</option>
+          <option value="Schwerin">Schwerin (Mecklenburg-Vorpommern)</option>
+          <option value="Stuttgart">Stuttgart (Baden-Württemberg)</option>
+          <option value="Wiesbaden">Wiesbaden (Hessen)</option>
+        </select>
+        <div class="pt-time-wrap">
+          <input class="pt-time-inp" id="tt-auto-min" type="number" min="0" max="999"
+            placeholder="—" title="Minuten von Zuhause zum Fuhrpark"
+            onclick="event.stopPropagation()"
+            onchange="updateStartTransfer('auto',this.value)">
+          <span class="pt-time-lbl">min</span>
+        </div>
         <div id="tt-auto-hint" style="display:none;font-size:10px;color:var(--gold);margin-top:3px;line-height:1.3">Fahrerlaubnis<br>erforderlich ↑</div>
+        <div class="pt-check">✓</div>
       </div>
     </div>
   </div>
@@ -1111,7 +1167,6 @@ function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   if(id === "s-prices") applyTransportVisibility();
-  if(id==="s-prices") applyTransportVisibility();
   const idx={"s-form":0,"s-prices":1,"s-overview":2,"s-results":3}[id]||0;
   document.querySelectorAll(".sdot").forEach((d,i)=>{
     d.classList.toggle("done",i<idx);
@@ -1270,7 +1325,31 @@ function onSelectStation(type, selectEl){
   if(!name) return;
   if(type === 'bahn') startTransfer.bahn.station = name;
   if(type === 'flug') startTransfer.flug.station = name;
-  if(type === 'auto') startTransfer.auto.name = name;
+  if(type === 'auto'){
+    startTransfer.auto.name = name;
+    // Find city coords and recalc OSRM
+    var city = FUHRPARK_STAEDTE.filter(function(s){ return s.name === name; })[0];
+    if(city && state.startGeo && state.startGeo.lat){
+      var minInp = document.getElementById('tt-auto-min');
+      if(minInp){ minInp.placeholder = '…'; }
+      getOsrmDriveMinutes(state.startGeo.lat, state.startGeo.lon, city.lat, city.lon).then(function(mins){
+        if(mins !== null && minInp){
+          minInp.value = mins;
+          minInp.dispatchEvent(new Event('change'));
+        } else if(minInp){
+          minInp.placeholder = '—';
+        }
+      });
+    }
+    return;
+  }
+  // Get coords from selected option's dataset
+  var selOpt = selectEl.options[selectEl.selectedIndex];
+  var toLat = parseFloat(selOpt.dataset.lat);
+  var toLon = parseFloat(selOpt.dataset.lon);
+  if(toLat && toLon){
+    calcAndSetMinutes(type, toLat, toLon);
+  }
 }
 
 function updateStartTransfer(type, val){
@@ -1310,135 +1389,125 @@ async function lookupStartStation(geo){
   var lat = geo.lat, lon = geo.lon;
   var RADIUS = 100000; // 100 km
 
+  // Helper: haversine distance in km
   function haversine(lat1,lon1,lat2,lon2){
-    var R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+    var R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
     var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
     return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   }
 
+  // Helper: update tile with name + distance
   function setTile(stationElId, stations){
     var el = document.getElementById(stationElId);
     if(!el) return;
+    // stations = array of {name, dist} sorted ascending
+    el.innerHTML = '';
+    if(!stations || !stations.length){
+      var opt = document.createElement('option');
+      opt.value = ''; opt.textContent = '— Kein Ergebnis in 100 km —';
+      el.appendChild(opt);
+      return;
+    }
     var MAX = 30;
     var list = stations.slice(0, MAX);
     var total = stations.length;
-    el.innerHTML = '';
-    if(!list.length){
-      var opt=document.createElement('option');
-      opt.value='';
-      opt.textContent='— Kein Ergebnis in 100 km —';
-      el.appendChild(opt); return;
-    }
-    var ph=document.createElement('option');
-    ph.value='';
-    ph.textContent= total>1 ? '↕ '+total+(total>MAX?'+':'')+' Optionen — hier ändern' : '— Auswählen —';
-    el.appendChild(ph);
+    var placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = total > 1
+      ? '↕ ' + total + (total > MAX ? '+' : '') + ' Optionen — hier ändern'
+      : '— Auswählen —';
+    el.appendChild(placeholder);
     list.forEach(function(s){
-      var opt=document.createElement('option');
-      opt.value=s.name;
-      opt.dataset.lat=s.lat||'';
-      opt.dataset.lon=s.lon||'';
-      opt.textContent=s.name+' · '+s.dist.toFixed(1)+' km';
+      var opt = document.createElement('option');
+      opt.value = s.name;
+      opt.dataset.lat = s.lat || '';
+      opt.dataset.lon = s.lon || '';
+      opt.textContent = s.name + ' · ' + s.dist.toFixed(1) + ' km';
       el.appendChild(opt);
     });
-    if(list.length) el.value=list[0].name;
+    // Auto-select closest + store coords on element for OSRM
+    if(list.length){
+      el.value = list[0].name;
+      el.dataset.autoLat = list[0].lat || '';
+      el.dataset.autoLon = list[0].lon || '';
+    }
   }
 
   try{
-    var query='[out:json][timeout:20];('
-      +'node["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS+','+lat+','+lon+');'
-      +'way["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS+','+lat+','+lon+');'
-      +'node["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
-      +'way["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
-      +');out center;';
+    // Overpass query: nearest railway=station AND aeroway=aerodrome within 25km
+    // Bahnhöfe: railway=station, kein Tourismus/Museum/Miniatur
+    // Flughäfen: nur mit IATA-Code = Linienflugbetrieb
+    var query = '[out:json][timeout:20];('
+      + 'node["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'way["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'node["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'way["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
+      + ');out center;';
 
-    var resp=await fetch('https://overpass-api.de/api/interpreter',{
-      method:'POST', body:query, headers:{'Content-Type':'text/plain'}
+    var resp = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query,
+      headers: {'Content-Type': 'text/plain'}
     });
-    var data=await resp.json();
-    var elements=data.elements||[];
+    var data = await resp.json();
+    var elements = data.elements || [];
 
-    var stations=[], airports=[], seen={};
+    // Separate stations and airports, calculate distances
+    // Ways use 'center' for coordinates, nodes use lat/lon directly
+    var stations = [], airports = [];
+    var seen = {};
     elements.forEach(function(el){
-      var elLat=el.lat||(el.center&&el.center.lat);
-      var elLon=el.lon||(el.center&&el.center.lon);
-      if(!elLat||!elLon) return;
-      var name=(el.tags&&(el.tags.name||el.tags['name:de']))||'';
+      var elLat = el.lat || (el.center && el.center.lat);
+      var elLon = el.lon || (el.center && el.center.lon);
+      if(!elLat || !elLon) return;
+      var name = (el.tags && (el.tags.name || el.tags['name:de'])) || '';
       if(!name) return;
-      if(seen[name]) return;
-      seen[name]=true;
-      var dist=haversine(lat,lon,elLat,elLon);
-      if(el.tags.railway==='station'){
-        var stype=el.tags.station||'';
-        var usage=el.tags.usage||'';
-        if(stype==='subway'||stype==='light_rail'||stype==='monorail') return;
-        if(usage==='tourism'||usage==='military') return;
-        if(el.tags.tram==='yes'&&el.tags.train!=='yes') return;
-        stations.push({name:name,dist:dist,lat:elLat,lon:elLon});
-      } else if(el.tags.aeroway==='aerodrome'){
-        var iata=el.tags.iata||'';
-        var displayName=iata?name+' ('+iata+')':name;
-        if(seen[displayName]) return;
-        seen[displayName]=true;
-        airports.push({name:displayName,dist:dist,lat:elLat,lon:elLon});
+      if(seen[name]) return; // deduplicate by name
+      seen[name] = true;
+      var dist = haversine(lat, lon, elLat, elLon);
+      if(el.tags.railway === 'station'){
+        // Exclude subway, light_rail, monorail, miniature
+        var stype = el.tags.station || '';
+        var usage  = el.tags.usage  || '';
+        if(stype === 'subway' || stype === 'light_rail' || stype === 'monorail') return;
+        if(usage === 'tourism' || usage === 'military') return;
+        // Exclude tram-only stations
+        if(el.tags.tram === 'yes' && el.tags.train !== 'yes' && el.tags.subway !== 'yes') return;
+        stations.push({name:name, dist:dist, lat:elLat, lon:elLon});
+      } else if(el.tags.aeroway === 'aerodrome'){
+        // Overpass already filtered iata tag — only scheduled airports
+        // Show IATA code in name if available
+        var iata = el.tags.iata || '';
+        var displayName = iata ? name + ' (' + iata + ')' : name;
+        airports.push({name:displayName, dist:dist, lat:elLat, lon:elLon});
       }
     });
 
-    stations.sort(function(a,b){return a.dist-b.dist;});
-    airports.sort(function(a,b){return a.dist-b.dist;});
+    // Sort by distance, pick closest
+    stations.sort(function(a,b){ return a.dist-b.dist; });
+    airports.sort(function(a,b){ return a.dist-b.dist; });
 
+    // Populate dropdowns sorted by distance
     setTile('tt-bahn-station', stations);
     setTile('tt-flug-station', airports);
-
+    // Set default (closest) in startTransfer + calc OSRM drive time
     if(stations.length){
-      startTransfer.bahn.station=stations[0].name;
-      calcAndSetMinutes('bahn',stations[0].lat,stations[0].lon);
+      startTransfer.bahn.station = stations[0].name;
+      calcAndSetMinutes('bahn', stations[0].lat, stations[0].lon);
     }
     if(airports.length){
-      startTransfer.flug.station=airports[0].name;
-      calcAndSetMinutes('flug',airports[0].lat,airports[0].lon);
+      startTransfer.flug.station = airports[0].name;
+      calcAndSetMinutes('flug', airports[0].lat, airports[0].lon);
     }
 
   } catch(e){
-    console.warn('Overpass lookup failed:',e);
-    var city=geo.short.split(',')[0].trim();
-    var stEl=document.getElementById('tt-bahn-station');
-    if(stEl) stEl.innerHTML='<option value="">'+city+' Hbf</option>';
-    var apEl=document.getElementById('tt-flug-station');
-    if(apEl) apEl.innerHTML='<option value="">'+city+' Flughafen</option>';
-  }
-}
-
-
-// ── OSRM Routing: drive time from start to station ───────────────────────────
-async function getOsrmDriveMinutes(fromLat, fromLon, toLat, toLon){
-  try{
-    var url = 'https://router.project-osrm.org/route/v1/driving/'
-      + fromLon + ',' + fromLat + ';'
-      + toLon + ',' + toLat
-      + '?overview=false&steps=false';
-    var resp = await fetch(url);
-    var data = await resp.json();
-    if(data.code === 'Ok' && data.routes && data.routes[0]){
-      return Math.round(data.routes[0].duration / 60); // seconds → minutes
-    }
-  } catch(e){
-    console.warn('OSRM routing failed:', e);
-  }
-  return null;
-}
-
-async function calcAndSetMinutes(type, toLat, toLon){
-  if(!state.startGeo || !state.startGeo.lat || !toLat || !toLon) return;
-  var minInp = document.getElementById(type === 'bahn' ? 'tt-bahn-min' : 'tt-flug-min');
-  if(!minInp) return;
-  minInp.placeholder = '…';
-  var mins = await getOsrmDriveMinutes(state.startGeo.lat, state.startGeo.lon, toLat, toLon);
-  if(mins !== null){
-    minInp.value = mins;
-    minInp.dispatchEvent(new Event('change'));
-  } else {
-    minInp.placeholder = '—';
+    console.warn('Overpass lookup failed:', e);
+    // Fallback: show city name
+    var city = geo.short.split(',')[0].trim();
+    var stEl = document.getElementById('tt-bahn-station');
+    if(stEl) stEl.textContent = city + ' Hbf';
+    var apEl = document.getElementById('tt-flug-station');
+    if(apEl) apEl.textContent = city + ' Flughafen';
   }
 }
 
@@ -1491,18 +1560,57 @@ function updateFuhrparkDropdown(geo){
     opt.textContent = d.name + ' · ' + d.dist.toFixed(0) + ' km';
     sel.appendChild(opt);
   });
+  // Select nearest + calculate OSRM drive minutes
   if(dists.length){
     sel.value = dists[0].name;
     startTransfer.auto.name = dists[0].name;
-    var nearest = FUHRPARK_STAEDTE.filter(function(s){ return s.name===dists[0].name; })[0];
+    // Find lat/lon of nearest city for OSRM
+    var nearest = FUHRPARK_STAEDTE.filter(function(s){ return s.name === dists[0].name; })[0];
     if(nearest){
-      var minInp=document.getElementById('tt-auto-min');
-      if(minInp) minInp.placeholder='…';
-      getOsrmDriveMinutes(geo.lat,geo.lon,nearest.lat,nearest.lon).then(function(mins){
-        if(mins!==null&&minInp){ minInp.value=mins; minInp.dispatchEvent(new Event('change')); }
-        else if(minInp) minInp.placeholder='—';
+      var minInp = document.getElementById('tt-auto-min');
+      if(minInp){ minInp.placeholder = '…'; }
+      getOsrmDriveMinutes(geo.lat, geo.lon, nearest.lat, nearest.lon).then(function(mins){
+        if(mins !== null && minInp){
+          minInp.value = mins;
+          minInp.dispatchEvent(new Event('change'));
+        } else if(minInp){
+          minInp.placeholder = '—';
+        }
       });
     }
+  }
+}
+
+
+// ── OSRM Routing: drive time from start to station ───────────────────────────
+async function getOsrmDriveMinutes(fromLat, fromLon, toLat, toLon){
+  try{
+    var url = 'https://router.project-osrm.org/route/v1/driving/'
+      + fromLon + ',' + fromLat + ';'
+      + toLon + ',' + toLat
+      + '?overview=false&steps=false';
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if(data.code === 'Ok' && data.routes && data.routes[0]){
+      return Math.round(data.routes[0].duration / 60); // seconds → minutes
+    }
+  } catch(e){
+    console.warn('OSRM routing failed:', e);
+  }
+  return null;
+}
+
+async function calcAndSetMinutes(type, toLat, toLon){
+  if(!state.startGeo || !state.startGeo.lat || !toLat || !toLon) return;
+  var minInp = document.getElementById(type === 'bahn' ? 'tt-bahn-min' : 'tt-flug-min');
+  if(!minInp) return;
+  minInp.placeholder = '…';
+  var mins = await getOsrmDriveMinutes(state.startGeo.lat, state.startGeo.lon, toLat, toLon);
+  if(mins !== null){
+    minInp.value = mins;
+    minInp.dispatchEvent(new Event('change'));
+  } else {
+    minInp.placeholder = '—';
   }
 }
 
@@ -1510,8 +1618,23 @@ function updateFuhrparkDropdown(geo){
 const inpStart=document.getElementById("inp-start");
 const inpZiel=document.getElementById("inp-ziel");
 inpStart.addEventListener("input",()=>{state.startGeo=null;inpStart.classList.remove("invalid");nominatim(inpStart.value,"drop-start",h=>{state.startText=h.short;state.startGeo=h;inpStart.value=h.short;updateAutoKmHint();lookupStartStation(h);updateFuhrparkDropdown(h);});});
-inpZiel.addEventListener("input",()=>{state.zielGeo=null;inpZiel.classList.remove("invalid");nominatim(inpZiel.value,"drop-ziel",h=>{state.zielText=h.short;state.zielGeo=h;inpZiel.value=h.short;updateAutoKmHint();rebuildDestSelect();
-applyTransportVisibility();document.getElementById('dest-card').style.display='block';});});
+inpZiel.addEventListener("input",()=>{state.zielGeo=null;inpZiel.classList.remove("invalid");nominatim(inpZiel.value,"drop-ziel",h=>{
+  state.zielText=h.short;state.zielGeo=h;inpZiel.value=h.short;
+  updateAutoKmHint(); state.zielText=h.short;
+  // Auto-fill station name fields with city name as search seed
+  var cityName=h.short.split(',')[0].trim();
+  var bahnInp=document.getElementById('dest-manual-bahn-name');
+  var flugInp=document.getElementById('dest-manual-flug-name');
+  // Only pre-fill if form is open and fields are empty
+  var form=document.getElementById('new-dest-form');
+  if(form&&form.classList.contains('open')){
+    if(bahnInp&&!bahnInp.value){ bahnInp.value=cityName+' Hbf'; }
+    if(flugInp&&!flugInp.value){ flugInp.value=cityName+' Flughafen'; }
+    // Also pre-fill dest name if empty
+    var nameInp=document.getElementById('dest-manual-name');
+    if(nameInp&&!nameInp.value) nameInp.value=cityName;
+  }
+});});
 
 // ── Swap button ───────────────────────────────────────────────────────────────
 document.getElementById("swap-btn").addEventListener("click",()=>{
@@ -1656,6 +1779,7 @@ function clearInvalid(){
   document.querySelectorAll('.req-field.invalid').forEach(function(el){
     el.classList.remove('invalid');
   });
+  var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
 }
 function isBlockComplete(prefix){
   // Returns true if a transport block has all required fields filled
@@ -1723,7 +1847,7 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   clearInvalid();
   var missingS1=[];
   if(!state.startText) missingS1.push('inp-start');
-  if(!state.zielText)  missingS1.push('inp-ziel');
+  if(!state.zielText){ missingS1.push('inp-ziel'); var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='rgba(248,113,113,0.8)'; } else { var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor=''; }
   if(!state.hD)        missingS1.push('hD');
   if(!state.hT)        missingS1.push('hT');
   if(!state.rD)        missingS1.push('rD');
@@ -2391,10 +2515,12 @@ document.getElementById("btn-new-search").addEventListener("click",()=>{
   ['tt-bahn-min','tt-flug-min','tt-auto-min'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   var an=document.getElementById('tt-auto-name');if(an)an.value='';
   var cddTxt=document.getElementById('cdd-selected-text');
-  if(cddTxt){cddTxt.textContent='— Ziel aus Datenbank wählen —';cddTxt.style.color='rgba(110,231,183,0.5)';}
-  document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){o.classList.remove('selected');});
-  var manSec=document.getElementById('manual-ziel-section');if(manSec)manSec.style.display='none';
-  var appEl=document.getElementById('dest-applied');if(appEl)appEl.style.display='none';
+  if(cddTxt){ cddTxt.className='cdd-placeholder'; cddTxt.textContent='— Ziel aus Datenbank wählen —'; }
+  document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
+  var manSec=document.getElementById('manual-ziel-section'); if(manSec) manSec.style.display='none';
+  var appEl=document.getElementById('dest-applied'); if(appEl) appEl.style.display='none';
+  var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
+  closeNewDestForm();
   applyDestTransferTimes(null);
   document.querySelectorAll("[data-work]").forEach(function(t){ t.classList.toggle("active", t.dataset.work==="no"); });
   var wh = document.getElementById("work-travel-hint"); if(wh) wh.style.display="none";
@@ -2880,9 +3006,6 @@ function setCostView(view){
 }
 
 // ── Transport selector ───────────────────────────────────────────────────────
-// State: which transports are selected
-state.transports = {bahn: true, flug: true, auto: false};
-
 function toggleTransportTile(type){
   if(type === 'auto'){
     if(!state.hasLicence){
@@ -2968,21 +3091,23 @@ function loadDestinations(){
 }
 
 function saveNewDest(){
-  var name  = document.getElementById('dest-manual-name').value.trim();
-  var bahn  = parseInt(document.getElementById('dest-manual-bahn').value)||0;
-  var flug  = parseInt(document.getElementById('dest-manual-flug').value)||0;
+  var name     = document.getElementById('dest-manual-name').value.trim();
+  var bahnSt   = document.getElementById('dest-manual-bahn-name') ? document.getElementById('dest-manual-bahn-name').value.trim() : name+' Hbf';
+  var flugSt   = document.getElementById('dest-manual-flug-name') ? document.getElementById('dest-manual-flug-name').value.trim() : name+' Flughafen';
+  var bahn     = parseInt(document.getElementById('dest-manual-bahn').value)||0;
+  var flug     = parseInt(document.getElementById('dest-manual-flug').value)||0;
   if(!name){alert('Bitte einen Namen für das Ziel eingeben.');return;}
   if(!bahn && !flug){alert('Bitte mindestens eine Transferzeit eingeben.');return;}
   var saved = [];
   try{ saved = JSON.parse(localStorage.getItem('rkt_destinations')||'[]'); }catch(e){}
-  // Check for duplicates
   var existing = saved.findIndex(function(d){return d.name.toLowerCase()===name.toLowerCase();});
-  var newEntry = {name:name, bahnStation:name+' Hbf', bahnMinutes:bahn, flugStation:name+' Flughafen', flugMinutes:flug, custom:true};
+  var newEntry = {name:name, bahnStation:bahnSt||name+' Hbf', bahnMinutes:bahn, flugStation:flugSt||name+' Flughafen', flugMinutes:flug, custom:true};
   if(existing>=0) saved[existing]=newEntry; else saved.push(newEntry);
   localStorage.setItem('rkt_destinations', JSON.stringify(saved));
+  closeNewDestForm();
   rebuildDestSelect();
-  var allDests = loadDestinations();
-  var newIdx = allDests.findIndex(function(d){ return d.name===name; });
+  var allDests=loadDestinations();
+  var newIdx=allDests.findIndex(function(d){ return d.name===name; });
   if(newIdx>=0){ selectCddItem(newIdx); }
 }
 
@@ -3000,71 +3125,85 @@ function rebuildDestSelect(){
     var right = document.createElement('span');
     right.style.cssText = 'font-size:11px;color:rgba(110,231,183,0.7)';
     right.textContent = '🚆 ' + d.bahnMinutes + 'min  ✈️ ' + d.flugMinutes + 'min';
-    div.appendChild(left);
-    div.appendChild(right);
-    div.onclick = (function(idx){ return function(){ selectCddItem(idx); }; })(i);
+    div.appendChild(left); div.appendChild(right);
+    div.onclick = (function(ii){ return function(){ selectCddItem(ii); }; })(i);
     container.appendChild(div);
   });
+  // Always add "Neues Ziel hinzufügen" at bottom
+  var addDiv = document.createElement('div');
+  addDiv.className = 'cdd-add-option';
+  addDiv.innerHTML = '<span>➕</span><span>Neues Ziel hinzufügen</span>';
+  addDiv.onclick = function(){ openNewDestForm(); };
+  container.appendChild(addDiv);
 }
 
 function filterCdd(q){
   document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){
-    var name = o.querySelector('span').textContent.toLowerCase();
-    o.style.display = name.indexOf(q.toLowerCase()) >= 0 ? '' : 'none';
+    o.style.display = o.querySelector('span').textContent.toLowerCase().indexOf(q.toLowerCase())>=0 ? '' : 'none';
   });
+  // Always keep "Neues Ziel" visible
+  var addOpt = document.querySelector('#cdd-options .cdd-add-option');
+  if(addOpt) addOpt.style.display = '';
 }
 
 function toggleCdd(){
-  var trigger = document.getElementById('cdd-trigger');
-  var menu = document.getElementById('cdd-menu');
+  var trigger=document.getElementById('cdd-trigger');
+  var menu=document.getElementById('cdd-menu');
   if(menu.classList.contains('open')){ closeCdd(); return; }
-  trigger.classList.add('open');
-  menu.classList.add('open');
+  trigger.classList.add('open'); menu.classList.add('open');
   setTimeout(function(){ var s=document.getElementById('cdd-search'); if(s) s.focus(); }, 50);
 }
 
 function closeCdd(){
-  var t = document.getElementById('cdd-trigger'); if(t) t.classList.remove('open');
-  var m = document.getElementById('cdd-menu'); if(m) m.classList.remove('open');
+  var t=document.getElementById('cdd-trigger'); if(t) t.classList.remove('open');
+  var m=document.getElementById('cdd-menu'); if(m) m.classList.remove('open');
 }
 
 function selectCddItem(idx){
-  var dest = loadDestinations()[idx];
+  var dest=loadDestinations()[idx];
   if(!dest) return;
-  var txt = document.getElementById('cdd-selected-text');
-  if(txt){ txt.style.color='#d1fae5'; txt.textContent=dest.name+'  🚆 '+dest.bahnMinutes+'min  ✈️ '+dest.flugMinutes+'min'; }
+  var txt=document.getElementById('cdd-selected-text');
+  if(txt){ txt.className=''; txt.style.color=''; txt.textContent=dest.name+'  🚆 '+dest.bahnMinutes+'min  ✈️ '+dest.flugMinutes+'min'; }
   document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
-  var sel = document.querySelector('#cdd-options .cdd-option[data-idx="'+idx+'"]');
+  var sel=document.querySelector('#cdd-options .cdd-option[data-idx="'+idx+'"]');
   if(sel) sel.classList.add('selected');
-  state.zielText = dest.name;
-  state.zielGeo = null;
+  state.zielText=dest.name; state.zielGeo=null;
+  var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
   applyDestTransferTimes(dest);
-  var a = document.getElementById('dest-applied'); if(a) a.style.display='block';
-  var ms = document.getElementById('manual-ziel-section'); if(ms) ms.style.display='none';
-  var bm = document.getElementById('btn-manual-ziel');
+  var a=document.getElementById('dest-applied'); if(a) a.style.display='block';
+  var ms=document.getElementById('manual-ziel-section'); if(ms) ms.style.display='none';
+  var bm=document.getElementById('btn-manual-ziel');
   if(bm) bm.textContent='✏️ Anderes Ziel (Freitext / Neu speichern)';
   closeCdd();
 }
 
-function toggleManualZiel(){
-  var sec = document.getElementById('manual-ziel-section');
-  var isOpen = sec.style.display !== 'none';
-  sec.style.display = isOpen ? 'none' : 'block';
-  var btn = document.getElementById('btn-manual-ziel');
-  if(btn) btn.textContent = isOpen ? '✏️ Anderes Ziel (Freitext / Neu speichern)' : '✖ Schließen';
-  if(!isOpen){
-    var txt = document.getElementById('cdd-selected-text');
-    if(txt){ txt.textContent='— Ziel aus Datenbank wählen —'; txt.style.color='rgba(110,231,183,0.5)'; }
-    applyDestTransferTimes(null);
-    var a = document.getElementById('dest-applied'); if(a) a.style.display='none';
-    document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
-    state.zielText=''; state.zielGeo=null;
-  }
+function openNewDestForm(){
+  closeCdd();
+  var form=document.getElementById('new-dest-form');
+  if(form){ form.classList.add('open'); }
+  // Clear fields
+  ['drop-bahn-station','drop-flug-station'].forEach(function(id){
+    var d=document.getElementById(id); if(d){ d.classList.remove('open'); d.innerHTML=''; }
+  });
+  ['dest-manual-name','dest-manual-bahn-name','dest-manual-flug-name','inp-ziel'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  ['dest-manual-bahn','dest-manual-flug'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  setTimeout(function(){ var el=document.getElementById('dest-manual-name'); if(el) el.focus(); },50);
 }
 
-document.addEventListener('click', function(e){
-  var wrap = document.getElementById('cdd-wrap');
-  if(wrap && !wrap.contains(e.target)) closeCdd();
+function closeNewDestForm(){
+  var form=document.getElementById('new-dest-form');
+  if(form) form.classList.remove('open');
+}
+
+function toggleManualZiel(){ openNewDestForm(); }
+
+document.addEventListener('click',function(e){
+  var wrap=document.getElementById('cdd-wrap');
+  if(wrap&&!wrap.contains(e.target)) closeCdd();
 });
 
 
@@ -3127,7 +3266,7 @@ var origZielSelect = null; // patched below after inpZiel listener setup
 updateHotelUI();
 updateAutoOverlay();
 rebuildDestSelect();
-setTimeout(function(){ applyTransportVisibility(); }, 0);
+applyTransportVisibility();
 </script>
 
 <div class="ee-toast" id="ee-toast"></div>
