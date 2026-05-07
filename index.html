@@ -1161,6 +1161,7 @@ function fillWorkSel(selId,maxMin){
 function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
+  if(id === "s-prices") applyTransportVisibility();
   const idx={"s-form":0,"s-prices":1,"s-overview":2,"s-results":3}[id]||0;
   document.querySelectorAll(".sdot").forEach((d,i)=>{
     d.classList.toggle("done",i<idx);
@@ -3001,15 +3002,20 @@ function updateTransportTiles(){
 
 function applyTransportVisibility(){
   // Show/hide blocks on page 2 based on selected transports
-  var map = {
-    bahn: document.querySelector('.tblock.bahn'),
-    flug: document.querySelector('.tblock.flug'),
-    auto: document.querySelector('.tblock.auto')
-  };
-  Object.keys(map).forEach(function(type){
-    var el = map[type];
-    if(el) el.style.display = state.transports[type] ? '' : 'none';
+  var types = ['bahn','flug','auto'];
+  types.forEach(function(type){
+    var el = document.querySelector('.tblock.'+type);
+    if(!el) return;
+    var show = state.transports[type];
+    el.style.display = show ? '' : 'none';
+    el.style.visibility = show ? '' : 'hidden'; // belt-and-suspenders
   });
+  // Force at least bahn visible if nothing selected (fallback)
+  var anyVisible = types.some(function(t){ return state.transports[t]; });
+  if(!anyVisible){
+    var bahnEl = document.querySelector('.tblock.bahn');
+    if(bahnEl){ bahnEl.style.display=''; bahnEl.style.visibility=''; }
+  }
 }
 
 // ── Easter Egg ───────────────────────────────────────────────────────────────
@@ -3234,7 +3240,7 @@ var origZielSelect = null; // patched below after inpZiel listener setup
 updateHotelUI();
 updateAutoOverlay();
 rebuildDestSelect();
-applyTransportVisibility();
+setTimeout(function(){ applyTransportVisibility(); }, 0);
 </script>
 
 <div class="ee-toast" id="ee-toast"></div>
