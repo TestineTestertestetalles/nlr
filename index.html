@@ -1489,6 +1489,13 @@ async function lookupStartStation(geo){
 }
 
 
+// ── Shared haversine (global scope) ─────────────────────────────────────────
+function haversineGlobal(lat1,lon1,lat2,lon2){
+  var R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
 // ── Fuhrpark: find nearest Landeshauptstadt ───────────────────────────────────
 var FUHRPARK_STAEDTE = [
   {name:'Berlin',       lat:52.5200, lon:13.4050},
@@ -1534,11 +1541,6 @@ function updateFuhrparkDropdown(geo){
   if(dists.length){ sel.value = dists[0].name; startTransfer.auto.name = dists[0].name; }
 }
 
-function haversineGlobal(lat1,lon1,lat2,lon2){
-  var R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
-  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
 
 // ── OSRM Routing: drive time from start to station ───────────────────────────
 async function getOsrmDriveMinutes(fromLat, fromLon, toLat, toLon){
@@ -2447,6 +2449,7 @@ document.getElementById("btn-new-search").addEventListener("click",()=>{
   });
   state.transports={bahn:true,flug:true,auto:false};
   updateTransportTiles();
+  applyTransportVisibility();
   state.startText="";state.zielText="";state.startGeo=null;state.zielGeo=null;
   state.hD="";state.hT="10:00";state.rD="";state.rT="17:00";
   state.persons=1;state.hasLicence=false;state.priority="balanced";state.hotelPrice=100;
@@ -3231,6 +3234,7 @@ var origZielSelect = null; // patched below after inpZiel listener setup
 updateHotelUI();
 updateAutoOverlay();
 rebuildDestSelect();
+applyTransportVisibility();
 </script>
 
 <div class="ee-toast" id="ee-toast"></div>
