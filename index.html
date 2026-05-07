@@ -1308,41 +1308,82 @@ function syncStartTransferToPage2(type){
 async function lookupStartStation(geo){
   if(!geo || !geo.lat) return;
   var lat = geo.lat, lon = geo.lon;
+  var RADIUS = 25000; // 25 km
 
-  // Parallel: search nearest station + nearest airport
+  // Helper: haversine distance in km
+  function haversine(lat1,lon1,lat2,lon2){
+    var R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+
+  // Helper: update tile with name + distance
+  function setTile(stationElId, stationName, distKm){
+    var el = document.getElementById(stationElId);
+    if(!el) return;
+    el.textContent = distKm !== null
+      ? stationName + ' · ' + distKm.toFixed(1) + ' km'
+      : stationName;
+  }
+
   try{
-    // Nearest railway station via Overpass (public transport)
-    var bahnUrl = 'https://nominatim.openstreetmap.org/search?q=Bahnhof+'
-      + encodeURIComponent(geo.short.split(',')[0])
-      + '&format=json&limit=5&countrycodes=de,at,ch&addressdetails=1';
-    var flugUrl = 'https://nominatim.openstreetmap.org/search?q=Flughafen+'
-      + encodeURIComponent(geo.short.split(',')[0])
-      + '&format=json&limit=5&countrycodes=de,at,ch&addressdetails=1';
+    // Overpass query: nearest railway=station AND aeroway=aerodrome within 25km
+    var query = '[out:json][timeout:10];('
+      + 'node["railway"="station"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'node["railway"="halt"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'node["aeroway"="aerodrome"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'node["aeroway"="terminal"](around:'+RADIUS+','+lat+','+lon+');'
+      + ');out body;';
 
-    var [bahnData, flugData] = await Promise.all([
-      fetch(bahnUrl, {headers:{'Accept-Language':'de'}}).then(r=>r.json()),
-      fetch(flugUrl, {headers:{'Accept-Language':'de'}}).then(r=>r.json())
-    ]);
+    var resp = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query,
+      headers: {'Content-Type': 'text/plain'}
+    });
+    var data = await resp.json();
+    var elements = data.elements || [];
 
-    // Pick best bahn result
-    if(bahnData && bahnData.length){
-      var b = bahnData[0];
-      var bName = b.display_name.split(',')[0].trim();
-      startTransfer.bahn.station = bName;
-      var stEl = document.getElementById('tt-bahn-station');
-      if(stEl) stEl.textContent = bName;
+    // Separate stations and airports, calculate distances
+    var stations = [], airports = [];
+    elements.forEach(function(el){
+      var dist = haversine(lat, lon, el.lat, el.lon);
+      var name = (el.tags && (el.tags.name || el.tags['name:de'])) || '';
+      if(!name) return;
+      if(el.tags.railway === 'station' || el.tags.railway === 'halt'){
+        stations.push({name:name, dist:dist});
+      } else if(el.tags.aeroway === 'aerodrome' || el.tags.aeroway === 'terminal'){
+        airports.push({name:name, dist:dist});
+      }
+    });
+
+    // Sort by distance, pick closest
+    stations.sort(function(a,b){ return a.dist-b.dist; });
+    airports.sort(function(a,b){ return a.dist-b.dist; });
+
+    if(stations.length){
+      var st = stations[0];
+      startTransfer.bahn.station = st.name;
+      setTile('tt-bahn-station', st.name, st.dist);
+    } else {
+      setTile('tt-bahn-station', 'Kein Bahnhof in 25 km', null);
     }
 
-    // Pick best flug result
-    if(flugData && flugData.length){
-      var f = flugData[0];
-      var fName = f.display_name.split(',')[0].trim();
-      startTransfer.flug.station = fName;
-      var stElF = document.getElementById('tt-flug-station');
-      if(stElF) stElF.textContent = fName;
+    if(airports.length){
+      var ap = airports[0];
+      startTransfer.flug.station = ap.name;
+      setTile('tt-flug-station', ap.name, ap.dist);
+    } else {
+      setTile('tt-flug-station', 'Kein Flughafen in 25 km', null);
     }
+
   } catch(e){
-    console.warn('Station lookup failed:', e);
+    console.warn('Overpass lookup failed:', e);
+    // Fallback: show city name
+    var city = geo.short.split(',')[0].trim();
+    var stEl = document.getElementById('tt-bahn-station');
+    if(stEl) stEl.textContent = city + ' Hbf';
+    var apEl = document.getElementById('tt-flug-station');
+    if(apEl) apEl.textContent = city + ' Flughafen';
   }
 }
 
