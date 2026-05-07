@@ -1328,13 +1328,13 @@ async function lookupStartStation(geo){
 
   try{
     // Overpass query: nearest railway=station AND aeroway=aerodrome within 25km
-    // Only stations with regional/long-distance rail (RE/S-Bahn/IC/ICE)
-    // Exclude subway, light_rail, tram stops
+    // Bahnhöfe: train=yes (RE/S-Bahn/IC/ICE), kein Tourismus/Museum
+    // Flughäfen: nur mit IATA-Code = Linienflugbetrieb
     var query = '[out:json][timeout:15];('
-      + 'node["railway"="station"]["station"!="subway"]["station"!="light_rail"]["station"!="monorail"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'way["railway"="station"]["station"!="subway"]["station"!="light_rail"]["station"!="monorail"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'node["aeroway"="aerodrome"]["aerodrome"!="private"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'way["aeroway"="aerodrome"]["aerodrome"!="private"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'node["railway"="station"]["train"="yes"]["usage"!="tourism"]["usage"!="military"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'way["railway"="station"]["train"="yes"]["usage"!="tourism"]["usage"!="military"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'node["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'way["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
       + ');out center;';
 
     var resp = await fetch('https://overpass-api.de/api/interpreter', {
@@ -1355,18 +1355,18 @@ async function lookupStartStation(geo){
       if(!elLat || !elLon) return;
       var name = (el.tags && (el.tags.name || el.tags['name:de'])) || '';
       if(!name) return;
-      if(seen[name]) return; // deduplicate
+      if(seen[name]) return; // deduplicate by name
       seen[name] = true;
       var dist = haversine(lat, lon, elLat, elLon);
       if(el.tags.railway === 'station'){
-        // Extra check: must have trains (not just tram/subway)
-        var stype = el.tags.station || '';
-        if(stype === 'subway' || stype === 'light_rail' || stype === 'monorail') return;
+        // Overpass already filtered train=yes + no tourism — safe to add
         stations.push({name:name, dist:dist});
       } else if(el.tags.aeroway === 'aerodrome'){
-        var atype = el.tags.aerodrome || '';
-        if(atype === 'private' || atype === 'military') return;
-        airports.push({name:name, dist:dist});
+        // Overpass already filtered iata tag — only scheduled airports
+        // Show IATA code in name if available
+        var iata = el.tags.iata || '';
+        var displayName = iata ? name + ' (' + iata + ')' : name;
+        airports.push({name:displayName, dist:dist});
       }
     });
 
