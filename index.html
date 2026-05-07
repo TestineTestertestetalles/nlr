@@ -429,7 +429,7 @@ select.invalid ~ .field-warn{display:block;}
      SCREEN 1 – EINGABE
 ════════════════════════════════════════════ -->
 <div class="screen active" id="s-form">
-  <div class="version-badge">v 07.05.2026 21:23</div>
+  <div class="version-badge">v 07.05.2026 21:30</div>
 
   <!-- Route -->
   <div class="card">
@@ -2892,10 +2892,12 @@ function showDestCard(){
 var origZielSelect = null; // patched below after inpZiel listener setup
 
 // ── Init ────────────────────────────────────────────────────────────────────
-updateHotelUI();
-updateAutoOverlay();
-rebuildDestSelect();
-applyTransportVisibility();
+document.addEventListener('DOMContentLoaded', function(){
+  updateHotelUI();
+  updateAutoOverlay();
+  rebuildDestSelect();
+  applyTransportVisibility();
+});
 </script>
 <div class="ee-toast" id="ee-toast"></div>
 </body>
