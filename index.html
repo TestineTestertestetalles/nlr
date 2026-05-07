@@ -331,6 +331,30 @@ input.req-field:focus{
 .dest-save-btn{width:100%;margin-top:8px;padding:8px;background:rgba(167,139,250,0.12);border:1px dashed rgba(167,139,250,0.4);border-radius:6px;font-size:12px;color:rgba(196,181,253,0.9);cursor:pointer;font-family:inherit;}
 .dest-save-btn:hover{background:rgba(167,139,250,0.2);}
 .dest-applied{font-size:11px;color:rgba(110,231,183,0.8);margin-top:6px;display:none;}
+/* ── Custom destination dropdown ── */
+.cdd-wrap{position:relative;width:100%;margin-bottom:6px;}
+.cdd-trigger{width:100%;border:1.5px solid rgba(251,191,36,0.6)!important;
+  background:rgba(251,191,36,0.09);border-radius:6px;
+  padding:9px 36px 9px 12px;font-size:13px;color:var(--text);font-family:inherit;
+  cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;
+  user-select:none;}
+.cdd-trigger:hover{border-color:rgba(251,191,36,0.9)!important;}
+.cdd-trigger .cdd-placeholder{color:rgba(241,245,249,0.38);}
+.cdd-trigger .cdd-arrow{font-size:10px;color:var(--gold);flex-shrink:0;transition:transform 0.2s;}
+.cdd-trigger.open .cdd-arrow{transform:rotate(180deg);}
+.cdd-menu{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:200;
+  background:#0a1a0e;border:1.5px solid #34d399;border-radius:6px;
+  max-height:220px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+.cdd-menu.open{display:block;}
+.cdd-option{padding:9px 12px;font-size:13px;color:#d1fae5;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(52,211,153,0.08);}
+.cdd-option:last-child{border-bottom:none;}
+.cdd-option:hover,.cdd-option.selected{background:rgba(52,211,153,0.12);color:#6ee7b7;}
+.cdd-search{width:100%;background:#0a1a0e;border:none;
+  border-bottom:1px solid rgba(52,211,153,0.2);
+  padding:8px 12px;font-size:13px;color:#d1fae5;font-family:inherit;outline:none;}
+.cdd-search::placeholder{color:rgba(110,231,183,0.4);}
 </style>
 </head>
 <body>
@@ -368,7 +392,7 @@ input.req-field:focus{
         <label class="flbl">Startort <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:0.7">(nur Stadt)</span></label>
         <div class="acwrap">
           <div class="ac-inp-wrap">
-            <input id="inp-start" type="text" class="req-field" placeholder="z. B. Berlin" autocomplete="off">
+            <input id="inp-start" type="text" class="req-field" placeholder="z. B. Bremen" autocomplete="off">
             <span class="ac-icon">📍</span>
           </div>
           <div class="drop" id="drop-start"></div>
@@ -380,58 +404,57 @@ input.req-field:focus{
         <div class="divl"></div>
       </div>
       <div>
-        <label class="flbl">Zielort <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:0.7">(nur Stadt)</span></label>
-        <div class="acwrap">
-          <div class="ac-inp-wrap">
-            <input id="inp-ziel" type="text" class="req-field" placeholder="z. B. Stuttgart" autocomplete="off">
-            <span class="ac-icon">🎯</span>
-          </div>
-          <div class="drop" id="drop-ziel"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+        <label class="flbl">Zielort</label>
 
-  <!-- Destination database card -->
-  <div class="dest-card" id="dest-card" style="display:none">
-    <div class="ctitle" style="margin-bottom:10px">
-      <span class="cdot" style="background:var(--blue)"></span>📍 Bekanntes Ziel auswählen
-    </div>
-    <select class="dest-select" id="dest-select" onchange="onDestSelect(this.value)">
-      <option value="">— Bitte wählen —</option>
-    </select>
-    <div id="dest-times-display" style="display:none">
-      <div class="dest-times">
-        <div class="dest-time-row">
-          <span>🚆 Bahnhof → Ziel</span>
-          <span class="dest-time-val" id="dest-bahn-te-val">—</span>
-        </div>
-        <div class="dest-time-row">
-          <span>✈️ Flughafen → Ziel</span>
-          <span class="dest-time-val" id="dest-flug-te-val">—</span>
-        </div>
+    <!-- Custom destination dropdown (primary) -->
+    <div class="cdd-wrap" id="cdd-wrap">
+      <div class="cdd-trigger" id="cdd-trigger" onclick="toggleCdd()">
+        <span id="cdd-selected-text" class="cdd-placeholder">— Ziel aus Datenbank wählen —</span>
+        <span class="cdd-arrow">▼</span>
       </div>
-      <div class="dest-applied" id="dest-applied">✓ Transferzeiten werden auf Seite 2 automatisch eingetragen.</div>
-    </div>
-    <div id="dest-manual" class="dest-manual">
-      <div style="font-size:12px;font-weight:600;color:rgba(196,181,253,0.9);margin-bottom:4px">Transferzeiten manuell eingeben:</div>
-      <div class="dest-manual-grid">
-        <div>
-          <label class="flbl" style="color:rgba(148,163,184,0.8)">🚆 Bahnhof → Ziel (Min)</label>
-          <input class="inpsm" type="number" id="dest-manual-bahn" min="0" step="1" placeholder="z. B. 20">
-        </div>
-        <div>
-          <label class="flbl" style="color:rgba(148,163,184,0.8)">✈️ Flughafen → Ziel (Min)</label>
-          <input class="inpsm" type="number" id="dest-manual-flug" min="0" step="1" placeholder="z. B. 35">
-        </div>
+      <div class="cdd-menu" id="cdd-menu">
+        <input class="cdd-search" id="cdd-search" placeholder="🔍 Suchen..." oninput="filterCdd(this.value)" onclick="event.stopPropagation()">
+        <div id="cdd-options"></div>
       </div>
-      <div style="margin-top:8px">
-        <label class="flbl" style="color:rgba(148,163,184,0.8)">Name für dieses Ziel (zum Speichern)</label>
-        <input class="inpsm" type="text" id="dest-manual-name" placeholder="z. B. Stuttgart Zentrum" style="width:100%;margin-top:4px">
-      </div>
-      <button class="dest-save-btn" onclick="saveNewDest()">💾 Als neues Ziel speichern</button>
     </div>
-  </div>
+
+    <!-- Anderes Ziel toggle -->
+    <div style="margin-top:6px">
+      <button onclick="toggleManualZiel()" id="btn-manual-ziel"
+        style="background:none;border:none;font-size:12px;color:rgba(148,163,184,0.8);cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;">
+        ✏️ Anderes Ziel (Freitext / Neu speichern)
+      </button>
+    </div>
+
+    <!-- Manual ziel section -->
+    <div id="manual-ziel-section" style="display:none;margin-top:8px">
+      <div class="acwrap">
+        <div class="ac-inp-wrap">
+          <input id="inp-ziel" type="text" class="req-field" placeholder="z. B. Stuttgart" autocomplete="off">
+          <span class="ac-icon">🎯</span>
+        </div>
+        <div class="drop" id="drop-ziel"></div>
+      </div>
+      <div class="dest-manual" style="margin-top:8px">
+        <div style="font-size:12px;font-weight:600;color:rgba(196,181,253,0.9);margin-bottom:4px">Transferzeiten + Als Ziel speichern:</div>
+        <div class="dest-manual-grid">
+          <div>
+            <label class="flbl" style="color:rgba(148,163,184,0.8)">🚆 Bahnhof → Ziel (Min)</label>
+            <input class="inpsm" type="number" id="dest-manual-bahn" min="0" step="1" placeholder="z. B. 20">
+          </div>
+          <div>
+            <label class="flbl" style="color:rgba(148,163,184,0.8)">✈️ Flughafen → Ziel (Min)</label>
+            <input class="inpsm" type="number" id="dest-manual-flug" min="0" step="1" placeholder="z. B. 35">
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <label class="flbl" style="color:rgba(148,163,184,0.8)">Name für dieses Ziel</label>
+          <input class="inpsm" type="text" id="dest-manual-name" placeholder="z. B. Stuttgart Zentrum" style="width:100%;margin-top:4px">
+        </div>
+        <button class="dest-save-btn" onclick="saveNewDest()">💾 Als neues Ziel speichern</button>
+      </div>
+    </div>
+    <div class="dest-applied" id="dest-applied" style="margin-top:6px;display:none">✓ Transferzeiten werden auf Seite 2 automatisch eingetragen.</div>
 
   <!-- Hinreise -->
   <div class="card">
@@ -1069,7 +1092,7 @@ document.addEventListener("click",e=>{
 const inpStart=document.getElementById("inp-start");
 const inpZiel=document.getElementById("inp-ziel");
 inpStart.addEventListener("input",()=>{state.startGeo=null;inpStart.classList.remove("invalid");nominatim(inpStart.value,"drop-start",h=>{state.startText=h.short;state.startGeo=h;inpStart.value=h.short;updateAutoKmHint();});});
-inpZiel.addEventListener("input",()=>{state.zielGeo=null;inpZiel.classList.remove("invalid");document.getElementById('dest-card').style.display='none';nominatim(inpZiel.value,"drop-ziel",h=>{state.zielText=h.short;state.zielGeo=h;inpZiel.value=h.short;updateAutoKmHint();rebuildDestSelect();document.getElementById('dest-card').style.display='block';});});
+inpZiel.addEventListener("input",()=>{state.zielGeo=null;inpZiel.classList.remove("invalid");nominatim(inpZiel.value,"drop-ziel",h=>{state.zielText=h.short;state.zielGeo=h;inpZiel.value=h.short;updateAutoKmHint();state.zielText=h.short;});});
 
 // ── Swap button ───────────────────────────────────────────────────────────────
 document.getElementById("swap-btn").addEventListener("click",()=>{
@@ -1214,6 +1237,7 @@ function clearInvalid(){
   document.querySelectorAll('.req-field.invalid').forEach(function(el){
     el.classList.remove('invalid');
   });
+  var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
 }
 function isBlockComplete(prefix){
   // Returns true if a transport block has all required fields filled
@@ -1276,7 +1300,7 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   clearInvalid();
   var missingS1=[];
   if(!state.startText) missingS1.push('inp-start');
-  if(!state.zielText)  missingS1.push('inp-ziel');
+  if(!state.zielText){ missingS1.push('inp-ziel'); var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='rgba(248,113,113,0.8)'; } else { var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor=''; }
   if(!state.hD)        missingS1.push('hD');
   if(!state.hT)        missingS1.push('hT');
   if(!state.rD)        missingS1.push('rD');
@@ -1922,7 +1946,12 @@ document.getElementById("btn-new-search").addEventListener("click",()=>{
     var el=document.getElementById(id); if(el) delete el.dataset.userEdited;
   });
   inpStart.value="";inpZiel.value="";
-  document.getElementById('dest-card').style.display='none';
+  var cddTxt=document.getElementById('cdd-selected-text');
+  if(cddTxt){ cddTxt.className='cdd-placeholder'; cddTxt.textContent='— Ziel aus Datenbank wählen —'; }
+  document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
+  var manSec=document.getElementById('manual-ziel-section'); if(manSec) manSec.style.display='none';
+  var appEl=document.getElementById('dest-applied'); if(appEl) appEl.style.display='none';
+  var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
   applyDestTransferTimes(null);
   document.querySelectorAll("[data-work]").forEach(function(t){ t.classList.toggle("active", t.dataset.work==="no"); });
   var wh = document.getElementById("work-travel-hint"); if(wh) wh.style.display="none";
@@ -2514,31 +2543,89 @@ function saveNewDest(){
   if(existing>=0) saved[existing]=newEntry; else saved.push(newEntry);
   localStorage.setItem('rkt_destinations', JSON.stringify(saved));
   rebuildDestSelect();
-  // Select the newly saved destination
-  var sel = document.getElementById('dest-select');
-  var allDests = loadDestinations();
-  var idx = allDests.findIndex(function(d){return d.name===name;});
-  if(idx>=0){ sel.value=String(idx); onDestSelect(String(idx)); }
-  document.getElementById('dest-manual').classList.remove('open');
+  var allDests=loadDestinations();
+  var newIdx=allDests.findIndex(function(d){ return d.name===name; });
+  if(newIdx>=0){ selectCddItem(newIdx); }
 }
 
 function rebuildDestSelect(){
-  var sel = document.getElementById('dest-select');
-  if(!sel) return;
+  var container = document.getElementById('cdd-options');
+  if(!container) return;
   var dests = loadDestinations();
-  sel.innerHTML = '<option value="">— Bitte wählen —</option>';
+  container.innerHTML = '';
   dests.forEach(function(d,i){
-    var opt = document.createElement('option');
-    opt.value = String(i);
-    opt.textContent = d.name + (d.custom?' ★':'') + ' – 🚆 '+d.bahnMinutes+'min / ✈️ '+d.flugMinutes+'min';
-    sel.appendChild(opt);
+    var div = document.createElement('div');
+    div.className = 'cdd-option';
+    div.dataset.idx = String(i);
+    var left = document.createElement('span');
+    left.textContent = (d.custom ? '★ ' : '') + d.name;
+    var right = document.createElement('span');
+    right.style.cssText = 'font-size:11px;color:rgba(110,231,183,0.7)';
+    right.textContent = '🚆 ' + d.bahnMinutes + 'min  ✈️ ' + d.flugMinutes + 'min';
+    div.appendChild(left); div.appendChild(right);
+    div.onclick = (function(ii){ return function(){ selectCddItem(ii); }; })(i);
+    container.appendChild(div);
   });
-  // Add manual option
-  var manOpt = document.createElement('option');
-  manOpt.value = 'manual';
-  manOpt.textContent = '➕ Anderes Ziel / Zeiten manuell eingeben';
-  sel.appendChild(manOpt);
 }
+
+function filterCdd(q){
+  document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){
+    o.style.display = o.querySelector('span').textContent.toLowerCase().indexOf(q.toLowerCase())>=0 ? '' : 'none';
+  });
+}
+
+function toggleCdd(){
+  var trigger=document.getElementById('cdd-trigger');
+  var menu=document.getElementById('cdd-menu');
+  if(menu.classList.contains('open')){ closeCdd(); return; }
+  trigger.classList.add('open'); menu.classList.add('open');
+  setTimeout(function(){ var s=document.getElementById('cdd-search'); if(s) s.focus(); }, 50);
+}
+
+function closeCdd(){
+  var t=document.getElementById('cdd-trigger'); if(t) t.classList.remove('open');
+  var m=document.getElementById('cdd-menu'); if(m) m.classList.remove('open');
+}
+
+function selectCddItem(idx){
+  var dest=loadDestinations()[idx];
+  if(!dest) return;
+  var txt=document.getElementById('cdd-selected-text');
+  if(txt){ txt.className=''; txt.style.color=''; txt.textContent=dest.name+'  🚆 '+dest.bahnMinutes+'min  ✈️ '+dest.flugMinutes+'min'; }
+  document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
+  var sel=document.querySelector('#cdd-options .cdd-option[data-idx="'+idx+'"]');
+  if(sel) sel.classList.add('selected');
+  state.zielText=dest.name; state.zielGeo=null;
+  var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
+  applyDestTransferTimes(dest);
+  var a=document.getElementById('dest-applied'); if(a) a.style.display='block';
+  var ms=document.getElementById('manual-ziel-section'); if(ms) ms.style.display='none';
+  var bm=document.getElementById('btn-manual-ziel');
+  if(bm) bm.textContent='✏️ Anderes Ziel (Freitext / Neu speichern)';
+  closeCdd();
+}
+
+function toggleManualZiel(){
+  var sec=document.getElementById('manual-ziel-section');
+  var isOpen=sec.style.display!=='none';
+  sec.style.display=isOpen?'none':'block';
+  var btn=document.getElementById('btn-manual-ziel');
+  if(btn) btn.textContent=isOpen?'✏️ Anderes Ziel (Freitext / Neu speichern)':'✖ Schließen';
+  if(!isOpen){
+    var txt=document.getElementById('cdd-selected-text');
+    if(txt){ txt.className='cdd-placeholder'; txt.textContent='— Ziel aus Datenbank wählen —'; }
+    applyDestTransferTimes(null);
+    var a=document.getElementById('dest-applied'); if(a) a.style.display='none';
+    document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
+    state.zielText=''; state.zielGeo=null;
+  }
+}
+
+document.addEventListener('click',function(e){
+  var wrap=document.getElementById('cdd-wrap');
+  if(wrap&&!wrap.contains(e.target)) closeCdd();
+});
+
 
 function onDestSelect(val){
   var timesDiv  = document.getElementById('dest-times-display');
