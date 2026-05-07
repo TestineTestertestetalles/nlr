@@ -321,7 +321,7 @@ input.req-field:focus{
 .ee-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 /* ── Destination database card ── */
 .dest-card{background:rgba(96,165,250,0.08);border:1.5px solid rgba(96,165,250,0.3);border-radius:var(--rs);padding:14px 16px;margin-top:8px;}
-.dest-select{width:100%;background:#2a2f45;border:1.5px solid rgba(148,163,184,0.45);border-radius:6px;padding:8px 10px;font-size:13px;color:#e2e8f0;font-family:inherit;margin-bottom:8px;}
+.dest-select{width:100%;background:#0f2318;border:1.5px solid #34d399;border-radius:6px;padding:9px 10px;font-size:13px;color:#d1fae5;font-family:inherit;margin-bottom:8px;}
 .dest-times{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;}
 .dest-time-row{font-size:12px;display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,0.05);border-radius:5px;}
 .dest-time-val{font-weight:700;color:rgba(110,231,183,0.97);}
@@ -2480,22 +2480,24 @@ function applyTransportVisibility(){
 
 // ── Destination Database ─────────────────────────────────────────────────────
 var DEFAULT_DESTINATIONS = [
-  {name:"Stuttgart",      bahnStation:"Stuttgart Hbf",          bahnMinutes:20, flugStation:"Stuttgart Airport (STR)", flugMinutes:35},
-  {name:"München",        bahnStation:"München Hbf",            bahnMinutes:25, flugStation:"München Airport (MUC)",   flugMinutes:50},
-  {name:"Frankfurt",      bahnStation:"Frankfurt Hbf",          bahnMinutes:20, flugStation:"Frankfurt Airport (FRA)", flugMinutes:30},
-  {name:"Hamburg",        bahnStation:"Hamburg Hbf",            bahnMinutes:20, flugStation:"Hamburg Airport (HAM)",   flugMinutes:30},
   {name:"Berlin",         bahnStation:"Berlin Hbf",             bahnMinutes:25, flugStation:"Berlin Brandenburg (BER)",flugMinutes:45},
   {name:"Düsseldorf",     bahnStation:"Düsseldorf Hbf",         bahnMinutes:20, flugStation:"Düsseldorf Airport (DUS)",flugMinutes:25},
+  {name:"Frankfurt",      bahnStation:"Frankfurt Hbf",          bahnMinutes:20, flugStation:"Frankfurt Airport (FRA)", flugMinutes:30},
+  {name:"Hamburg",        bahnStation:"Hamburg Hbf",            bahnMinutes:20, flugStation:"Hamburg Airport (HAM)",   flugMinutes:30},
+  {name:"Hannover",       bahnStation:"Hannover Hbf",           bahnMinutes:20, flugStation:"Hannover Airport (HAJ)",  flugMinutes:30},
   {name:"Köln",           bahnStation:"Köln Hbf",               bahnMinutes:15, flugStation:"Köln/Bonn Airport (CGN)", flugMinutes:35},
   {name:"Leipzig",        bahnStation:"Leipzig Hbf",            bahnMinutes:20, flugStation:"Leipzig/Halle Airport",   flugMinutes:40},
-  {name:"Hannover",       bahnStation:"Hannover Hbf",           bahnMinutes:20, flugStation:"Hannover Airport (HAJ)",  flugMinutes:30},
+  {name:"München",        bahnStation:"München Hbf",            bahnMinutes:25, flugStation:"München Airport (MUC)",   flugMinutes:50},
   {name:"Nürnberg",       bahnStation:"Nürnberg Hbf",           bahnMinutes:20, flugStation:"Nürnberg Airport (NUE)", flugMinutes:25},
+  {name:"Stuttgart",      bahnStation:"Stuttgart Hbf",          bahnMinutes:20, flugStation:"Stuttgart Airport (STR)", flugMinutes:35},
 ];
 
 function loadDestinations(){
   var saved = [];
   try{ saved = JSON.parse(localStorage.getItem('rkt_destinations')||'[]'); }catch(e){}
-  return DEFAULT_DESTINATIONS.concat(saved);
+  var all = DEFAULT_DESTINATIONS.concat(saved);
+  all.sort(function(a,b){ return a.name.localeCompare(b.name,'de'); });
+  return all;
 }
 
 function saveNewDest(){
