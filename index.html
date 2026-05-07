@@ -429,7 +429,7 @@ select.invalid ~ .field-warn{display:block;}
      SCREEN 1 – EINGABE
 ════════════════════════════════════════════ -->
 <div class="screen active" id="s-form">
-  <div class="version-badge">v 07.05.2026 21:30</div>
+  <div class="version-badge">v 07.05.2026 21:35</div>
 
   <!-- Route -->
   <div class="card">
@@ -695,7 +695,7 @@ select.invalid ~ .field-warn{display:block;}
   </div>
 
   <div class="err" id="err-s1"></div>
-  <button class="btnp" id="btn-s1" style="display:none">Weiter →</button>
+  <button class="btnp" id="btn-s1">Verbindungssuche →</button>
 </div>
 
 
@@ -1530,7 +1530,7 @@ function gs(id){return g(id).value||"";}
 
 function getSt(id){ var el=document.getElementById(id); return el?el.value:""; }
 
-document.getElementById("btn-s3").addEventListener("click",()=>{
+(document.getElementById("btn-s3")||document.createElement("div")).addEventListener("click",()=>{
   const items=[];
   const err=document.getElementById("err-s3");
   clearInvalid();
@@ -2093,7 +2093,7 @@ function renderResults(items){
 }
 
 // ── New search ────────────────────────────────────────────────────────────────
-document.getElementById("btn-new-search").addEventListener("click",()=>{
+(document.getElementById("btn-new-search")||document.createElement("div")).addEventListener("click",()=>{
   ["inp-start","inp-ziel","hD","rD","auto-kosten",
    "bahn-hin-dep","bahn-hin-arr","bahn-hin-price","bahn-rueck-dep","bahn-rueck-arr","bahn-rueck-price",
    "flug-hin-dep","flug-hin-arr","flug-hin-price","flug-rueck-dep","flug-rueck-arr","flug-rueck-price",
@@ -2163,7 +2163,7 @@ document.getElementById("btn-new-search").addEventListener("click",()=>{
 
 var _lastItems = []; // stores last calculated items for re-render
 
-document.getElementById('btn-s-overview').addEventListener('click',function(){
+(document.getElementById('btn-s-overview')||document.createElement('div')).addEventListener('click',function(){
   if(_lastItems.length === 0){
     document.getElementById('btn-s3').click();
     return;
