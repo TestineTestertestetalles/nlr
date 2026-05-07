@@ -355,6 +355,16 @@ input.req-field:focus{
   border-bottom:1px solid rgba(52,211,153,0.2);
   padding:8px 12px;font-size:13px;color:#d1fae5;font-family:inherit;outline:none;}
 .cdd-search::placeholder{color:rgba(110,231,183,0.4);}
+/* ── New destination form ── */
+.cdd-add-option{padding:10px 12px;font-size:13px;color:rgba(167,139,250,0.95);
+  cursor:pointer;display:flex;align-items:center;gap:8px;
+  border-top:1px solid rgba(167,139,250,0.2);background:rgba(167,139,250,0.06);}
+.cdd-add-option:hover{background:rgba(167,139,250,0.14);}
+.new-dest-form{display:none;background:rgba(167,139,250,0.06);
+  border:1.5px solid rgba(167,139,250,0.3);border-radius:var(--rs);
+  padding:16px 18px;margin-top:8px;}
+.new-dest-form.open{display:block;}
+.new-dest-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -418,43 +428,60 @@ input.req-field:focus{
       </div>
     </div>
 
-    <!-- Anderes Ziel toggle -->
-    <div style="margin-top:6px">
-      <button onclick="toggleManualZiel()" id="btn-manual-ziel"
-        style="background:none;border:none;font-size:12px;color:rgba(148,163,184,0.8);cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;">
-        ✏️ Anderes Ziel (Freitext / Neu speichern)
-      </button>
-    </div>
+    <!-- Applied hint -->
+    <div class="dest-applied" id="dest-applied" style="display:none;margin-top:6px">✓ Transferzeiten werden auf Seite 2 automatisch eingetragen.</div>
 
-    <!-- Manual ziel section -->
-    <div id="manual-ziel-section" style="display:none;margin-top:8px">
-      <div class="acwrap">
+    <!-- New destination form (shown below CDD when "Neues Ziel" clicked) -->
+    <div class="new-dest-form" id="new-dest-form">
+      <div style="font-size:13px;font-weight:700;color:rgba(221,214,254,0.95);margin-bottom:14px">
+        ➕ Neues Ziel hinzufügen
+      </div>
+
+      <label class="flbl">Stadtname (für die Liste)</label>
+      <input class="inpsm" type="text" id="dest-manual-name"
+        placeholder="z. B. Stuttgart" style="margin-bottom:10px">
+
+      <label class="flbl">Stadtsuche für GPS (Auto-Entfernung)</label>
+      <div class="acwrap" style="margin-bottom:10px">
         <div class="ac-inp-wrap">
-          <input id="inp-ziel" type="text" class="req-field" placeholder="z. B. Stuttgart" autocomplete="off">
+          <input id="inp-ziel" type="text" class="req-field"
+            placeholder="z. B. Stuttgart" autocomplete="off">
           <span class="ac-icon">🎯</span>
         </div>
         <div class="drop" id="drop-ziel"></div>
       </div>
-      <div class="dest-manual" style="margin-top:8px">
-        <div style="font-size:12px;font-weight:600;color:rgba(196,181,253,0.9);margin-bottom:4px">Transferzeiten + Als Ziel speichern:</div>
-        <div class="dest-manual-grid">
-          <div>
-            <label class="flbl" style="color:rgba(148,163,184,0.8)">🚆 Bahnhof → Ziel (Min)</label>
-            <input class="inpsm" type="number" id="dest-manual-bahn" min="0" step="1" placeholder="z. B. 20">
-          </div>
-          <div>
-            <label class="flbl" style="color:rgba(148,163,184,0.8)">✈️ Flughafen → Ziel (Min)</label>
-            <input class="inpsm" type="number" id="dest-manual-flug" min="0" step="1" placeholder="z. B. 35">
-          </div>
+
+      <div class="new-dest-grid">
+        <div>
+          <label class="flbl">🚆 Bahnhofsname</label>
+          <input class="inpsm" type="text" id="dest-manual-bahn-name"
+            placeholder="z. B. Stuttgart Hbf" style="margin-bottom:6px">
+          <label class="flbl">Transfer zum Ziel (Min)</label>
+          <input class="inpsm" type="number" id="dest-manual-bahn"
+            min="0" step="1" placeholder="z. B. 20">
         </div>
-        <div style="margin-top:8px">
-          <label class="flbl" style="color:rgba(148,163,184,0.8)">Name für dieses Ziel</label>
-          <input class="inpsm" type="text" id="dest-manual-name" placeholder="z. B. Stuttgart Zentrum" style="width:100%;margin-top:4px">
+        <div>
+          <label class="flbl">✈️ Flughafenname</label>
+          <input class="inpsm" type="text" id="dest-manual-flug-name"
+            placeholder="z. B. Stuttgart Airport (STR)" style="margin-bottom:6px">
+          <label class="flbl">Transfer zum Ziel (Min)</label>
+          <input class="inpsm" type="number" id="dest-manual-flug"
+            min="0" step="1" placeholder="z. B. 35">
         </div>
-        <button class="dest-save-btn" onclick="saveNewDest()">💾 Als neues Ziel speichern</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="dest-save-btn" onclick="saveNewDest()"
+          style="flex:1;background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.5)">
+          💾 Speichern & auswählen
+        </button>
+        <button onclick="closeNewDestForm()"
+          style="background:none;border:1px solid var(--br);border-radius:6px;
+          padding:8px 14px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit">
+          Abbrechen
+        </button>
       </div>
     </div>
-    <div class="dest-applied" id="dest-applied" style="margin-top:6px;display:none">✓ Transferzeiten werden auf Seite 2 automatisch eingetragen.</div>
 
   <!-- Hinreise -->
   <div class="card">
@@ -1952,6 +1979,7 @@ document.getElementById("btn-new-search").addEventListener("click",()=>{
   var manSec=document.getElementById('manual-ziel-section'); if(manSec) manSec.style.display='none';
   var appEl=document.getElementById('dest-applied'); if(appEl) appEl.style.display='none';
   var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
+  closeNewDestForm();
   applyDestTransferTimes(null);
   document.querySelectorAll("[data-work]").forEach(function(t){ t.classList.toggle("active", t.dataset.work==="no"); });
   var wh = document.getElementById("work-travel-hint"); if(wh) wh.style.display="none";
@@ -2530,18 +2558,20 @@ function loadDestinations(){
 }
 
 function saveNewDest(){
-  var name  = document.getElementById('dest-manual-name').value.trim();
-  var bahn  = parseInt(document.getElementById('dest-manual-bahn').value)||0;
-  var flug  = parseInt(document.getElementById('dest-manual-flug').value)||0;
+  var name     = document.getElementById('dest-manual-name').value.trim();
+  var bahnSt   = document.getElementById('dest-manual-bahn-name') ? document.getElementById('dest-manual-bahn-name').value.trim() : name+' Hbf';
+  var flugSt   = document.getElementById('dest-manual-flug-name') ? document.getElementById('dest-manual-flug-name').value.trim() : name+' Flughafen';
+  var bahn     = parseInt(document.getElementById('dest-manual-bahn').value)||0;
+  var flug     = parseInt(document.getElementById('dest-manual-flug').value)||0;
   if(!name){alert('Bitte einen Namen für das Ziel eingeben.');return;}
   if(!bahn && !flug){alert('Bitte mindestens eine Transferzeit eingeben.');return;}
   var saved = [];
   try{ saved = JSON.parse(localStorage.getItem('rkt_destinations')||'[]'); }catch(e){}
-  // Check for duplicates
   var existing = saved.findIndex(function(d){return d.name.toLowerCase()===name.toLowerCase();});
-  var newEntry = {name:name, bahnStation:name+' Hbf', bahnMinutes:bahn, flugStation:name+' Flughafen', flugMinutes:flug, custom:true};
+  var newEntry = {name:name, bahnStation:bahnSt||name+' Hbf', bahnMinutes:bahn, flugStation:flugSt||name+' Flughafen', flugMinutes:flug, custom:true};
   if(existing>=0) saved[existing]=newEntry; else saved.push(newEntry);
   localStorage.setItem('rkt_destinations', JSON.stringify(saved));
+  closeNewDestForm();
   rebuildDestSelect();
   var allDests=loadDestinations();
   var newIdx=allDests.findIndex(function(d){ return d.name===name; });
@@ -2566,12 +2596,21 @@ function rebuildDestSelect(){
     div.onclick = (function(ii){ return function(){ selectCddItem(ii); }; })(i);
     container.appendChild(div);
   });
+  // Always add "Neues Ziel hinzufügen" at bottom
+  var addDiv = document.createElement('div');
+  addDiv.className = 'cdd-add-option';
+  addDiv.innerHTML = '<span>➕</span><span>Neues Ziel hinzufügen</span>';
+  addDiv.onclick = function(){ openNewDestForm(); };
+  container.appendChild(addDiv);
 }
 
 function filterCdd(q){
   document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){
     o.style.display = o.querySelector('span').textContent.toLowerCase().indexOf(q.toLowerCase())>=0 ? '' : 'none';
   });
+  // Always keep "Neues Ziel" visible
+  var addOpt = document.querySelector('#cdd-options .cdd-add-option');
+  if(addOpt) addOpt.style.display = '';
 }
 
 function toggleCdd(){
@@ -2605,21 +2644,26 @@ function selectCddItem(idx){
   closeCdd();
 }
 
-function toggleManualZiel(){
-  var sec=document.getElementById('manual-ziel-section');
-  var isOpen=sec.style.display!=='none';
-  sec.style.display=isOpen?'none':'block';
-  var btn=document.getElementById('btn-manual-ziel');
-  if(btn) btn.textContent=isOpen?'✏️ Anderes Ziel (Freitext / Neu speichern)':'✖ Schließen';
-  if(!isOpen){
-    var txt=document.getElementById('cdd-selected-text');
-    if(txt){ txt.className='cdd-placeholder'; txt.textContent='— Ziel aus Datenbank wählen —'; }
-    applyDestTransferTimes(null);
-    var a=document.getElementById('dest-applied'); if(a) a.style.display='none';
-    document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
-    state.zielText=''; state.zielGeo=null;
-  }
+function openNewDestForm(){
+  closeCdd();
+  var form=document.getElementById('new-dest-form');
+  if(form){ form.classList.add('open'); }
+  // Clear fields
+  ['dest-manual-name','dest-manual-bahn-name','dest-manual-flug-name','inp-ziel'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  ['dest-manual-bahn','dest-manual-flug'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  setTimeout(function(){ var el=document.getElementById('dest-manual-name'); if(el) el.focus(); },50);
 }
+
+function closeNewDestForm(){
+  var form=document.getElementById('new-dest-form');
+  if(form) form.classList.remove('open');
+}
+
+function toggleManualZiel(){ openNewDestForm(); }
 
 document.addEventListener('click',function(e){
   var wrap=document.getElementById('cdd-wrap');
