@@ -414,7 +414,7 @@ input.req-field:focus{
         <div class="divl"></div>
       </div>
       <div>
-        <label class="flbl">Zielort</label>
+        <label class="flbl">Reiseziel</label>
 
     <!-- Custom destination dropdown (primary) -->
     <div class="cdd-wrap" id="cdd-wrap">
@@ -437,7 +437,7 @@ input.req-field:focus{
         ➕ Neues Ziel hinzufügen
       </div>
 
-      <label class="flbl">Stadtname (für die Liste)</label>
+      <label class="flbl">Reiseziel (erscheint in der Auswahlliste)</label>
       <input class="inpsm" type="text" id="dest-manual-name"
         placeholder="z. B. Stuttgart" style="margin-bottom:10px">
 
@@ -454,16 +454,22 @@ input.req-field:focus{
       <div class="new-dest-grid">
         <div>
           <label class="flbl">🚆 Bahnhofsname</label>
-          <input class="inpsm" type="text" id="dest-manual-bahn-name"
-            placeholder="z. B. Stuttgart Hbf" style="margin-bottom:6px">
+          <div class="acwrap" style="margin-bottom:6px">
+            <input class="inpsm" type="text" id="dest-manual-bahn-name"
+              placeholder="z. B. Stuttgart Hbf" autocomplete="off">
+            <div class="drop" id="drop-bahn-station"></div>
+          </div>
           <label class="flbl">Transfer zum Ziel (Min)</label>
           <input class="inpsm" type="number" id="dest-manual-bahn"
             min="0" step="1" placeholder="z. B. 20">
         </div>
         <div>
           <label class="flbl">✈️ Flughafenname</label>
-          <input class="inpsm" type="text" id="dest-manual-flug-name"
-            placeholder="z. B. Stuttgart Airport (STR)" style="margin-bottom:6px">
+          <div class="acwrap" style="margin-bottom:6px">
+            <input class="inpsm" type="text" id="dest-manual-flug-name"
+              placeholder="z. B. Stuttgart Airport (STR)" autocomplete="off">
+            <div class="drop" id="drop-flug-station"></div>
+          </div>
           <label class="flbl">Transfer zum Ziel (Min)</label>
           <input class="inpsm" type="number" id="dest-manual-flug"
             min="0" step="1" placeholder="z. B. 35">
@@ -1115,11 +1121,131 @@ document.addEventListener("click",e=>{
   document.querySelectorAll(".drop").forEach(d=>{if(!d.contains(e.target))d.classList.remove("open");});
 });
 
+
+// ── Station autocomplete (new dest form) ─────────────────────────────────────
+function searchStation(q, dropId, inputId, type){
+  // type: 'railway' for stations, 'aerodrome' for airports
+  var drop = document.getElementById(dropId);
+  if(!drop) return;
+  if(!q || q.length < 2){ drop.classList.remove('open'); drop.innerHTML=''; return; }
+  clearTimeout(nomTimers[dropId]);
+  nomTimers[dropId] = setTimeout(async function(){
+    var tag = type === 'railway'
+      ? 'railway=station OR railway=halt OR amenity=bus_station'
+      : 'aeroway=aerodrome';
+    // Use Nominatim with category filter
+    var url = 'https://nominatim.openstreetmap.org/search?q='
+      + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1'
+      + (type === 'railway' ? '&featuretype=railway' : '&featuretype=aerodrome');
+    // Simpler: search by name + city context
+    var cityEl = document.getElementById('inp-ziel');
+    var city = cityEl ? cityEl.value.split(',')[0].trim() : '';
+    var searchQ = q + (city && q.toLowerCase().indexOf(city.toLowerCase()) < 0 ? ' ' + city : '');
+    var url2 = 'https://nominatim.openstreetmap.org/search?q='
+      + encodeURIComponent(searchQ)
+      + '&format=json&limit=8&countrycodes=de,at,ch&addressdetails=1';
+    var data;
+    var key = 'station_' + type + '_' + searchQ.toLowerCase();
+    data = nomCache[key];
+    if(!data){
+      try{
+        var r = await fetch(url2, {headers:{'Accept-Language':'de'}});
+        data = await r.json();
+        // Filter to relevant types
+        if(type === 'railway'){
+          data = data.filter(function(x){
+            return x.type==='station' || x.type==='halt' || x.class==='railway'
+              || (x.display_name && x.display_name.toLowerCase().indexOf('bahnhof')>=0)
+              || (x.display_name && x.display_name.toLowerCase().indexOf('hbf')>=0);
+          });
+          if(!data.length){
+            // Fallback: search without filter
+            var r2 = await fetch(
+              'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(searchQ)
+              + '%20Bahnhof&format=json&limit=5&countrycodes=de,at,ch&addressdetails=1',
+              {headers:{'Accept-Language':'de'}});
+            data = await r2.json();
+          }
+        } else {
+          data = data.filter(function(x){
+            return x.type==='aerodrome' || x.class==='aeroway'
+              || (x.display_name && x.display_name.toLowerCase().indexOf('airport')>=0)
+              || (x.display_name && x.display_name.toLowerCase().indexOf('flughafen')>=0);
+          });
+          if(!data.length){
+            var r3 = await fetch(
+              'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(searchQ)
+              + '%20Flughafen&format=json&limit=5&countrycodes=de,at,ch&addressdetails=1',
+              {headers:{'Accept-Language':'de'}});
+            data = await r3.json();
+          }
+        }
+        nomCache[key] = data;
+      } catch(e){ return; }
+    }
+    if(!data || !data.length){
+      drop.innerHTML = '<div class="ditem"><div class="dmain" style="color:var(--muted)">Keine Ergebnisse — bitte manuell eingeben</div></div>';
+      drop.classList.add('open');
+      return;
+    }
+    drop.innerHTML = data.slice(0,6).map(function(x,i){
+      var name = x.display_name.split(',')[0].trim();
+      var sub  = x.display_name.split(',').slice(1,3).join(',').trim();
+      return '<div class="ditem" data-idx="'+i+'"><div class="dmain">'+name+'</div><div class="dsub">'+sub+'</div></div>';
+    }).join('');
+    drop.classList.add('open');
+    drop.querySelectorAll('.ditem').forEach(function(el){
+      el.addEventListener('mousedown', function(e){
+        e.preventDefault();
+        var x = data[+el.dataset.idx];
+        var name = x.display_name.split(',')[0].trim();
+        var inp = document.getElementById(inputId);
+        if(inp){ inp.value = name; inp.dispatchEvent(new Event('input')); }
+        drop.classList.remove('open'); drop.innerHTML='';
+      });
+    });
+  }, 350);
+}
+
+// Wire up bahn + flug station search
+(function(){
+  var bahnInp = document.getElementById('dest-manual-bahn-name');
+  var flugInp = document.getElementById('dest-manual-flug-name');
+  if(bahnInp){
+    bahnInp.addEventListener('input', function(){
+      searchStation(this.value, 'drop-bahn-station', 'dest-manual-bahn-name', 'railway');
+    });
+  }
+  if(flugInp){
+    flugInp.addEventListener('input', function(){
+      searchStation(this.value, 'drop-flug-station', 'dest-manual-flug-name', 'aerodrome');
+    });
+  }
+})();
+
+// Auto-trigger station search when GPS city is selected
+var _origInpZielCallback = null;
 // ── Setup autocomplete ────────────────────────────────────────────────────────
 const inpStart=document.getElementById("inp-start");
 const inpZiel=document.getElementById("inp-ziel");
 inpStart.addEventListener("input",()=>{state.startGeo=null;inpStart.classList.remove("invalid");nominatim(inpStart.value,"drop-start",h=>{state.startText=h.short;state.startGeo=h;inpStart.value=h.short;updateAutoKmHint();});});
-inpZiel.addEventListener("input",()=>{state.zielGeo=null;inpZiel.classList.remove("invalid");nominatim(inpZiel.value,"drop-ziel",h=>{state.zielText=h.short;state.zielGeo=h;inpZiel.value=h.short;updateAutoKmHint();state.zielText=h.short;});});
+inpZiel.addEventListener("input",()=>{state.zielGeo=null;inpZiel.classList.remove("invalid");nominatim(inpZiel.value,"drop-ziel",h=>{
+  state.zielText=h.short;state.zielGeo=h;inpZiel.value=h.short;
+  updateAutoKmHint(); state.zielText=h.short;
+  // Auto-fill station name fields with city name as search seed
+  var cityName=h.short.split(',')[0].trim();
+  var bahnInp=document.getElementById('dest-manual-bahn-name');
+  var flugInp=document.getElementById('dest-manual-flug-name');
+  // Only pre-fill if form is open and fields are empty
+  var form=document.getElementById('new-dest-form');
+  if(form&&form.classList.contains('open')){
+    if(bahnInp&&!bahnInp.value){ bahnInp.value=cityName+' Hbf'; }
+    if(flugInp&&!flugInp.value){ flugInp.value=cityName+' Flughafen'; }
+    // Also pre-fill dest name if empty
+    var nameInp=document.getElementById('dest-manual-name');
+    if(nameInp&&!nameInp.value) nameInp.value=cityName;
+  }
+});});
 
 // ── Swap button ───────────────────────────────────────────────────────────────
 document.getElementById("swap-btn").addEventListener("click",()=>{
@@ -2649,6 +2775,9 @@ function openNewDestForm(){
   var form=document.getElementById('new-dest-form');
   if(form){ form.classList.add('open'); }
   // Clear fields
+  ['drop-bahn-station','drop-flug-station'].forEach(function(id){
+    var d=document.getElementById(id); if(d){ d.classList.remove('open'); d.innerHTML=''; }
+  });
   ['dest-manual-name','dest-manual-bahn-name','dest-manual-flug-name','inp-ziel'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
