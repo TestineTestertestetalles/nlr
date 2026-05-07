@@ -1328,12 +1328,14 @@ async function lookupStartStation(geo){
 
   try{
     // Overpass query: nearest railway=station AND aeroway=aerodrome within 25km
-    var query = '[out:json][timeout:10];('
-      + 'node["railway"="station"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'node["railway"="halt"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'node["aeroway"="aerodrome"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'node["aeroway"="terminal"](around:'+RADIUS+','+lat+','+lon+');'
-      + ');out body;';
+    // Only stations with regional/long-distance rail (RE/S-Bahn/IC/ICE)
+    // Exclude subway, light_rail, tram stops
+    var query = '[out:json][timeout:15];('
+      + 'node["railway"="station"]["station"!="subway"]["station"!="light_rail"]["station"!="monorail"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'way["railway"="station"]["station"!="subway"]["station"!="light_rail"]["station"!="monorail"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'node["aeroway"="aerodrome"]["aerodrome"!="private"](around:'+RADIUS+','+lat+','+lon+');'
+      + 'way["aeroway"="aerodrome"]["aerodrome"!="private"](around:'+RADIUS+','+lat+','+lon+');'
+      + ');out center;';
 
     var resp = await fetch('https://overpass-api.de/api/interpreter', {
       method: 'POST',
@@ -1344,14 +1346,26 @@ async function lookupStartStation(geo){
     var elements = data.elements || [];
 
     // Separate stations and airports, calculate distances
+    // Ways use 'center' for coordinates, nodes use lat/lon directly
     var stations = [], airports = [];
+    var seen = {};
     elements.forEach(function(el){
-      var dist = haversine(lat, lon, el.lat, el.lon);
+      var elLat = el.lat || (el.center && el.center.lat);
+      var elLon = el.lon || (el.center && el.center.lon);
+      if(!elLat || !elLon) return;
       var name = (el.tags && (el.tags.name || el.tags['name:de'])) || '';
       if(!name) return;
-      if(el.tags.railway === 'station' || el.tags.railway === 'halt'){
+      if(seen[name]) return; // deduplicate
+      seen[name] = true;
+      var dist = haversine(lat, lon, elLat, elLon);
+      if(el.tags.railway === 'station'){
+        // Extra check: must have trains (not just tram/subway)
+        var stype = el.tags.station || '';
+        if(stype === 'subway' || stype === 'light_rail' || stype === 'monorail') return;
         stations.push({name:name, dist:dist});
-      } else if(el.tags.aeroway === 'aerodrome' || el.tags.aeroway === 'terminal'){
+      } else if(el.tags.aeroway === 'aerodrome'){
+        var atype = el.tags.aerodrome || '';
+        if(atype === 'private' || atype === 'military') return;
         airports.push({name:name, dist:dist});
       }
     });
