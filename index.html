@@ -365,6 +365,23 @@ input.req-field:focus{
   padding:16px 18px;margin-top:8px;}
 .new-dest-form.open{display:block;}
 .new-dest-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+/* ── Enhanced transport tiles with station info ── */
+.transport-tile .pt-station{font-size:10px;color:rgba(148,163,184,0.75);margin-top:3px;
+  line-height:1.3;min-height:14px;word-break:break-word;}
+.transport-tile.active .pt-station{color:rgba(203,213,225,0.85);}
+.transport-tile .pt-time-wrap{margin-top:4px;display:flex;align-items:center;justify-content:center;gap:3px;}
+.pt-time-inp{width:36px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+  border-radius:4px;padding:2px 4px;font-size:11px;font-weight:700;color:inherit;
+  font-family:inherit;text-align:center;}
+.transport-tile.active.bahn .pt-time-inp{color:#34d399;border-color:rgba(52,211,153,0.35);}
+.transport-tile.active.flug .pt-time-inp{color:#60a5fa;border-color:rgba(96,165,250,0.35);}
+.transport-tile.active.auto .pt-time-inp{color:#fbbf24;border-color:rgba(251,191,36,0.35);}
+.pt-time-lbl{font-size:10px;color:rgba(148,163,184,0.7);}
+.transport-tile.disabled .pt-time-inp{opacity:0.4;}
+/* Fuhrpark name input inside auto tile */
+.pt-fuhrpark-inp{width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  border-radius:4px;padding:2px 5px;font-size:10px;color:rgba(241,245,249,0.85);
+  font-family:inherit;text-align:center;margin-top:3px;}
 </style>
 </head>
 <body>
@@ -540,18 +557,45 @@ input.req-field:focus{
       <div class="transport-tile active bahn" id="tt-bahn" onclick="toggleTransportTile('bahn')">
         <div class="pt-icon">🚆</div>
         <div class="pt-label">Bahn</div>
+        <div class="pt-station" id="tt-bahn-station">—</div>
+        <div class="pt-time-wrap">
+          <input class="pt-time-inp" id="tt-bahn-min" type="number" min="0" max="999"
+            placeholder="—" title="Minuten von Zuhause zum Bahnhof"
+            onclick="event.stopPropagation()"
+            onchange="updateStartTransfer('bahn',this.value)">
+          <span class="pt-time-lbl">min</span>
+        </div>
         <div class="pt-check">✓</div>
       </div>
       <div class="transport-tile active flug" id="tt-flug" onclick="toggleTransportTile('flug')">
         <div class="pt-icon">✈️</div>
         <div class="pt-label">Flug</div>
+        <div class="pt-station" id="tt-flug-station">—</div>
+        <div class="pt-time-wrap">
+          <input class="pt-time-inp" id="tt-flug-min" type="number" min="0" max="999"
+            placeholder="—" title="Minuten von Zuhause zum Flughafen"
+            onclick="event.stopPropagation()"
+            onchange="updateStartTransfer('flug',this.value)">
+          <span class="pt-time-lbl">min</span>
+        </div>
         <div class="pt-check">✓</div>
       </div>
       <div class="transport-tile auto" id="tt-auto" onclick="toggleTransportTile('auto')">
         <div class="pt-icon">🚗</div>
         <div class="pt-label">Auto</div>
-        <div class="pt-check">✓</div>
+        <input class="pt-fuhrpark-inp" id="tt-auto-name" type="text"
+          placeholder="Fuhrpark" title="Name des Fuhrparks"
+          onclick="event.stopPropagation()"
+          onchange="updateStartTransfer('auto-name',this.value)">
+        <div class="pt-time-wrap">
+          <input class="pt-time-inp" id="tt-auto-min" type="number" min="0" max="999"
+            placeholder="—" title="Minuten von Zuhause zum Fuhrpark"
+            onclick="event.stopPropagation()"
+            onchange="updateStartTransfer('auto',this.value)">
+          <span class="pt-time-lbl">min</span>
+        </div>
         <div id="tt-auto-hint" style="display:none;font-size:10px;color:var(--gold);margin-top:3px;line-height:1.3">Fahrerlaubnis<br>erforderlich ↑</div>
+        <div class="pt-check">✓</div>
       </div>
     </div>
   </div>
@@ -1225,10 +1269,87 @@ function searchStation(q, dropId, inputId, type){
 
 // Auto-trigger station search when GPS city is selected
 var _origInpZielCallback = null;
+
+// ── Start transfer auto-lookup ────────────────────────────────────────────────
+var startTransfer = {bahn: {station:'', minutes:0}, flug: {station:'', minutes:0}, auto: {name:'Fuhrpark', minutes:0}};
+
+function updateStartTransfer(type, val){
+  if(type === 'auto-name'){
+    startTransfer.auto.name = val;
+    return;
+  }
+  var mins = parseInt(val) || 0;
+  startTransfer[type].minutes = mins;
+  // Mirror to page 2 fields immediately
+  syncStartTransferToPage2(type);
+}
+
+function syncStartTransferToPage2(type){
+  if(type === 'bahn' || type === 'all'){
+    var el = document.getElementById('bahn-hin-ts');
+    if(el && !el.dataset.userEdited) el.value = startTransfer.bahn.minutes || '';
+    var el2 = document.getElementById('bahn-rueck-ts');
+    if(el2 && !el2.dataset.userEdited) el2.value = startTransfer.bahn.minutes || '';
+  }
+  if(type === 'flug' || type === 'all'){
+    var el3 = document.getElementById('flug-hin-ts');
+    if(el3 && !el3.dataset.userEdited) el3.value = startTransfer.flug.minutes || '';
+    var el4 = document.getElementById('flug-rueck-ts');
+    if(el4 && !el4.dataset.userEdited) el4.value = startTransfer.flug.minutes || '';
+  }
+  if(type === 'auto' || type === 'all'){
+    var el5 = document.getElementById('auto-tr-hs');
+    if(el5 && !el5.dataset.userEdited) el5.value = startTransfer.auto.minutes || '';
+    var el6 = document.getElementById('auto-tr-rs');
+    if(el6 && !el6.dataset.userEdited) el6.value = startTransfer.auto.minutes || '';
+  }
+}
+
+async function lookupStartStation(geo){
+  if(!geo || !geo.lat) return;
+  var lat = geo.lat, lon = geo.lon;
+
+  // Parallel: search nearest station + nearest airport
+  try{
+    // Nearest railway station via Overpass (public transport)
+    var bahnUrl = 'https://nominatim.openstreetmap.org/search?q=Bahnhof+'
+      + encodeURIComponent(geo.short.split(',')[0])
+      + '&format=json&limit=5&countrycodes=de,at,ch&addressdetails=1';
+    var flugUrl = 'https://nominatim.openstreetmap.org/search?q=Flughafen+'
+      + encodeURIComponent(geo.short.split(',')[0])
+      + '&format=json&limit=5&countrycodes=de,at,ch&addressdetails=1';
+
+    var [bahnData, flugData] = await Promise.all([
+      fetch(bahnUrl, {headers:{'Accept-Language':'de'}}).then(r=>r.json()),
+      fetch(flugUrl, {headers:{'Accept-Language':'de'}}).then(r=>r.json())
+    ]);
+
+    // Pick best bahn result
+    if(bahnData && bahnData.length){
+      var b = bahnData[0];
+      var bName = b.display_name.split(',')[0].trim();
+      startTransfer.bahn.station = bName;
+      var stEl = document.getElementById('tt-bahn-station');
+      if(stEl) stEl.textContent = bName;
+    }
+
+    // Pick best flug result
+    if(flugData && flugData.length){
+      var f = flugData[0];
+      var fName = f.display_name.split(',')[0].trim();
+      startTransfer.flug.station = fName;
+      var stElF = document.getElementById('tt-flug-station');
+      if(stElF) stElF.textContent = fName;
+    }
+  } catch(e){
+    console.warn('Station lookup failed:', e);
+  }
+}
+
 // ── Setup autocomplete ────────────────────────────────────────────────────────
 const inpStart=document.getElementById("inp-start");
 const inpZiel=document.getElementById("inp-ziel");
-inpStart.addEventListener("input",()=>{state.startGeo=null;inpStart.classList.remove("invalid");nominatim(inpStart.value,"drop-start",h=>{state.startText=h.short;state.startGeo=h;inpStart.value=h.short;updateAutoKmHint();});});
+inpStart.addEventListener("input",()=>{state.startGeo=null;inpStart.classList.remove("invalid");nominatim(inpStart.value,"drop-start",h=>{state.startText=h.short;state.startGeo=h;inpStart.value=h.short;updateAutoKmHint();lookupStartStation(h);});});
 inpZiel.addEventListener("input",()=>{state.zielGeo=null;inpZiel.classList.remove("invalid");nominatim(inpZiel.value,"drop-ziel",h=>{
   state.zielText=h.short;state.zielGeo=h;inpZiel.value=h.short;
   updateAutoKmHint(); state.zielText=h.short;
@@ -1485,6 +1606,7 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   if(phf) phf.textContent=state.persons>1?" (Preis pro Person)":"";
   updateHotelUI();
   applyTransportVisibility();
+  syncStartTransferToPage2('all');
   showScreen("s-prices");
 });
 
@@ -2099,6 +2221,10 @@ document.getElementById("btn-new-search").addEventListener("click",()=>{
     var el=document.getElementById(id); if(el) delete el.dataset.userEdited;
   });
   inpStart.value="";inpZiel.value="";
+  startTransfer={bahn:{station:'',minutes:0},flug:{station:'',minutes:0},auto:{name:'Fuhrpark',minutes:0}};
+  ['tt-bahn-station','tt-flug-station'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='—';});
+  ['tt-bahn-min','tt-flug-min','tt-auto-min'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  var an=document.getElementById('tt-auto-name');if(an)an.value='';
   var cddTxt=document.getElementById('cdd-selected-text');
   if(cddTxt){ cddTxt.className='cdd-placeholder'; cddTxt.textContent='— Ziel aus Datenbank wählen —'; }
   document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
