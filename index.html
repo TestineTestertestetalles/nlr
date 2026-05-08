@@ -3,23 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reisekostentool – Bahn Update</title>
+<title>Reisekostentool – Bahn Ablauf</title>
 <style>
 :root{
   --bg:#151528;
   --card:rgba(255,255,255,0.07);
-  --border:rgba(255,255,255,0.12);
+  --card2:rgba(255,255,255,0.10);
+  --border:rgba(255,255,255,0.13);
   --gold:#fbbf24;
   --gold2:#f59e0b;
   --green:#34d399;
+  --blue:#60a5fa;
+  --red:#f87171;
   --text:#f3f4f6;
   --muted:#9ca3af;
   --radius:16px;
+  --radius-sm:10px;
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;margin:0;padding:0}
 body{
-  margin:0;
-  font-family:Inter,Segoe UI,sans-serif;
+  font-family:'DM Sans','Segoe UI',Inter,sans-serif;
   background:var(--bg);
   color:var(--text);
   min-height:100vh;
@@ -29,187 +32,407 @@ body::before{
   position:fixed;
   inset:0;
   background:
-    radial-gradient(circle at top left, rgba(251,191,36,0.14), transparent 35%),
-    radial-gradient(circle at bottom right, rgba(96,165,250,0.08), transparent 35%);
+    radial-gradient(ellipse 60% 40% at 15% 20%,rgba(251,191,36,0.13) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 80%,rgba(96,165,250,0.06) 0%,transparent 60%);
+  pointer-events:none;
+  z-index:0;
 }
 .app{
   position:relative;
-  z-index:2;
-  max-width:1000px;
-  margin:auto;
-  padding:48px 20px 80px;
+  z-index:1;
+  max-width:680px;
+  margin:0 auto;
+  padding:44px 20px 80px;
 }
 .hero{
   text-align:center;
-  margin-bottom:42px;
+  margin-bottom:34px;
 }
 .hero-badge{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  padding:8px 18px;
+  padding:7px 17px;
   border-radius:999px;
   background:rgba(251,191,36,0.08);
   border:1px solid rgba(251,191,36,0.2);
   color:var(--gold);
-  font-size:12px;
-  font-weight:700;
+  font-size:11px;
+  font-weight:800;
   letter-spacing:.08em;
-  margin-bottom:18px;
+  margin-bottom:16px;
 }
-.dot{
-  width:8px;
-  height:8px;
+.pulse{
+  width:7px;
+  height:7px;
   border-radius:50%;
   background:var(--gold);
+  animation:pulse 2s infinite;
 }
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
 h1{
-  margin:0;
-  font-size:54px;
+  font-size:clamp(34px,8vw,56px);
   line-height:1.05;
-  letter-spacing:-0.04em;
+  letter-spacing:-0.045em;
+  font-weight:800;
 }
 h1 span{
   color:var(--gold);
 }
 .hero-sub{
-  margin-top:16px;
   color:var(--muted);
-  font-size:18px;
+  font-size:15px;
+  margin-top:12px;
 }
 .card{
   background:var(--card);
   border:1px solid var(--border);
   border-radius:var(--radius);
-  padding:28px;
+  padding:24px;
+  margin-bottom:14px;
   backdrop-filter:blur(12px);
 }
-.section-title{
+.ctitle{
   display:flex;
   align-items:center;
-  gap:10px;
-  margin-bottom:24px;
-  font-size:13px;
-  text-transform:uppercase;
-  letter-spacing:.12em;
+  gap:9px;
+  margin-bottom:18px;
+  font-size:11px;
+  font-weight:800;
   color:var(--muted);
-  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.11em;
 }
-.section-dot{
-  width:8px;
-  height:8px;
+.cdot{
+  width:7px;
+  height:7px;
   border-radius:50%;
-  background:var(--green);
+  background:var(--gold);
 }
-.grid{
+.grid2{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:18px;
+  gap:12px;
 }
 .field{
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:6px;
 }
 label{
-  font-size:12px;
+  font-size:11px;
   text-transform:uppercase;
-  letter-spacing:.08em;
-  color:var(--muted);
+  letter-spacing:.07em;
+  color:rgba(241,245,249,.86);
   font-weight:700;
 }
-input{
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.14);
-  border-radius:10px;
-  padding:14px;
-  color:white;
-  font-size:15px;
-}
-input:focus{
+input,select{
+  width:100%;
+  background:var(--card2);
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:12px 13px;
+  color:var(--text);
+  font-size:14px;
+  font-family:inherit;
   outline:none;
-  border-color:rgba(251,191,36,0.6);
 }
-.route-box{
-  margin-top:22px;
-  padding:18px;
-  border-radius:14px;
-  background:rgba(52,211,153,0.05);
-  border:1px solid rgba(52,211,153,0.18);
+input:focus,select:focus{
+  border-color:rgba(251,191,36,0.65);
+  background:rgba(255,255,255,0.11);
 }
-.route-title{
+input[type=date],input[type=time]{color-scheme:dark}
+.btn-primary{
+  width:100%;
+  border:none;
+  border-radius:var(--radius-sm);
+  padding:15px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#1a1000;
+  font-weight:800;
   font-size:15px;
-  font-weight:700;
-  margin-bottom:18px;
+  font-family:inherit;
+  cursor:pointer;
+  box-shadow:0 8px 26px rgba(251,191,36,.18);
+  margin-top:8px;
+}
+.btn-primary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 34px rgba(251,191,36,.28);
+}
+.route-summary{
+  display:none;
+  margin-bottom:14px;
+  padding:13px 15px;
+  border-radius:var(--radius-sm);
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.6;
+}
+.route-summary strong{color:var(--text)}
+.bahn-card{
+  display:none;
+  animation:fadeIn .25s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.trip-block{
+  background:rgba(52,211,153,0.045);
+  border:1.5px solid rgba(52,211,153,0.22);
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:14px;
+}
+.trip-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:13px;
   color:var(--green);
+  font-weight:800;
+  font-size:14px;
+}
+.route-line{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+  font-size:14px;
+  font-weight:700;
+}
+.arrow{color:var(--gold)}
+.db-link{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  border-radius:10px;
+  padding:13px;
+  background:rgba(220,38,38,0.12);
+  border:1.5px solid rgba(220,38,38,0.44);
+  color:#fca5a5;
+  text-decoration:none;
+  font-weight:800;
+  font-size:14px;
+  margin-bottom:15px;
+}
+.db-link:hover{background:rgba(220,38,38,0.22)}
+.time-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+  margin-bottom:11px;
+}
+.price-row{
+  display:grid;
+  grid-template-columns:1fr;
+}
+.hint{
+  font-size:12px;
+  line-height:1.6;
+  color:var(--muted);
+  background:rgba(96,165,250,.09);
+  border:1px solid rgba(96,165,250,.22);
+  border-radius:10px;
+  padding:11px 13px;
+  margin-bottom:14px;
+}
+.small-note{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:6px;
+}
+@media(max-width:560px){
+  .grid2,.time-grid{grid-template-columns:1fr}
+  .card{padding:20px}
 }
 </style>
 </head>
 <body>
 <div class="app">
 
-<div class="hero">
-  <div class="hero-badge">
-    <div class="dot"></div>
-    100% KOSTENLOS · KEINE REGISTRIERUNG
-  </div>
+  <header class="hero">
+    <div class="hero-badge"><span class="pulse"></span> 100% KOSTENLOS · KEINE REGISTRIERUNG</div>
+    <h1>Reisekosten<span>tool</span></h1>
+    <p class="hero-sub">Dienstreise clever planen · Schritt für Schritt zur besten Reisevariante</p>
+  </header>
 
-  <h1>Reisekosten<span>tool</span></h1>
-
-  <div class="hero-sub">
-    Dienstreisen intelligent planen · Bahn · Flug · Auto
-  </div>
-</div>
-
-<div class="card">
-  <div class="section-title">
-    <div class="section-dot"></div>
-    Bahnverbindung
-  </div>
-
-  <div class="route-box">
-    <div class="route-title">↗ Hinreise</div>
-
-    <div class="grid">
+  <section class="card">
+    <div class="ctitle"><span class="cdot"></span> Reisedaten</div>
+    <div class="grid2">
       <div class="field">
-        <label>Ticketkosten (€)</label>
-        <input type="number" placeholder="z. B. 49">
+        <label>Startstadt</label>
+        <input id="start" type="text" list="cities" placeholder="z. B. Bremen">
       </div>
-
       <div class="field">
-        <label>Abfahrtszeit</label>
-        <input type="time">
+        <label>Ziel aus interner Datenbank</label>
+        <select id="ziel">
+          <option value="">— Ziel wählen —</option>
+          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Hbf|Stuttgart Hbf">MHP Arena Stuttgart</option>
+          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf">Deutsche Bank Park Frankfurt</option>
+        </select>
       </div>
-
       <div class="field">
-        <label>Ankunftszeit</label>
-        <input type="time">
+        <label>Hinreise Datum</label>
+        <input id="hin-date" type="date">
       </div>
-    </div>
-  </div>
-
-  <div class="route-box">
-    <div class="route-title">↙ Rückreise</div>
-
-    <div class="grid">
       <div class="field">
-        <label>Ticketkosten (€)</label>
-        <input type="number" placeholder="z. B. 39">
+        <label>Gewünschte Ankunft</label>
+        <input id="hin-arrival-target" type="time" value="10:00">
       </div>
-
       <div class="field">
-        <label>Abfahrtszeit</label>
-        <input type="time">
+        <label>Rückreise Datum</label>
+        <input id="rueck-date" type="date">
       </div>
-
       <div class="field">
-        <label>Ankunftszeit</label>
-        <input type="time">
+        <label>Geplante Abfahrt</label>
+        <input id="rueck-departure-target" type="time" value="17:00">
       </div>
     </div>
-  </div>
+
+    <datalist id="cities">
+      <option>Bremen</option>
+      <option>Hamburg</option>
+      <option>Berlin</option>
+      <option>Hannover</option>
+      <option>Düsseldorf</option>
+      <option>Köln</option>
+      <option>Frankfurt am Main</option>
+      <option>Stuttgart</option>
+      <option>München</option>
+      <option>Dresden</option>
+      <option>Leipzig</option>
+    </datalist>
+
+    <button class="btn-primary" onclick="showBahnSearch()">🚆 Bahnverbindung suchen</button>
+  </section>
+
+  <div id="route-summary" class="route-summary"></div>
+
+  <section id="bahn-card" class="card bahn-card">
+    <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Bahnverbindung eintragen</div>
+
+    <div class="hint">
+      Öffne zuerst die DB-Suche, wähle eine passende Verbindung aus und trage anschließend Abfahrtszeit, Ankunftszeit und Ticketkosten ein.
+    </div>
+
+    <div class="trip-block">
+      <div class="trip-head">↗ Hinreise</div>
+      <div class="route-line">
+        <span id="hin-from">Start</span>
+        <span class="arrow">→</span>
+        <span id="hin-to">Ziel</span>
+      </div>
+      <a id="hin-db-link" class="db-link" href="#" target="_blank" rel="noopener">🔗 Hinreise bei Deutsche Bahn suchen ↗</a>
+
+      <div class="time-grid">
+        <div class="field">
+          <label>Abfahrtszeit</label>
+          <input id="bahn-hin-departure" type="time">
+        </div>
+        <div class="field">
+          <label>Ankunftszeit</label>
+          <input id="bahn-hin-arrival" type="time">
+        </div>
+      </div>
+
+      <div class="price-row">
+        <div class="field">
+          <label>Ticketpreis Hinreise (€ / Person)</label>
+          <input id="bahn-hin-price" type="number" min="0" step="0.01" placeholder="z. B. 49,90">
+        </div>
+      </div>
+      <div class="small-note">Anordnung: Zeiten oben, Ticketpreis darunter.</div>
+    </div>
+
+    <div class="trip-block">
+      <div class="trip-head">↙ Rückreise</div>
+      <div class="route-line">
+        <span id="rueck-from">Ziel</span>
+        <span class="arrow">→</span>
+        <span id="rueck-to">Start</span>
+      </div>
+      <a id="rueck-db-link" class="db-link" href="#" target="_blank" rel="noopener">🔗 Rückreise bei Deutsche Bahn suchen ↗</a>
+
+      <div class="time-grid">
+        <div class="field">
+          <label>Abfahrtszeit</label>
+          <input id="bahn-rueck-departure" type="time">
+        </div>
+        <div class="field">
+          <label>Ankunftszeit</label>
+          <input id="bahn-rueck-arrival" type="time">
+        </div>
+      </div>
+
+      <div class="price-row">
+        <div class="field">
+          <label>Ticketpreis Rückreise (€ / Person)</label>
+          <input id="bahn-rueck-price" type="number" min="0" step="0.01" placeholder="z. B. 39,90">
+        </div>
+      </div>
+      <div class="small-note">Die Rückreise bleibt getrennt erfassbar, damit später Kombinationen sauber berechnet werden können.</div>
+    </div>
+  </section>
 
 </div>
-</div>
+
+<script>
+function formatDateForDb(date){
+  if(!date) return "";
+  const [y,m,d] = date.split("-");
+  return `${d}.${m}.${y}`;
+}
+
+function buildDbUrl(from, to, date, time, mode){
+  const params = new URLSearchParams({
+    S: from,
+    Z: to
+  });
+  if(date) params.set("date", formatDateForDb(date));
+  if(time) params.set("time", time);
+  if(mode) params.set("timesel", mode);
+  return "https://www.bahn.de/buchung/fahrplan/suche#?" + params.toString();
+}
+
+function showBahnSearch(){
+  const start = document.getElementById("start").value.trim();
+  const zielRaw = document.getElementById("ziel").value;
+  const hinDate = document.getElementById("hin-date").value;
+  const hinArrivalTarget = document.getElementById("hin-arrival-target").value;
+  const rueckDate = document.getElementById("rueck-date").value;
+  const rueckDepartureTarget = document.getElementById("rueck-departure-target").value;
+
+  if(!start || !zielRaw){
+    alert("Bitte Startstadt und Ziel auswählen.");
+    return;
+  }
+
+  const [zielName, zielAdresse, zielStation] = zielRaw.split("|");
+
+  document.getElementById("route-summary").style.display = "block";
+  document.getElementById("route-summary").innerHTML =
+    `<strong>Route vorbereitet:</strong> ${start} → ${zielName}<br>` +
+    `<span>${zielAdresse}</span>`;
+
+  document.getElementById("bahn-card").style.display = "block";
+
+  document.getElementById("hin-from").textContent = start;
+  document.getElementById("hin-to").textContent = zielStation || zielName;
+  document.getElementById("rueck-from").textContent = zielStation || zielName;
+  document.getElementById("rueck-to").textContent = start;
+
+  document.getElementById("hin-db-link").href =
+    buildDbUrl(start, zielStation || zielName, hinDate, hinArrivalTarget, "arrive");
+
+  document.getElementById("rueck-db-link").href =
+    buildDbUrl(zielStation || zielName, start, rueckDate, rueckDepartureTarget, "depart");
+
+  document.getElementById("bahn-card").scrollIntoView({behavior:"smooth", block:"start"});
+}
+</script>
 </body>
 </html>
