@@ -412,7 +412,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
 
-<div class="version-badge">v 08.05.2026 07:59</div>
+<div class="version-badge">v 08.05.2026 12:05</div>
 
 <div class="screen active" id="s-form">
 
@@ -2704,17 +2704,17 @@ function applyTransportVisibility(){
 
 // ── Destination Database ─────────────────────────────────────────────────────
 var DEFAULT_DESTINATIONS = [
-  // 10 größte Städte Deutschlands – Phantasiewerte, später anpassen
-  {name:"Berlin",     bahnStation:"Berlin Hbf",           bahnMinutes:20, flugStation:"Berlin Brandenburg (BER)", flugMinutes:40},
-  {name:"Dortmund",   bahnStation:"Dortmund Hbf",         bahnMinutes:15, flugStation:"Dortmund Airport (DTM)",   flugMinutes:25},
-  {name:"Düsseldorf", bahnStation:"Düsseldorf Hbf",       bahnMinutes:15, flugStation:"Düsseldorf Airport (DUS)", flugMinutes:25},
-  {name:"Essen",      bahnStation:"Essen Hbf",            bahnMinutes:10, flugStation:"Düsseldorf Airport (DUS)", flugMinutes:35},
-  {name:"Frankfurt",  bahnStation:"Frankfurt (Main) Hbf", bahnMinutes:15, flugStation:"Frankfurt Airport (FRA)",  flugMinutes:20},
-  {name:"Hamburg",    bahnStation:"Hamburg Hbf",          bahnMinutes:15, flugStation:"Hamburg Airport (HAM)",    flugMinutes:30},
-  {name:"Köln",       bahnStation:"Köln Hbf",             bahnMinutes:10, flugStation:"Köln/Bonn Airport (CGN)", flugMinutes:30},
-  {name:"Leipzig",    bahnStation:"Leipzig Hbf",          bahnMinutes:15, flugStation:"Leipzig/Halle Airport",    flugMinutes:35},
-  {name:"München",    bahnStation:"München Hbf",          bahnMinutes:20, flugStation:"München Airport (MUC)",    flugMinutes:45},
-  {name:"Stuttgart",  bahnStation:"Stuttgart Hbf",        bahnMinutes:20, flugStation:"Stuttgart Airport (STR)",  flugMinutes:35},
+  // Entfernung Stadtmitte → Hbf / Flughafen in Minuten (Taxi/ÖPNV-Schätzwert)
+  {name:"Berlin",     bahnStation:"Berlin Hbf",           bahnMinutes:12, flugStation:"Berlin Brandenburg (BER)", flugMinutes:45},
+  {name:"Dortmund",   bahnStation:"Dortmund Hbf",         bahnMinutes:10, flugStation:"Dortmund Airport (DTM)",   flugMinutes:25},
+  {name:"Düsseldorf", bahnStation:"Düsseldorf Hbf",       bahnMinutes:8,  flugStation:"Düsseldorf Airport (DUS)", flugMinutes:20},
+  {name:"Essen",      bahnStation:"Essen Hbf",            bahnMinutes:5,  flugStation:"Düsseldorf Airport (DUS)", flugMinutes:30},
+  {name:"Frankfurt",  bahnStation:"Frankfurt (Main) Hbf", bahnMinutes:10, flugStation:"Frankfurt Airport (FRA)",  flugMinutes:15},
+  {name:"Hamburg",    bahnStation:"Hamburg Hbf",          bahnMinutes:8,  flugStation:"Hamburg Airport (HAM)",    flugMinutes:30},
+  {name:"Köln",       bahnStation:"Köln Hbf",             bahnMinutes:5,  flugStation:"Köln/Bonn Airport (CGN)", flugMinutes:25},
+  {name:"Leipzig",    bahnStation:"Leipzig Hbf",          bahnMinutes:8,  flugStation:"Leipzig/Halle Airport",    flugMinutes:30},
+  {name:"München",    bahnStation:"München Hbf",          bahnMinutes:10, flugStation:"München Airport (MUC)",    flugMinutes:40},
+  {name:"Stuttgart",  bahnStation:"Stuttgart Hbf",        bahnMinutes:12, flugStation:"Stuttgart Airport (STR)",  flugMinutes:30},
 ];
 
 function loadDestinations(){
@@ -2899,10 +2899,15 @@ var origZielSelect = null; // patched below after inpZiel listener setup
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
-  updateHotelUI();
-  updateAutoOverlay();
-  rebuildDestSelect();
-  applyTransportVisibility();
+  try{ updateHotelUI(); }catch(e){ console.warn('updateHotelUI:',e); }
+  try{ updateAutoOverlay(); }catch(e){ console.warn('updateAutoOverlay:',e); }
+  try{ rebuildDestSelect(); }catch(e){ console.warn('rebuildDestSelect:',e); }
+  try{ applyTransportVisibility(); }catch(e){ console.warn('applyTransportVisibility:',e); }
+});
+// Fallback: also run on window load in case DOMContentLoaded already fired
+window.addEventListener('load', function(){
+  var container = document.getElementById('cdd-options');
+  if(container && container.children.length === 0){ rebuildDestSelect(); }
 });
 
 </script>
