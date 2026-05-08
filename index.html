@@ -541,20 +541,15 @@ input[type=date],input[type=time]{color-scheme:dark}
 }
 
 
-.reservation-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
+
+
+
 .reservation-price{
   margin-left:auto;
   font-size:13px;
   font-weight:800;
   color:var(--gold);
   white-space:nowrap;
-}
-@media(max-width:560px){
-  .reservation-grid{grid-template-columns:1fr}
 }
 
 @media(max-width:560px){
@@ -633,32 +628,6 @@ input[type=date],input[type=time]{color-scheme:dark}
       </div>
     </label>
   </section>
-
-
-  <section class="card">
-    <div class="ctitle"><span class="cdot" style="background:var(--gold)"></span> Sitzplatzreservierung</div>
-
-    <div class="reservation-grid">
-      <label class="cb-row" id="seat-hin-row">
-        <input type="checkbox" id="seat-hin">
-        <div>
-          <div class="cb-label">Sitzplatzreservierung Hinreise</div>
-          <div class="cb-note">Optional zur Bahnverbindung hinzufügen</div>
-        </div>
-        <span class="reservation-price">5,50 €</span>
-      </label>
-
-      <label class="cb-row" id="seat-rueck-row">
-        <input type="checkbox" id="seat-rueck">
-        <div>
-          <div class="cb-label">Sitzplatzreservierung Rückreise</div>
-          <div class="cb-note">Optional zur Bahnverbindung hinzufügen</div>
-        </div>
-        <span class="reservation-price">5,50 €</span>
-      </label>
-    </div>
-  </section>
-
   <section class="card">
     <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Verfügbare Verkehrsmittel</div>
 
