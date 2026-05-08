@@ -429,7 +429,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
 
-<div class="version-badge">v 08.05.2026 12:29</div>
+<div class="version-badge">v 08.05.2026 12:35</div>
 
 <div class="screen active" id="s-form">
 
@@ -1706,8 +1706,18 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   var phf=document.getElementById("flug-persons-hint");
   if(phf) phf.textContent=state.persons>1?" (Preis pro Person)":"";
   updateHotelUI();
-  fillScreen2();
-  showScreen("s-prices");
+  try {
+    fillScreen2();
+  } catch(e) {
+    console.error('fillScreen2 error:', e);
+    alert('Fehler in fillScreen2: ' + e.message);
+  }
+  try {
+    showScreen("s-prices");
+  } catch(e) {
+    console.error('showScreen error:', e);
+    alert('Fehler in showScreen: ' + e.message);
+  }
 });
 
 // ── Screen 2 → 3 ─────────────────────────────────────────────────────────────
