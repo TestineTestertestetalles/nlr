@@ -570,6 +570,202 @@ input[type=date],input[type=time]{color-scheme:dark}
 .price-reservation-row .cb-note{
   font-size:10px;
 }
+
+.summary-page{
+  display:none;
+  animation:fadeIn .25s ease;
+}
+.summary-page.active{
+  display:block;
+}
+.input-page.hidden{
+  display:none;
+}
+.summary-card{
+  border-color:rgba(52,211,153,.38);
+  background:linear-gradient(135deg,rgba(52,211,153,.055),rgba(255,255,255,.055));
+}
+.summary-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+.summary-title{
+  font-size:22px;
+  font-weight:900;
+  color:var(--green);
+  letter-spacing:-.02em;
+}
+.summary-route{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.6;
+  text-align:right;
+}
+.summary-calc{
+  display:grid;
+  grid-template-columns:1fr auto 1fr auto 1fr;
+  gap:16px;
+  align-items:center;
+  padding:18px;
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.09);
+  margin-bottom:14px;
+}
+.summary-item{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  min-width:0;
+}
+.summary-icon{
+  width:46px;
+  height:46px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:25px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.09);
+  flex-shrink:0;
+}
+.summary-label{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+.summary-value{
+  font-size:18px;
+  font-weight:900;
+  color:var(--text);
+}
+.summary-value.green{
+  color:var(--green);
+}
+.summary-op{
+  font-size:34px;
+  font-weight:300;
+  color:rgba(255,255,255,.55);
+}
+.summary-note{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:13px 14px;
+  border-radius:10px;
+  background:rgba(96,165,250,.08);
+  border:1px solid rgba(96,165,250,.2);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+}
+.summary-detail-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:16px;
+  font-size:13px;
+}
+.summary-detail-table td{
+  padding:9px 10px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.summary-detail-table tr:last-child td{
+  border-bottom:none;
+}
+.summary-detail-table td:last-child{
+  text-align:right;
+  font-weight:800;
+}
+.summary-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+.btn-secondary{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px;
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  font-weight:800;
+  font-size:14px;
+  font-family:inherit;
+  cursor:pointer;
+}
+.btn-secondary:hover{
+  background:rgba(255,255,255,.1);
+}
+@media(max-width:760px){
+  .summary-calc{
+    grid-template-columns:1fr;
+  }
+  .summary-op{
+    text-align:center;
+    font-size:24px;
+  }
+  .summary-head{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .summary-route{
+    text-align:left;
+  }
+  .summary-actions{
+    grid-template-columns:1fr;
+  }
+}
+
+
+.flight-card{
+  display:none;
+  border-color:rgba(96,165,250,.30);
+}
+.flight-card .trip-block{
+  background:rgba(96,165,250,0.045);
+  border-color:rgba(96,165,250,0.22);
+}
+.flight-card .trip-head{
+  color:var(--blue);
+}
+.flight-link{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  border-radius:10px;
+  padding:13px;
+  background:rgba(96,165,250,0.12);
+  border:1.5px solid rgba(96,165,250,0.42);
+  color:#bfdbfe;
+  text-decoration:none;
+  font-weight:800;
+  font-size:14px;
+  margin-bottom:15px;
+}
+.flight-link:hover{background:rgba(96,165,250,0.20);}
+.flight-price-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+  align-items:stretch;
+}
+.flight-price-row .cb-row{
+  margin:0;
+  height:100%;
+  align-items:center;
+}
+@media(max-width:560px){
+  .flight-price-row{grid-template-columns:1fr}
+}
+
 @media(max-width:560px){
   .price-reservation-row{grid-template-columns:1fr}
 }
@@ -589,6 +785,7 @@ input[type=date],input[type=time]{color-scheme:dark}
     <p class="hero-sub">Dienstreise clever planen · Schritt für Schritt zur besten Reisevariante</p>
   </header>
 
+  <main id="input-page" class="input-page">
   <section class="card">
     <div class="ctitle"><span class="cdot"></span> Reisedaten</div>
     <div class="grid2">
@@ -606,8 +803,8 @@ input[type=date],input[type=time]{color-scheme:dark}
         <label>Ziel aus interner Datenbank</label>
         <select id="ziel">
           <option value="">— Ziel wählen —</option>
-          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Neckarpark|Stuttgart Neckarpark|8006743">MHP Arena Stuttgart · Mercedesstraße 87, 70372 Stuttgart</option>
-          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf|8000105">Deutsche Bank Park Frankfurt · Mörfelder Landstraße 362, 60528 Frankfurt am Main</option>
+          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Neckarpark|Stuttgart Neckarpark|8006743|STR">MHP Arena Stuttgart · Mercedesstraße 87, 70372 Stuttgart</option>
+          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf|8000105|FRA">Deutsche Bank Park Frankfurt · Mörfelder Landstraße 362, 60528 Frankfurt am Main</option>
         </select>
       </div>
       <div class="field">
@@ -787,6 +984,183 @@ input[type=date],input[type=time]{color-scheme:dark}
       <div class="small-note">Die Rückreise bleibt getrennt erfassbar, damit später Kombinationen sauber berechnet werden können.</div>
     </div>
   </section>
+
+
+  <section id="flight-card" class="card flight-card">
+    <div class="ctitle"><span class="cdot" style="background:var(--blue)"></span> Flugverbindung eintragen</div>
+
+    <div class="hint">
+      Öffne zuerst die Google-Flights-Suche, wähle eine passende Verbindung aus und trage anschließend Abflugzeit, Ankunftszeit und Flugpreis ein.
+    </div>
+
+    <div class="trip-block">
+      <div class="trip-head">↗ Hinflug</div>
+      <div class="route-line">
+        <span id="flug-hin-from">Startflughafen</span>
+        <span class="arrow">→</span>
+        <span id="flug-hin-to">Zielflughafen</span>
+      </div>
+      <a id="flug-hin-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Hinflug bei Google Flights suchen ↗</a>
+
+      <div class="time-grid">
+        <div class="field">
+          <label>Abflugzeit</label>
+          <input id="flug-hin-departure" type="time">
+        </div>
+        <div class="field">
+          <label>Ankunftszeit</label>
+          <input id="flug-hin-arrival" type="time">
+        </div>
+      </div>
+
+      <div class="flight-price-row">
+        <div class="field">
+          <label>Flugpreis Hinflug (€ / Person)</label>
+          <input id="flug-hin-price" type="number" min="0" step="0.01" placeholder="z. B. 129,90">
+        </div>
+
+        <label class="cb-row" id="baggage-hin-row">
+          <input type="checkbox" id="baggage-hin">
+          <div>
+            <div class="cb-label">Gepäck hinzufügen</div>
+            <div class="cb-note">+ 20,00 € pro Person</div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="trip-block">
+      <div class="trip-head">↙ Rückflug</div>
+      <div class="route-line">
+        <span id="flug-rueck-from">Zielflughafen</span>
+        <span class="arrow">→</span>
+        <span id="flug-rueck-to">Startflughafen</span>
+      </div>
+      <a id="flug-rueck-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Rückflug bei Google Flights suchen ↗</a>
+
+      <div class="time-grid">
+        <div class="field">
+          <label>Abflugzeit</label>
+          <input id="flug-rueck-departure" type="time">
+        </div>
+        <div class="field">
+          <label>Ankunftszeit</label>
+          <input id="flug-rueck-arrival" type="time">
+        </div>
+      </div>
+
+      <div class="flight-price-row">
+        <div class="field">
+          <label>Flugpreis Rückflug (€ / Person)</label>
+          <input id="flug-rueck-price" type="number" min="0" step="0.01" placeholder="z. B. 119,90">
+        </div>
+
+        <label class="cb-row" id="baggage-rueck-row">
+          <input type="checkbox" id="baggage-rueck">
+          <div>
+            <div class="cb-label">Gepäck hinzufügen</div>
+            <div class="cb-note">+ 20,00 € pro Person</div>
+          </div>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <button class="btn-primary" type="button" onclick="showSummaryPage()">Zusammenfassung anzeigen →</button>
+  </main>
+
+  <main id="summary-page" class="summary-page">
+    <section class="card summary-card">
+      <div class="summary-head">
+        <div>
+          <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Zusammenfassung</div>
+          <div class="summary-title" id="summary-title">Reisezusammenfassung</div>
+        </div>
+        <div class="summary-route" id="summary-route">—</div>
+      </div>
+
+      <div class="summary-calc">
+        <div class="summary-item">
+          <div class="summary-icon">🚆</div>
+          <div>
+            <div class="summary-label">Ticketkosten gesamt</div>
+            <div class="summary-value" id="sum-ticket">0,00 €</div>
+          </div>
+        </div>
+
+        <div class="summary-op">+</div>
+
+        <div class="summary-item">
+          <div class="summary-icon">💺</div>
+          <div>
+            <div class="summary-label">Zusatzkosten</div>
+            <div class="summary-value" id="sum-seat">0,00 €</div>
+          </div>
+        </div>
+
+        <div class="summary-op">=</div>
+
+        <div class="summary-item">
+          <div class="summary-icon">💼</div>
+          <div>
+            <div class="summary-label">Gesamtbetrag</div>
+            <div class="summary-value green" id="sum-total">0,00 €</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-note">
+        <span>ⓘ</span>
+        <span>Alle Beträge werden auf Basis der Anzahl Reisenden berechnet. Sitzplatzreservierungen kosten 5,50 € pro Person und Bahnstrecke; Gepäck kostet 20,00 € pro Person und Flugstrecke.</span>
+      </div>
+
+      <table class="summary-detail-table">
+        <tbody>
+          <tr>
+            <td>Hinreise Ticketpreis</td>
+            <td id="detail-hin-price">0,00 €</td>
+          </tr>
+          <tr>
+            <td>Rückreise Ticketpreis</td>
+            <td id="detail-rueck-price">0,00 €</td>
+          </tr>
+          <tr>
+            <td>Sitzplatzreservierung Hinreise</td>
+            <td id="detail-seat-hin">0,00 €</td>
+          </tr>
+          <tr>
+            <td>Sitzplatzreservierung Rückreise</td>
+            <td id="detail-seat-rueck">0,00 €</td>
+          </tr>
+          <tr>
+            <td>Hinflug Flugpreis</td>
+            <td id="detail-flug-hin-price">0,00 €</td>
+          </tr>
+          <tr>
+            <td>Rückflug Flugpreis</td>
+            <td id="detail-flug-rueck-price">0,00 €</td>
+          </tr>
+          <tr>
+            <td>Gepäck Hinflug</td>
+            <td id="detail-baggage-hin">0,00 €</td>
+          </tr>
+          <tr>
+            <td>Gepäck Rückflug</td>
+            <td id="detail-baggage-rueck">0,00 €</td>
+          </tr>
+          <tr>
+            <td>Anzahl Reisende</td>
+            <td id="detail-persons">1</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="summary-actions">
+        <button class="btn-secondary" type="button" onclick="showInputPage()">← Angaben bearbeiten</button>
+        <button class="btn-primary" type="button" onclick="alert('Ranking-Seite wird im nächsten Schritt ergänzt.')">Weiter zum Ranking →</button>
+      </div>
+    </section>
+  </main>
 
 </div>
 
@@ -1043,7 +1417,9 @@ function fillSelect(type, items, placeholder, autoSelectNearest=false){
   sel.innerHTML = `<option value="">${placeholder}</option>` + items
     .map((x, idx) => {
       const eva = x.eva || stationEvaByName(x.name);
-      return `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" data-lat="${x.lat || ""}" data-lon="${x.lon || ""}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name} · ca. ${x.minutes} min · ${Math.round(x.km)} km</option>`;
+      const iata = x.iata || x.code || "";
+      const codeText = type === "flug" && iata ? ` · ${iata}` : "";
+      return `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" data-iata="${iata}" data-lat="${x.lat || ""}" data-lon="${x.lon || ""}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name}${codeText} · ca. ${x.minutes} min · ${Math.round(x.km)} km</option>`;
     })
     .join("");
 
@@ -1051,6 +1427,7 @@ function fillSelect(type, items, placeholder, autoSelectNearest=false){
     sel.selectedIndex = 1;
     transportState[type].point = items[0].name;
     transportState[type].eva = items[0].eva || stationEvaByName(items[0].name);
+    transportState[type].iata = items[0].iata || items[0].code || "";
     transportState[type].minutes = String(items[0].minutes);
     if(minInput) minInput.value = items[0].minutes;
   }
@@ -1335,6 +1712,7 @@ function onTransportPointChange(type){
   const selected = sel.options[sel.selectedIndex];
   transportState[type].point = sel.value;
   transportState[type].eva = selected ? (selected.dataset.eva || stationEvaByName(sel.value)) : "";
+  transportState[type].iata = selected ? (selected.dataset.iata || "") : "";
 
   // Bei jeder neuen Auswahl die geschätzte Minutenanzahl aktualisieren.
   // Manuelle Korrekturen sind danach weiterhin über das Minutenfeld möglich.
@@ -1389,7 +1767,10 @@ const tripState = {
   hasLicence: false,
   seatReservationHin: false,
   seatReservationRueck: false,
-  seatReservationPrice: 5.50
+  seatReservationPrice: 5.50,
+  baggageHin: false,
+  baggageRueck: false,
+  baggagePrice: 20.00
 };
 
 function updatePersonsUi(){
@@ -1401,6 +1782,75 @@ function updatePersonsUi(){
   label.textContent = tripState.persons === 1
     ? "1 Person reist allein"
     : `${tripState.persons} Personen reisen gemeinsam`;
+}
+
+
+
+function buildGoogleFlightsUrl(fromIata, toIata, departDate, returnDate){
+  if(!fromIata || !toIata || !departDate) return "https://www.google.com/travel/flights?hl=de";
+  const routeOut = `${fromIata}.${toIata}.${departDate}`;
+  const routeBack = returnDate ? `*${toIata}.${fromIata}.${returnDate}` : "";
+  return `https://www.google.com/travel/flights?hl=de#flt=${routeOut}${routeBack}`;
+}
+
+function initBaggage(){
+  const hin = document.getElementById("baggage-hin");
+  const rueck = document.getElementById("baggage-rueck");
+  const hinRow = document.getElementById("baggage-hin-row");
+  const rueckRow = document.getElementById("baggage-rueck-row");
+
+  if(hin){
+    hin.addEventListener("change", () => {
+      tripState.baggageHin = hin.checked;
+      if(hinRow) hinRow.classList.toggle("checked", hin.checked);
+    });
+  }
+
+  if(rueck){
+    rueck.addEventListener("change", () => {
+      tripState.baggageRueck = rueck.checked;
+      if(rueckRow) rueckRow.classList.toggle("checked", rueck.checked);
+    });
+  }
+}
+
+function setupFlightSearch(zielRaw, hinDate, rueckDate){
+  const flightCard = document.getElementById("flight-card");
+  if(!flightCard) return;
+
+  if(!transportState.flug.active){
+    flightCard.style.display = "none";
+    return;
+  }
+
+  const flugSelect = document.getElementById("flug-station");
+  const selected = flugSelect && flugSelect.selectedOptions[0] ? flugSelect.selectedOptions[0] : null;
+  const fromIata = selected ? (selected.dataset.iata || transportState.flug.iata || "") : (transportState.flug.iata || "");
+  const fromName = flugSelect ? (flugSelect.value || "Startflughafen") : "Startflughafen";
+
+  const parts = zielRaw.split("|");
+  const targetIata = parts[5] || "";
+  const targetName = targetIata === "STR" ? "Stuttgart Airport (STR)" : targetIata === "FRA" ? "Frankfurt Airport (FRA)" : `Zielflughafen (${targetIata})`;
+
+  if(!fromIata || !targetIata){
+    flightCard.style.display = "none";
+    return;
+  }
+
+  flightCard.style.display = "block";
+
+  document.getElementById("flug-hin-from").textContent = `${fromName} (${fromIata})`;
+  document.getElementById("flug-hin-to").textContent = targetName;
+  document.getElementById("flug-rueck-from").textContent = targetName;
+  document.getElementById("flug-rueck-to").textContent = `${fromName} (${fromIata})`;
+
+  const hinUrl = buildGoogleFlightsUrl(fromIata, targetIata, hinDate, rueckDate);
+  const rueckUrl = buildGoogleFlightsUrl(targetIata, fromIata, rueckDate, hinDate);
+
+  document.getElementById("flug-hin-link").href = hinUrl;
+  document.getElementById("flug-hin-link").title = hinUrl;
+  document.getElementById("flug-rueck-link").href = rueckUrl;
+  document.getElementById("flug-rueck-link").title = rueckUrl;
 }
 
 
@@ -1481,6 +1931,7 @@ function initTravelers(){
 document.addEventListener("DOMContentLoaded", () => {
   initTravelers();
   initSeatReservations();
+  initBaggage();
 });
 
 function formatDateForDb(date){
@@ -1606,8 +2057,86 @@ async function showBahnSearch(){
   document.getElementById("rueck-db-link").href = rueckUrl;
   document.getElementById("rueck-db-link").title = rueckUrl;
 
+  setupFlightSearch(zielRaw, hinDate, rueckDate);
+
   document.getElementById("bahn-card").scrollIntoView({behavior:"smooth", block:"start"});
 }
+function parseEuroInput(id){
+  const el = document.getElementById(id);
+  if(!el) return 0;
+  const raw = String(el.value || "").replace(",", ".").trim();
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function formatEuro(value){
+  return value.toLocaleString("de-DE", {style:"currency", currency:"EUR"});
+}
+
+function showInputPage(){
+  document.getElementById("summary-page").classList.remove("active");
+  document.getElementById("input-page").classList.remove("hidden");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function showSummaryPage(){
+  updateSummaryPage();
+  document.getElementById("input-page").classList.add("hidden");
+  document.getElementById("summary-page").classList.add("active");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function updateSummaryPage(){
+  const persons = tripState.persons || 1;
+
+  const bahnActive = !!transportState.bahn.active && document.getElementById("bahn-card")?.style.display !== "none";
+  const flugActive = !!transportState.flug.active && document.getElementById("flight-card")?.style.display !== "none";
+
+  const hinPrice = bahnActive ? parseEuroInput("bahn-hin-price") : 0;
+  const rueckPrice = bahnActive ? parseEuroInput("bahn-rueck-price") : 0;
+
+  const hinSeat = bahnActive && document.getElementById("seat-hin")?.checked ? tripState.seatReservationPrice : 0;
+  const rueckSeat = bahnActive && document.getElementById("seat-rueck")?.checked ? tripState.seatReservationPrice : 0;
+
+  const flugHinPrice = flugActive ? parseEuroInput("flug-hin-price") : 0;
+  const flugRueckPrice = flugActive ? parseEuroInput("flug-rueck-price") : 0;
+
+  const baggageHin = flugActive && document.getElementById("baggage-hin")?.checked ? tripState.baggagePrice : 0;
+  const baggageRueck = flugActive && document.getElementById("baggage-rueck")?.checked ? tripState.baggagePrice : 0;
+
+  const ticketTotal = (hinPrice + rueckPrice + flugHinPrice + flugRueckPrice) * persons;
+  const extrasTotal = (hinSeat + rueckSeat + baggageHin + baggageRueck) * persons;
+  const total = ticketTotal + extrasTotal;
+
+  const hinFrom = document.getElementById("hin-from")?.textContent || "Start";
+  const hinTo = document.getElementById("hin-to")?.textContent || "Ziel";
+  const flugFrom = document.getElementById("flug-hin-from")?.textContent || "Startflughafen";
+  const flugTo = document.getElementById("flug-hin-to")?.textContent || "Zielflughafen";
+
+  const routeParts = [];
+  if(bahnActive) routeParts.push(`🚆 <strong>${hinFrom} → ${hinTo}</strong>`);
+  if(flugActive) routeParts.push(`✈️ <strong>${flugFrom} → ${flugTo}</strong>`);
+
+  document.getElementById("summary-route").innerHTML = routeParts.join("<br>") || "—";
+  document.getElementById("summary-title").textContent = flugActive && bahnActive ? "Bahn & Flug" : flugActive ? "Flugreise" : "Bahnreise";
+
+  document.getElementById("sum-ticket").textContent = formatEuro(ticketTotal);
+  document.getElementById("sum-seat").textContent = formatEuro(extrasTotal);
+  document.getElementById("sum-total").textContent = formatEuro(total);
+
+  document.getElementById("detail-hin-price").textContent = bahnActive ? `${formatEuro(hinPrice * persons)} (${formatEuro(hinPrice)} × ${persons})` : "nicht ausgewählt";
+  document.getElementById("detail-rueck-price").textContent = bahnActive ? `${formatEuro(rueckPrice * persons)} (${formatEuro(rueckPrice)} × ${persons})` : "nicht ausgewählt";
+  document.getElementById("detail-seat-hin").textContent = hinSeat ? `${formatEuro(hinSeat * persons)} (${formatEuro(hinSeat)} × ${persons})` : "nicht ausgewählt";
+  document.getElementById("detail-seat-rueck").textContent = rueckSeat ? `${formatEuro(rueckSeat * persons)} (${formatEuro(rueckSeat)} × ${persons})` : "nicht ausgewählt";
+
+  document.getElementById("detail-flug-hin-price").textContent = flugActive ? `${formatEuro(flugHinPrice * persons)} (${formatEuro(flugHinPrice)} × ${persons})` : "nicht ausgewählt";
+  document.getElementById("detail-flug-rueck-price").textContent = flugActive ? `${formatEuro(flugRueckPrice * persons)} (${formatEuro(flugRueckPrice)} × ${persons})` : "nicht ausgewählt";
+  document.getElementById("detail-baggage-hin").textContent = baggageHin ? `${formatEuro(baggageHin * persons)} (${formatEuro(baggageHin)} × ${persons})` : "nicht ausgewählt";
+  document.getElementById("detail-baggage-rueck").textContent = baggageRueck ? `${formatEuro(baggageRueck * persons)} (${formatEuro(baggageRueck)} × ${persons})` : "nicht ausgewählt";
+  document.getElementById("detail-persons").textContent = String(persons);
+}
+
+
 </script>
 </body>
 </html>
