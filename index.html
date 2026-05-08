@@ -783,7 +783,7 @@ const STATION_EVA_LOOKUP = {
   "kiel hbf": "8000199",
   "erfurt hbf": "8010101",
 
-  "syke": "8000347",
+  "syke": "8005809",
   "bassum": "8000037",
   "bremen-mahndorf": "8007755",
   "bremen-sebaldsbrück": "8001125",
@@ -799,6 +799,30 @@ const STATION_EVA_LOOKUP = {
   "nienburg(weser)": "8000276",
 
   "stuttgart neckarpark": "8006743"
+};
+
+
+const STATION_DB_INFO = {
+  "syke": {eva:"8005809", x:"8809700", y:"52916360"},
+  "stuttgart neckarpark": {eva:"8006743", x:"9240833", y:"48792222"},
+  "frankfurt(main)hbf": {eva:"8000105", x:"8663785", y:"50106817"},
+  "frankfurt hbf": {eva:"8000105", x:"8663785", y:"50106817"},
+  "frankfurt(main) hbf": {eva:"8000105", x:"8663785", y:"50106817"},
+  "bremen hbf": {eva:"8000050", x:"8813833", y:"53083478"},
+  "stuttgart hbf": {eva:"8000096", x:"9182760", y:"48784782"},
+  "hamburg hbf": {eva:"8002549", x:"10006908", y:"53552736"},
+  "berlin hbf": {eva:"8011160", x:"13369549", y:"52525589"},
+  "hannover hbf": {eva:"8000152", x:"9741017", y:"52376764"},
+  "düsseldorf hbf": {eva:"8000085", x:"6794397", y:"51219576"},
+  "duesseldorf hbf": {eva:"8000085", x:"6794397", y:"51219576"},
+  "köln hbf": {eva:"8000207", x:"6958730", y:"50943029"},
+  "koeln hbf": {eva:"8000207", x:"6958730", y:"50943029"},
+  "münchen hbf": {eva:"8000261", x:"11558339", y:"48140229"},
+  "muenchen hbf": {eva:"8000261", x:"11558339", y:"48140229"},
+  "leipzig hbf": {eva:"8010205", x:"12375812", y:"51345378"},
+  "dresden hbf": {eva:"8010085", x:"13732000", y:"51040600"},
+  "nürnberg hbf": {eva:"8000284", x:"11082989", y:"49445615"},
+  "nuernberg hbf": {eva:"8000284", x:"11082989", y:"49445615"}
 };
 
 function normalizeStationName(name){
@@ -818,10 +842,35 @@ function stationEvaByName(name){
   return STATION_EVA_LOOKUP[raw] || STATION_EVA_LOOKUP[norm] || "";
 }
 
-function stationLocationRef(name, eva){
-  if(!eva) return "";
-  // HAFAS-kompatible Stationsreferenz: Name bleibt lesbar, EVA/IBNR macht die Station eindeutig.
-  return `A=1@O=${name}@L=${eva}@`;
+function stationDbInfoByName(name){
+  const raw = String(name || "").toLowerCase().replace(/\s+/g," ").trim();
+  const norm = normalizeStationName(name);
+  const info = STATION_DB_INFO[raw] || STATION_DB_INFO[norm];
+  if(info) return info;
+  const eva = stationEvaByName(name);
+  return eva ? {eva, x:null, y:null} : null;
+}
+
+function stationInfoFromOption(option, name){
+  if(!option) return stationDbInfoByName(name);
+  const eva = option.dataset.eva || stationEvaByName(name);
+  const lat = parseFloat(option.dataset.lat || "");
+  const lon = parseFloat(option.dataset.lon || "");
+  const info = stationDbInfoByName(name) || {};
+  return {
+    eva: eva || info.eva || "",
+    x: info.x || (Number.isFinite(lon) ? String(Math.round(lon * 1000000)) : null),
+    y: info.y || (Number.isFinite(lat) ? String(Math.round(lat * 1000000)) : null)
+  };
+}
+
+function stationLocationRef(name, info){
+  if(!info || !info.eva) return "";
+  let s = `A=1@O=${name}`;
+  if(info.x) s += `@X=${info.x}`;
+  if(info.y) s += `@Y=${info.y}`;
+  s += `@U=80@L=${info.eva}@`;
+  return s;
 }
 
 
@@ -944,7 +993,7 @@ function fillSelect(type, items, placeholder, autoSelectNearest=false){
     .map((x, idx) => {
       const eva = x.eva || stationEvaByName(x.name);
       const evaText = eva ? ` · EVA ${eva}` : "";
-      return `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name} · ca. ${x.minutes} min · ${Math.round(x.km)} km${type === "bahn" ? evaText : ""}</option>`;
+      return `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" data-lat="${x.lat || ""}" data-lon="${x.lon || ""}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name} · ca. ${x.minutes} min · ${Math.round(x.km)} km${type === "bahn" ? evaText : ""}</option>`;
     })
     .join("");
 
@@ -1348,21 +1397,35 @@ function formatDateForDb(date){
   return `${d}.${m}.${y}`;
 }
 
-function buildDbUrl(from, to, date, time, mode, fromEva="", toEva=""){
-  const params = new URLSearchParams({
-    S: from,
-    Z: to
-  });
+function buildDbUrl(fromName, fromInfo, toName, toInfo, dateVal, timeVal, isArrival){
+  const enc = encodeURIComponent;
+  const dt = dateVal ? (dateVal + "T" + (timeVal || "00:00") + ":00") : "";
 
-  const sid = stationLocationRef(from, fromEva);
-  const zid = stationLocationRef(to, toEva);
-  if(sid) params.set("SID", sid);
-  if(zid) params.set("ZID", zid);
+  let url = "https://www.bahn.de/buchung/fahrplan/suche"
+    + "#sts=true"
+    + "&so=" + enc(fromName)
+    + "&zo=" + enc(toName)
+    + "&kl=2";
 
-  if(date) params.set("date", formatDateForDb(date));
-  if(time) params.set("time", time);
-  if(mode) params.set("timesel", mode);
-  return "https://www.bahn.de/buchung/fahrplan/suche#?" + params.toString();
+  const fromSoid = stationLocationRef(fromName, fromInfo);
+  const toSoid = stationLocationRef(toName, toInfo);
+
+  if(fromSoid) url += "&soid=" + enc(fromSoid) + "&sot=ST";
+  if(fromInfo && fromInfo.eva) url += "&soei=" + enc(fromInfo.eva);
+
+  if(toSoid) url += "&zoid=" + enc(toSoid) + "&zot=ST";
+  if(toInfo && toInfo.eva) url += "&zoei=" + enc(toInfo.eva);
+
+  if(dt){
+    url += "&hd=" + enc(dt)
+      + "&hza=" + (isArrival ? "A" : "D");
+  }
+
+  url += "&hz=%5B%5D&ar=false&s=true&d=false"
+    + "&vm=00,01,02,03,04,05,06,07,08,09"
+    + "&fm=false&bp=false";
+
+  return url;
 }
 
 async function ensureStartGeoFromText(){
@@ -1391,9 +1454,9 @@ async function showBahnSearch(){
 
   const bahnStartSelect = document.getElementById("bahn-station");
   const bahnStartStation = bahnStartSelect ? bahnStartSelect.value : "";
-  const bahnStartEva = bahnStartSelect && bahnStartSelect.selectedOptions[0]
-    ? (bahnStartSelect.selectedOptions[0].dataset.eva || stationEvaByName(bahnStartStation))
-    : stationEvaByName(bahnStartStation);
+  const bahnStartInfo = bahnStartSelect && bahnStartSelect.selectedOptions[0]
+    ? stationInfoFromOption(bahnStartSelect.selectedOptions[0], bahnStartStation)
+    : stationDbInfoByName(bahnStartStation);
 
   if(!startCity || !zielRaw){
     alert("Bitte Startstadt und Ziel auswählen.");
@@ -1407,7 +1470,7 @@ async function showBahnSearch(){
 
   const [zielName, zielAdresse, zielStation, _zielStationLabel, zielEvaRaw] = zielRaw.split("|");
   const bahnZielStation = zielStation || zielName;
-  const bahnZielEva = zielEvaRaw || stationEvaByName(bahnZielStation);
+  const bahnZielInfo = stationDbInfoByName(bahnZielStation) || {eva: zielEvaRaw || stationEvaByName(bahnZielStation), x:null, y:null};
 
   document.getElementById("route-summary").style.display = "block";
 
@@ -1429,7 +1492,7 @@ async function showBahnSearch(){
     `<span>${zielAdresse}</span><br>` +
     `<span>${tripState.persons} ${tripState.persons === 1 ? "reisende Person" : "reisende Personen"} · ${licenceText}</span><br>` +
     `<span>Verkehrsmittel: ${activeTransports}</span><br>` +
-    `<span>Bahnlink: ${bahnStartStation}${bahnStartEva ? " (EVA " + bahnStartEva + ")" : ""} → ${bahnZielStation}${bahnZielEva ? " (EVA " + bahnZielEva + ")" : ""}</span>`;
+    `<span>Bahnlink: ${bahnStartStation}${bahnStartInfo && bahnStartInfo.eva ? " (EVA " + bahnStartInfo.eva + ")" : ""} → ${bahnZielStation}${bahnZielInfo && bahnZielInfo.eva ? " (EVA " + bahnZielInfo.eva + ")" : ""}</span>`;
 
   document.getElementById("bahn-card").style.display = "block";
 
@@ -1439,10 +1502,10 @@ async function showBahnSearch(){
   document.getElementById("rueck-to").textContent = bahnStartStation;
 
   document.getElementById("hin-db-link").href =
-    buildDbUrl(bahnStartStation, bahnZielStation, hinDate, hinArrivalTarget, "arrive", bahnStartEva, bahnZielEva);
+    buildDbUrl(bahnStartStation, bahnStartInfo, bahnZielStation, bahnZielInfo, hinDate, hinArrivalTarget, true);
 
   document.getElementById("rueck-db-link").href =
-    buildDbUrl(bahnZielStation, bahnStartStation, rueckDate, rueckDepartureTarget, "depart", bahnZielEva, bahnStartEva);
+    buildDbUrl(bahnZielStation, bahnZielInfo, bahnStartStation, bahnStartInfo, rueckDate, rueckDepartureTarget, false);
 
   document.getElementById("bahn-card").scrollIntoView({behavior:"smooth", block:"start"});
 }
