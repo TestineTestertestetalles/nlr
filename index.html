@@ -412,7 +412,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
 
-<div class="version-badge">v 08.05.2026 12:05</div>
+<div class="version-badge">v 08.05.2026 12:16</div>
 
 <div class="screen active" id="s-form">
 
@@ -1380,10 +1380,13 @@ function setupWorkSel(depId,arrId,selId,wrapId,maxId){
 
 // ── Checkboxes ────────────────────────────────────────────────────────────────
 function setupCb(cbId,rowId,priceId,price){
-  document.getElementById(rowId).addEventListener("click",()=>{
-    const cb=document.getElementById(cbId);cb.checked=!cb.checked;
-    document.getElementById(rowId).classList.toggle("checked",cb.checked);
-    document.getElementById(priceId).textContent=cb.checked?eur(price):"—";
+  var row=document.getElementById(rowId);
+  if(!row) return;
+  row.addEventListener("click",()=>{
+    var cb=document.getElementById(cbId); if(!cb) return;
+    cb.checked=!cb.checked;
+    row.classList.toggle("checked",cb.checked);
+    var priceEl=document.getElementById(priceId); if(priceEl) priceEl.textContent=cb.checked?eur(price):"—";
   });
 }
 setupCb("seat-hin","seat-hin-cb","seat-hin-price",SEAT);
