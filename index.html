@@ -5,7 +5,417 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reisekostentool</title>
-<link rel="stylesheet" href="assets/css/styles.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#151528;--s1:rgba(255,255,255,0.07);--s2:rgba(255,255,255,0.11);
+  --br:rgba(255,255,255,0.14);
+  --gold:#fbbf24;--gold2:#f59e0b;--green:#34d399;--red:#f87171;
+  --orange:#fb923c;--blue:#60a5fa;--purple:#a78bfa;
+  --text:#f0f0f8;--muted:#9898b8;
+  --r:14px;--rs:8px;
+}
+body{font-family:'DM Sans','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 60% 40% at 15% 20%,rgba(251,191,36,0.13) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 40% at 85% 80%,rgba(96,165,250,0.04) 0%,transparent 60%);
+  pointer-events:none;z-index:0;}
+#app{position:relative;z-index:1;max-width:600px;margin:0 auto;padding:40px 20px 80px;}
+.screen{display:none;}.screen.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* Header */
+.hdr{text-align:center;margin-bottom:32px;}
+.badge{display:inline-flex;align-items:center;gap:7px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:20px;padding:5px 14px;margin-bottom:14px;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:0.08em;}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite;display:inline-block;}
+h1{font-size:clamp(26px,5vw,34px);font-weight:700;line-height:1.15;letter-spacing:-0.02em;}
+h1 span{color:var(--gold);}
+.sub{color:var(--muted);font-size:14px;margin-top:8px;}
+
+/* Steps */
+.steps{display:flex;align-items:center;gap:6px;margin-bottom:28px;justify-content:center;}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--br);transition:all 0.3s;}
+.sdot.active{background:var(--gold);transform:scale(1.35);}
+.sdot.done{background:var(--green);}
+.sline{flex:1;max-width:40px;height:1px;background:var(--br);}
+
+/* Cards */
+.card{background:var(--s1);border:1px solid var(--br);border-radius:var(--r);padding:22px;margin-bottom:12px;}
+.ctitle{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.cdot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+
+/* Inputs */
+.flbl{font-size:11px;color:rgba(241,245,249,0.85);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;display:block;}
+input,select{width:100%;background:var(--s2);border:1.5px solid var(--br);border-radius:var(--rs);padding:11px 13px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s,background 0.2s;}
+input:focus,select:focus{border-color:rgba(251,191,36,0.6);background:rgba(255,255,255,0.09);}
+
+input::placeholder{color:rgba(255,255,255,0.2);}
+input[type=date],input[type=time]{color-scheme:dark;}
+input[type=number]::-webkit-inner-spin-button{opacity:0.4;}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6b8a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.inpsm{background:rgba(255,255,255,0.06);border:1px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:'DM Mono',monospace;width:100%;}
+.inpsm:focus{border-color:rgba(251,191,36,0.5);outline:none;}
+.inpsm-blue{border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.06);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.stk{display:flex;flex-direction:column;gap:11px;}
+
+/* Autocomplete */
+.acwrap{position:relative;}
+.ac-inp-wrap{position:relative;}
+.ac-icon{position:absolute;right:11px;top:50%;transform:translateY(-50%);opacity:0.35;font-size:14px;pointer-events:none;}
+.drop{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:999;background:#1a1a2e;border:1px solid rgba(251,191,36,0.25);border-radius:10px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;}
+.drop.open{display:block;}
+.ditem{padding:9px 13px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);}
+.ditem:last-child{border-bottom:none;}
+.ditem:hover{background:rgba(251,191,36,0.08);}
+.dmain{font-size:13px;font-weight:600;color:#f0f0f0;}
+.dsub{font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Swap */
+.div-row{display:flex;align-items:center;gap:10px;margin:2px 0;}
+.divl{flex:1;height:1px;background:var(--br);}
+.swapbtn{background:var(--s2);border:1px solid var(--br);border-radius:var(--rs);width:36px;height:36px;cursor:pointer;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;}
+.swapbtn:hover{background:rgba(255,255,255,0.1);color:var(--text);}
+
+/* Buttons */
+.btnp{width:100%;padding:14px;border:none;border-radius:var(--rs);background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1000;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:0.01em;box-shadow:0 4px 20px rgba(251,191,36,0.2);transition:transform 0.15s,box-shadow 0.15s;}
+.btnp:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(251,191,36,0.35);}
+.btnp:active{transform:none;}
+.btnp.ghost{background:rgba(255,255,255,0.06);color:var(--muted);box-shadow:none;border:1px solid var(--br);}
+.btnp.ghost:hover{background:rgba(255,255,255,0.1);color:var(--text);box-shadow:none;}
+.btn-omio{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--rs);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);color:var(--text);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none;transition:all 0.15s;margin-bottom:16px;}
+.btn-omio:hover{background:rgba(255,255,255,0.11);}
+.btn-print{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--rs);background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);color:var(--purple);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.15s;margin-top:10px;}
+.btn-print:hover{background:rgba(167,139,250,0.18);}
+.backbtn{display:inline-flex;align-items:center;gap:6px;background:var(--s1);border:1px solid var(--br);border-radius:var(--rs);padding:8px 13px;color:var(--muted);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:18px;transition:all 0.15s;}
+.backbtn:hover{background:var(--s2);color:var(--text);}
+
+/* Misc */
+.err{padding:10px 13px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:var(--rs);color:var(--red);font-size:13px;margin-bottom:10px;display:none;}
+.err.show{display:block;}
+.rpill{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--s1);border:1px solid var(--br);border-radius:var(--rs);padding:9px 13px;font-size:13px;margin-bottom:18px;}
+.rpill strong{color:var(--text);}
+.rarrow{color:var(--gold);font-size:14px;}
+.rmeta{margin-left:auto;color:var(--muted);font-size:11px;}
+.slbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.slbl::after{content:'';flex:1;height:1px;background:var(--br);}
+.hint{font-size:12px;color:rgba(203,213,225,0.92);line-height:1.6;padding:10px 13px;background:rgba(96,165,250,0.13);border:1px solid rgba(96,165,250,0.3);border-radius:var(--rs);margin-bottom:14px;}
+
+/* Priority tiles */
+.prio-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.work-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.prio-tile{padding:12px 10px;border-radius:10px;text-align:center;cursor:pointer;transition:all 0.15s;border:1.5px solid var(--br);background:var(--s1);}
+.prio-tile.active{border-color:var(--gold);background:rgba(251,191,36,0.08);}
+.prio-tile-icon{font-size:22px;margin-bottom:4px;}
+.prio-tile-label{font-size:13px;font-weight:700;color:var(--text);}
+.prio-tile.active .prio-tile-label{color:var(--gold);}
+.prio-tile-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* Persons counter */
+.persons-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+.counter-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--br);background:var(--s2);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;}
+.counter-btn:hover{background:rgba(255,255,255,0.12);}
+.counter-num{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;min-width:32px;text-align:center;}
+
+/* Checkbox */
+.cb-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:7px;cursor:pointer;transition:background 0.15s;user-select:none;margin-top:8px;}
+.cb-row:hover{background:rgba(255,255,255,0.07);}
+.cb-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;}
+.cb-row.checked{background:rgba(251,191,36,0.07);border-color:rgba(251,191,36,0.25);}
+.cb-label{font-size:13px;font-weight:600;color:var(--text);}
+.cb-price{margin-left:auto;font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--gold);}
+.cb-note{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* Hotel */
+.hotel-box{background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.2);border-radius:var(--rs);padding:16px;margin-bottom:12px;}
+.hotel-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.hotel-chip{background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap;}
+.hotel-total{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:var(--orange);margin-left:auto;}
+
+/* Transfer label */
+.flbl-blue{font-size:10px;color:var(--blue);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;display:block;}
+
+/* Price block */
+.tblock{background:var(--s1);border:1.5px solid var(--br);border-radius:var(--rs);padding:16px;margin-bottom:10px;position:relative;display:block;}
+.tblock.auto{border-color:rgba(251,191,36,0.35);background:rgba(251,191,36,0.03);}
+.tblock.bahn{border-color:rgba(52,211,153,0.35);background:rgba(52,211,153,0.03);}
+.tblock.flug{border-color:rgba(96,165,250,0.35);background:rgba(96,165,250,0.03);}
+.cost-badge{margin-left:auto;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;color:var(--gold);background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:20px;padding:3px 10px;transition:all 0.2s;}
+.tblock.disabled-overlay::after{content:'';position:absolute;inset:0;border-radius:var(--rs);background:rgba(12,12,20,0.85);backdrop-filter:blur(3px);z-index:5;display:flex;align-items:center;justify-content:center;}
+.no-licence-banner{position:absolute;inset:0;border-radius:var(--rs);background:rgba(12,12,20,0.85);backdrop-filter:blur(3px);z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:20px;}
+.no-licence-banner.show{display:flex;}
+.tblock-hdr{display:flex;align-items:center;gap:9px;margin-bottom:13px;}
+.paste-box{background:rgba(96,165,250,0.04);border:1.5px dashed rgba(96,165,250,0.3);border-radius:8px;padding:12px;margin-bottom:12px;}
+.paste-box textarea{width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(96,165,250,0.2);border-radius:6px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;padding:8px 10px;resize:vertical;min-height:60px;outline:none;line-height:1.5;}
+.paste-box textarea::placeholder{color:rgba(255,255,255,0.2);font-family:'DM Sans',sans-serif;}
+.paste-box textarea:focus{border-color:rgba(96,165,250,0.5);}
+.btn-parse{padding:7px 14px;border-radius:6px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:var(--blue);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.15s;margin-top:8px;}
+.btn-parse:hover{background:rgba(96,165,250,0.22);}
+.parse-result{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:5px;display:none;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.parse-result.ok{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.3);}
+.parse-result.err{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.3);}
+.tleg-lbl{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:7px;text-transform:uppercase;letter-spacing:0.07em;}
+
+/* Result cards */
+.rcard{background:var(--s1);border:1.5px solid var(--br);border-radius:var(--r);padding:20px 22px;position:relative;overflow:hidden;margin-bottom:12px;animation:fadeIn 0.4s ease;}
+.rcard.best{background:linear-gradient(135deg,rgba(251,191,36,0.09),rgba(251,191,36,0.03));border-color:rgba(251,191,36,0.45);}
+.bestbadge{position:absolute;top:0;right:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1000;font-size:9px;font-weight:800;padding:5px 12px;border-radius:0 12px 0 8px;letter-spacing:0.08em;}
+.rcard-hdr{display:flex;align-items:center;gap:11px;margin-bottom:14px;}
+.rcard-total{margin-left:auto;font-size:20px;font-weight:800;font-family:'DM Mono',monospace;}
+.persons-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--blue);margin-left:6px;}
+.cost-per-person{font-size:28px;font-weight:800;font-family:'DM Mono',monospace;}
+.cost-per-person.gold{color:var(--gold);}
+.cost-per-person-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;}
+.cost-total-small{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+.rcard-total.gold{color:var(--gold);}
+.rcard-total.normal{color:var(--text);}
+.ricon{width:44px;height:44px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,0.06);}
+.ricon.best{background:rgba(251,191,36,0.15);}
+.rname{font-size:16px;font-weight:700;}
+.rbadge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;}
+.rbg{background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.3);}
+.rbo{background:rgba(251,191,36,0.12);color:var(--gold);border:1px solid rgba(251,191,36,0.3);}
+.rbm{background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--br);}
+.rnums{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px 20px;margin-bottom:14px;}
+.rnl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;}
+.rnv{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;}
+.rnv.gold{color:var(--gold);}
+.rnv.lg{font-size:24px;}
+.rns{font-size:11px;color:var(--muted);margin-top:2px;}
+.total-time-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;margin-bottom:12px;}
+.total-time-val{font-size:22px;font-weight:800;font-family:'DM Mono',monospace;}
+.total-time-lbl{font-size:11px;color:var(--muted);}
+.total-time-aside{margin-left:auto;font-size:12px;color:var(--muted);text-align:right;line-height:1.6;}
+.times-block{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:12px;}
+.times-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.times-row:last-child{border-bottom:none;}
+.times-leg{color:var(--muted);font-weight:600;}
+.times-leg.blue{color:var(--blue);}
+.times-val{color:var(--text);font-family:'DM Mono',monospace;}
+.times-val.blue{color:var(--blue);}
+.work-row{display:flex;align-items:center;gap:8px;padding:6px 0;}
+/* Overview work-time table */
+.ov-work-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;}
+.ov-work-table td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.ov-work-table tr:last-child td{border-bottom:none;}
+.ov-work-seg{color:var(--text);font-weight:500;}
+.ov-work-dur{color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;}
+.ov-work-sel{color:var(--purple);background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.3);border-radius:5px;padding:3px 6px;font-size:11px;font-family:inherit;cursor:pointer;}
+.ov-work-sel:disabled{color:var(--muted);background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.05);cursor:default;opacity:0.5;}
+.ov-work-na{color:var(--muted);font-size:11px;font-style:italic;}
+.work-val{font-size:13px;font-weight:700;color:var(--purple);font-family:'DM Mono',monospace;}
+.sbar{margin-bottom:10px;}
+.sbarlbl{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;}
+.sbartr{height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;}
+.sbarfi{height:100%;border-radius:2px;}
+.rdetail{font-size:12px;color:var(--muted);line-height:1.7;}
+.recom{display:flex;align-items:flex-start;gap:11px;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.18);border-radius:var(--rs);padding:13px 15px;margin-bottom:14px;}
+.recom-text{font-size:13px;color:#c8a84b;line-height:1.6;}
+
+/* Print */
+.print-only{display:none;}
+.no-print{}
+@media print{
+  @page{margin:15mm 12mm;}
+  body{background:#fff!important;color:#111!important;}
+  body::before{display:none!important;}
+  .no-print{display:none!important;}
+  .print-only{display:block!important;}
+  #app{padding:0!important;max-width:100%!important;}
+  .hdr,.steps,.rpill,.recom,.backbtn,.btn-print,.btnp,.err,.sbar,.badge{display:none!important;}
+  .rcard{border:1px solid #ccc!important;background:#fff!important;break-inside:avoid;animation:none!important;margin-bottom:12px!important;padding:14px!important;}
+  .rcard.best{border:2px solid #f59e0b!important;background:#fffbef!important;}
+  .bestbadge{background:#f59e0b!important;color:#1a1000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .rnv{color:#111!important;}
+  .total-time-val,.total-time-row{color:#111!important;background:#f9fafb!important;border:1px solid #e5e7eb!important;}
+  .times-block{background:#f9fafb!important;border:1px solid #e5e7eb!important;}
+  .rdetail,.rnl,.rns{color:#555!important;}
+  .print-header{display:block!important;}
+  .print-footer{display:block!important;}
+}
+.print-header{display:none;border-bottom:2px solid #f59e0b;padding-bottom:10px;margin-bottom:16px;}
+.print-footer{display:none;border-top:1px solid #ddd;margin-top:16px;padding-top:10px;font-size:9pt;color:#888;}
+/* ── Required field states (must be last for specificity) ── */
+input.req-field,
+select.req-field{
+  border-color:rgba(251,191,36,0.6)!important;
+  background:rgba(251,191,36,0.09)!important;
+  box-shadow:0 0 0 1px rgba(251,191,36,0.2)!important;
+}
+input.req-field.invalid,
+select.req-field.invalid{
+  border-color:rgba(248,113,113,0.8)!important;
+  background:rgba(248,113,113,0.1)!important;
+  box-shadow:0 0 0 1px rgba(248,113,113,0.3)!important;
+}
+input.req-field:focus{
+  border-color:rgba(251,191,36,0.9)!important;
+  background:rgba(251,191,36,0.12)!important;
+}
+/* ── Omio Guide ── */
+.guide-toggle{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;border:none;background:rgba(255,255,255,0.04);border-radius:var(--rs);color:var(--muted);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:6px;transition:all 0.15s;}
+.guide-toggle:hover{background:rgba(255,255,255,0.08);color:var(--text);}
+.guide-toggle .chevron{transition:transform 0.25s;display:inline-block;font-style:normal;}
+.guide-toggle.open .chevron{transform:rotate(180deg);}
+.guide-box{display:none;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:var(--rs);padding:16px;margin-bottom:10px;}
+.guide-box.open{display:block;animation:fadeIn 0.2s ease;}
+.guide-tabs{display:flex;gap:6px;margin-bottom:14px;}
+.guide-tab{flex:1;padding:7px 10px;border-radius:6px;border:1.5px solid var(--br);background:transparent;color:var(--muted);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.15s;text-align:center;}
+.guide-tab.active{border-color:rgba(52,211,153,0.5);background:rgba(52,211,153,0.08);color:var(--green);}
+.guide-tab.active.flug{border-color:rgba(96,165,250,0.5);background:rgba(96,165,250,0.08);color:var(--blue);}
+.guide-content{display:none;}
+.guide-content.active{display:block;}
+.guide-step{display:flex;align-items:flex-start;gap:11px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.guide-step:last-child{border-bottom:none;padding-bottom:0;}
+.guide-num{flex-shrink:0;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;}
+.guide-num.bahn{background:var(--green);}
+.guide-num.flug{background:var(--blue);}
+.guide-step-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.guide-step-body{flex:1;}
+.guide-step-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.guide-step-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+.guide-tip{display:flex;align-items:flex-start;gap:8px;margin-top:12px;padding:9px 11px;background:rgba(251,191,36,0.13);border:1px solid rgba(251,191,36,0.2);border-radius:6px;font-size:11px;color:#c8a84b;line-height:1.5;}
+/* ── Cost view toggle ── */
+.cost-view-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.cost-view-tile{padding:10px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.15s;border:1.5px solid var(--br);background:var(--s1);}
+.cost-view-tile.active{border-color:rgba(96,165,250,0.5);background:rgba(96,165,250,0.08);}
+.cost-view-tile .prio-tile-icon{font-size:18px;margin-bottom:3px;}
+.cost-view-tile .prio-tile-label{font-size:13px;font-weight:700;color:var(--text);}
+.cost-view-tile.active .prio-tile-label{color:var(--blue);}
+.cost-view-tile .prio-tile-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+/* ── Transport selector (page 1) ── */
+.transport-tile{flex:1;padding:12px 8px;border-radius:8px;text-align:center;cursor:pointer;
+  transition:all 0.15s;border:1.5px solid var(--br);background:var(--s1);position:relative;}
+.transport-tile.active{border-color:rgba(52,211,153,0.5);background:rgba(52,211,153,0.08);}
+.transport-tile.active.auto{border-color:rgba(251,191,36,0.5);background:rgba(251,191,36,0.13);}
+.transport-tile.active.flug{border-color:rgba(96,165,250,0.5);background:rgba(96,165,250,0.08);}
+.transport-tile.disabled{opacity:0.45;cursor:not-allowed;}
+.transport-tile .pt-icon{font-size:22px;margin-bottom:4px;}
+.transport-tile .pt-label{font-size:12px;font-weight:700;color:var(--text);}
+.transport-tile.active .pt-label{color:var(--green);}
+.transport-tile.active.auto .pt-label{color:var(--gold);}
+.transport-tile.active.flug .pt-label{color:var(--blue);}
+.transport-tile .pt-check{position:absolute;top:5px;right:5px;font-size:11px;
+  opacity:0;transition:opacity 0.15s;}
+.transport-tile.active .pt-check{opacity:1;}
+/* ── Omio info card ── */
+.omio-info-card{background:rgba(96,165,250,0.05);border:1.5px solid rgba(96,165,250,0.2);border-radius:var(--rs);padding:14px 16px;margin-bottom:12px;}
+.omio-info-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;width:100%;background:none;border:none;color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:0;}
+.omio-info-toggle .chevron{color:var(--muted);font-size:11px;transition:transform 0.2s;}
+.omio-info-toggle.open .chevron{transform:rotate(180deg);}
+.omio-info-body{display:none;margin-top:12px;}
+.omio-info-body.open{display:block;}
+.omio-info-section{margin-bottom:12px;}
+.omio-info-section:last-child{margin-bottom:0;}
+.omio-info-section h4{font-size:12px;font-weight:700;color:var(--blue);margin:0 0 4px 0;text-transform:uppercase;letter-spacing:0.06em;}
+.omio-info-section p{font-size:12px;color:var(--muted);line-height:1.6;margin:0;}
+.omio-info-section strong{color:var(--text);}
+/* ── Easter Egg Toast ── */
+.ee-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(40px);
+  background:#1a1a2e;border:1px solid rgba(251,191,36,0.4);border-radius:10px;
+  padding:12px 20px;font-size:13px;color:var(--text);z-index:9999;
+  opacity:0;transition:opacity 0.4s ease,transform 0.4s ease;pointer-events:none;
+  white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+.ee-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* ── Destination database card ── */
+.dest-card{background:rgba(96,165,250,0.08);border:1.5px solid rgba(96,165,250,0.3);border-radius:var(--rs);padding:14px 16px;margin-top:8px;}
+.dest-select{width:100%;background:#0f2318;border:1.5px solid #34d399;border-radius:6px;padding:9px 10px;font-size:13px;color:#d1fae5;font-family:inherit;margin-bottom:8px;}
+.dest-times{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;}
+.dest-time-row{font-size:12px;display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:rgba(255,255,255,0.05);border-radius:5px;}
+.dest-time-val{font-weight:700;color:rgba(110,231,183,0.97);}
+.dest-manual{background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:6px;padding:10px;margin-top:4px;display:none;}
+.dest-manual.open{display:block;}
+.dest-manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.dest-save-btn{width:100%;margin-top:8px;padding:8px;background:rgba(167,139,250,0.12);border:1px dashed rgba(167,139,250,0.4);border-radius:6px;font-size:12px;color:rgba(196,181,253,0.9);cursor:pointer;font-family:inherit;}
+.dest-save-btn:hover{background:rgba(167,139,250,0.2);}
+.dest-applied{font-size:11px;color:rgba(110,231,183,0.8);margin-top:6px;display:none;}
+/* ── Custom destination dropdown ── */
+.cdd-wrap{position:relative;width:100%;margin-bottom:6px;}
+.cdd-trigger{width:100%;border:1.5px solid rgba(251,191,36,0.6)!important;
+  background:rgba(251,191,36,0.09);border-radius:6px;
+  padding:9px 36px 9px 12px;font-size:13px;color:var(--text);font-family:inherit;
+  cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;
+  user-select:none;}
+.cdd-trigger:hover{border-color:rgba(251,191,36,0.9)!important;}
+.cdd-trigger .cdd-placeholder{color:rgba(241,245,249,0.38);}
+.cdd-trigger .cdd-arrow{font-size:10px;color:var(--gold);flex-shrink:0;transition:transform 0.2s;}
+.cdd-trigger.open .cdd-arrow{transform:rotate(180deg);}
+.cdd-menu{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:200;
+  background:#0a1a0e;border:1.5px solid #34d399;border-radius:6px;
+  max-height:220px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+.cdd-menu.open{display:block;}
+.cdd-option{padding:9px 12px;font-size:13px;color:#d1fae5;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(52,211,153,0.08);}
+.cdd-option:last-child{border-bottom:none;}
+.cdd-option:hover,.cdd-option.selected{background:rgba(52,211,153,0.12);color:#6ee7b7;}
+.cdd-search{width:100%;background:#0a1a0e;border:none;
+  border-bottom:1px solid rgba(52,211,153,0.2);
+  padding:8px 12px;font-size:13px;color:#d1fae5;font-family:inherit;outline:none;}
+.cdd-search::placeholder{color:rgba(110,231,183,0.4);}
+/* ── New destination form ── */
+.cdd-add-option{padding:10px 12px;font-size:13px;color:rgba(167,139,250,0.95);
+  cursor:pointer;display:flex;align-items:center;gap:8px;
+  border-top:1px solid rgba(167,139,250,0.2);background:rgba(167,139,250,0.06);}
+.cdd-add-option:hover{background:rgba(167,139,250,0.14);}
+.new-dest-form{display:none;background:rgba(167,139,250,0.06);
+  border:1.5px solid rgba(167,139,250,0.3);border-radius:var(--rs);
+  padding:16px 18px;margin-top:8px;}
+.new-dest-form.open{display:block;}
+.new-dest-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+/* ── Enhanced transport tiles with station info ── */
+.transport-tile .pt-station{font-size:10px;color:rgba(148,163,184,0.75);margin-top:3px;
+  line-height:1.3;min-height:14px;word-break:break-word;}
+.transport-tile.active .pt-station{color:rgba(203,213,225,0.85);}
+.transport-tile .pt-time-wrap{margin-top:4px;display:flex;align-items:center;justify-content:center;gap:3px;}
+.pt-time-inp{width:64px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+  border-radius:4px;padding:4px 6px;font-size:13px;font-weight:700;color:inherit;
+  font-family:inherit;text-align:center;}
+.transport-tile.active.bahn .pt-time-inp{color:#34d399;border-color:rgba(52,211,153,0.35);}
+.transport-tile.active.flug .pt-time-inp{color:#60a5fa;border-color:rgba(96,165,250,0.35);}
+.transport-tile.active.auto .pt-time-inp{color:#fbbf24;border-color:rgba(251,191,36,0.35);}
+.pt-time-lbl{font-size:10px;color:rgba(148,163,184,0.7);}
+.transport-tile.disabled .pt-time-inp{opacity:0.4;}
+/* Fuhrpark name input inside auto tile */
+.pt-fuhrpark-inp{width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  border-radius:4px;padding:2px 5px;font-size:10px;color:rgba(241,245,249,0.85);
+  font-family:inherit;text-align:center;margin-top:3px;}
+/* ── Station selection dropdown in tile ── */
+.pt-station-select{width:100%;background:#0f2318;border:1px solid rgba(52,211,153,0.4);
+  border-radius:5px;padding:4px 6px;font-size:10px;color:#d1fae5;font-family:inherit;
+  margin-top:4px;cursor:pointer;max-width:100%;word-wrap:break-word;}
+.transport-tile.active.bahn .pt-station-select{border-color:rgba(52,211,153,0.5);}
+.transport-tile.active.flug .pt-station-select{background:#0a1628;border-color:rgba(96,165,250,0.5);color:#bfdbfe;}
+.transport-tile.active.auto .pt-station-select{background:#1a1200;border-color:rgba(251,191,36,0.5);color:#fef08a;}
+.pt-station-select option{background:#0a1a0e;color:#d1fae5;}
+.transport-tile.active.flug .pt-station-select option{background:#0a1628;color:#bfdbfe;}
+.transport-tile.active.auto .pt-station-select option{background:#1a1200;color:#fef08a;}
+/* ── Inline field warning icons ── */
+.field-warn{display:none;position:absolute;right:-24px;top:50%;transform:translateY(-50%);
+  font-size:14px;pointer-events:none;}
+.field-wrap{position:relative;}
+input.invalid ~ .field-warn,
+select.invalid ~ .field-warn{display:block;}
+/* ── Version badge ── */
+.version-badge{font-size:10px;color:rgba(148,163,184,0.5);text-align:right;
+  margin-bottom:6px;font-family:'DM Mono',monospace;letter-spacing:0.04em;}
+
+.db-card{background:var(--s1);border:1px solid var(--br);border-radius:var(--r);padding:22px;margin-top:14px;display:none;}
+.db-card.open{display:block;animation:fadeIn 0.3s ease;}
+.db-section{background:var(--s2);border-radius:8px;padding:14px 16px;margin-bottom:12px;}
+.db-route-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+.db-station{font-size:15px;font-weight:700;color:var(--text);}
+.db-date-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.db-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.db-btn{display:block;width:100%;padding:12px;background:rgba(220,38,38,0.12);border:1.5px solid rgba(220,38,38,0.45);border-radius:8px;color:#fca5a5;font-size:14px;font-weight:700;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box;}
+.db-btn:hover{background:rgba(220,38,38,0.24);}
+.db-price-row{display:flex;align-items:center;gap:12px;}
+.db-price-lbl{font-size:13px;color:var(--muted);white-space:nowrap;}
+.db-hint{font-size:11px;color:rgba(148,163,184,0.6);margin-top:5px;}
+.db-divider{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:14px 0;}
+</style>
 <body>
 <div class="app">
 <div class="hero">
@@ -251,16 +661,6 @@
         <span id="db-hin-meta-text">-</span>
       </div>
       <a class="db-btn" id="db-hin-link" href="#" target="_blank" rel="noopener">&#128279; Hinreise bei Deutsche Bahn suchen &#8599;</a>
-      <div class="db-time-grid" aria-label="Tatsächliche Bahnzeiten Hinreise">
-        <div>
-          <label class="db-price-lbl" for="bahn-hin-dep">Abfahrt</label>
-          <input class="inpsm req-field" type="time" id="bahn-hin-dep">
-        </div>
-        <div>
-          <label class="db-price-lbl" for="bahn-hin-arr">Ankunft</label>
-          <input class="inpsm req-field" type="time" id="bahn-hin-arr">
-        </div>
-      </div>
       <div class="db-price-row">
         <label class="db-price-lbl">Preis Hinreise (&#8364;/Person):</label>
         <input class="inpsm" type="number" id="bahn-hin-price" min="0" step="0.01" placeholder="z. B. 49" style="max-width:110px">
@@ -280,16 +680,6 @@
         <span id="db-rueck-meta-text">-</span>
       </div>
       <a class="db-btn" id="db-rueck-link" href="#" target="_blank" rel="noopener">&#128279; R&#252;ckreise bei Deutsche Bahn suchen &#8599;</a>
-      <div class="db-time-grid" aria-label="Tatsächliche Bahnzeiten Rückreise">
-        <div>
-          <label class="db-price-lbl" for="bahn-rueck-dep">Abfahrt</label>
-          <input class="inpsm req-field" type="time" id="bahn-rueck-dep">
-        </div>
-        <div>
-          <label class="db-price-lbl" for="bahn-rueck-arr">Ankunft</label>
-          <input class="inpsm req-field" type="time" id="bahn-rueck-arr">
-        </div>
-      </div>
       <div class="db-price-row">
         <label class="db-price-lbl">Preis R&#252;ckreise (&#8364;/Person):</label>
         <input class="inpsm" type="number" id="bahn-rueck-price" min="0" step="0.01" placeholder="z. B. 39" style="max-width:110px">
@@ -301,6 +691,2319 @@
 </div>
 <div class="ee-toast" id="ee-toast"></div>
 </div>
-<script src="assets/js/app.js"></script>
+<script>
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const ROAD_FAC=1.30,CAR_SPEED=110,SEAT=5.50,BAG=20,WORK_EFFICIENCY=0.75;
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const state={
+  startText:"",zielText:"",startGeo:null,zielGeo:null,
+  hD:"",hT:"10:00",rD:"",rT:"17:00",
+  persons:1,hasLicence:false,priority:"balanced",canWorkDuringTravel:false,
+  costView:'perperson',
+  hotelPrice:100,
+  transports:{bahn:true,flug:true,auto:false},
+  zielDest:null
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function hav(a,b,c,d){
+  const R=6371,r=x=>x*Math.PI/180,dA=r(c-a),dB=r(d-b);
+  const q=Math.sin(dA/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dB/2)**2;
+  return R*2*Math.atan2(Math.sqrt(q),Math.sqrt(1-q));
+}
+const eur=n=>new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:2}).format(n);
+const eurR=n=>new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
+const fD=d=>d?d.split("-").reverse().join("."):"";
+const fDT=(d,t)=>fD(d)+(t?" "+t+" Uhr":"");
+function tMin(dep,arr){
+  if(!dep||!arr)return 0;
+  const[dh,dm]=dep.split(":").map(Number),[ah,am]=arr.split(":").map(Number);
+  let v=(ah*60+am)-(dh*60+dm);return v<0?v+1440:v;
+}
+function durS(m){
+  if(!m||m<=0)return"—";const h=Math.floor(m/60),r=m%60;
+  return h?(r?h+"h "+r+"min":h+"h"):r+"min";
+}
+function addM(t,m){
+  if(!t)return"";const[h,mn]=t.split(":").map(Number);
+  const tot=h*60+mn+m;const hh=Math.floor(((tot%1440)+1440)%1440/60),mm=((tot%1440)+1440)%1440%60;
+  return(hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;
+}
+function calcNights(d1,d2){
+  if(!d1||!d2)return 0;
+  const diff=Math.round((new Date(d2)-new Date(d1))/86400000);
+  return diff>0?diff:0;
+}
+function autoKm(){
+  if(!state.startGeo||!state.zielGeo)return null;
+  return Math.round(hav(state.startGeo.lat,state.startGeo.lon,state.zielGeo.lat,state.zielGeo.lon)*ROAD_FAC);
+}
+
+// ── Work opts ─────────────────────────────────────────────────────────────────
+function fillWorkSel(selId,maxMin){
+  const sel=document.getElementById(selId);if(!sel)return;
+  sel.innerHTML='<option value="0">Keine Arbeitszeit</option>';
+  for(let m=10;m<=maxMin;m+=10){
+    const h=Math.floor(m/60),r=m%60;
+    const l=h?(r?h+"h "+r+"min":h+"h"):r+"min";
+    sel.innerHTML+=`<option value="${m}">${l}</option>`;
+  }
+}
+
+// ── Screen management ─────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  if(id === "s-prices") applyTransportVisibility();
+  const idx={"s-form":0,"s-prices":1,"s-overview":2,"s-results":3}[id]||0;
+  document.querySelectorAll(".sdot").forEach((d,i)=>{
+    d.classList.toggle("done",i<idx);
+    d.classList.toggle("active",i===idx);
+    d.classList.remove(...(i<idx||i===idx?[]:["done","active"]));
+  });
+  window.scrollTo(0,0);
+}
+
+// ── Nominatim ─────────────────────────────────────────────────────────────────
+const nomCache={};let nomTimers={};
+function nominatim(q,dropId,onSelect){
+  const drop=document.getElementById(dropId);
+  if(!q||q.length<2){drop.classList.remove("open");drop.innerHTML="";return;}
+  clearTimeout(nomTimers[dropId]);
+  nomTimers[dropId]=setTimeout(async()=>{
+    const key=q.toLowerCase();
+    let data=nomCache[key];
+    if(!data){
+      try{
+        const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=de,at,ch&addressdetails=1`,{headers:{"Accept-Language":"de"}});
+        data=await r.json();nomCache[key]=data;
+      }catch{return;}
+    }
+    drop.innerHTML=data.map((x,i)=>{
+      const parts=[x.address&&(x.address.city||x.address.town||x.address.village||x.address.county),x.address&&x.address.state].filter(Boolean);
+      const short=parts.join(", ")||x.display_name.split(",")[0];
+      return `<div class="ditem" data-idx="${i}"><div class="dmain">${short}</div><div class="dsub">${x.display_name}</div></div>`;
+    }).join("");
+    drop.classList.add("open");
+    drop.querySelectorAll(".ditem").forEach(el=>{
+      el.addEventListener("mousedown",e=>{
+        e.preventDefault();
+        const x=data[+el.dataset.idx];
+        const parts=[x.address&&(x.address.city||x.address.town||x.address.village||x.address.county),x.address&&x.address.state].filter(Boolean);
+        onSelect({short:parts.join(", ")||x.display_name.split(",")[0],lat:+x.lat,lon:+x.lon});
+        drop.classList.remove("open");drop.innerHTML="";
+      });
+    });
+  },320);
+}
+document.addEventListener("click",e=>{
+  document.querySelectorAll(".drop").forEach(d=>{if(!d.contains(e.target))d.classList.remove("open");});
+});
+
+
+// ── Station autocomplete (new dest form) ─────────────────────────────────────
+function searchStation(q, dropId, inputId, type){
+  // type: 'railway' for stations, 'aerodrome' for airports
+  var drop = document.getElementById(dropId);
+  if(!drop) return;
+  if(!q || q.length < 2){ drop.classList.remove('open'); drop.innerHTML=''; return; }
+  clearTimeout(nomTimers[dropId]);
+  nomTimers[dropId] = setTimeout(async function(){
+    var tag = type === 'railway'
+      ? 'railway=station OR railway=halt OR amenity=bus_station'
+      : 'aeroway=aerodrome';
+    // Use Nominatim with category filter
+    var url = 'https://nominatim.openstreetmap.org/search?q='
+      + encodeURIComponent(q) + '&format=json&limit=8&addressdetails=1'
+      + (type === 'railway' ? '&featuretype=railway' : '&featuretype=aerodrome');
+    // Simpler: search by name + city context
+    var cityEl = document.getElementById('inp-ziel');
+    var city = cityEl ? cityEl.value.split(',')[0].trim() : '';
+    var searchQ = q + (city && q.toLowerCase().indexOf(city.toLowerCase()) < 0 ? ' ' + city : '');
+    var url2 = 'https://nominatim.openstreetmap.org/search?q='
+      + encodeURIComponent(searchQ)
+      + '&format=json&limit=8&countrycodes=de,at,ch&addressdetails=1';
+    var data;
+    var key = 'station_' + type + '_' + searchQ.toLowerCase();
+    data = nomCache[key];
+    if(!data){
+      try{
+        var r = await fetch(url2, {headers:{'Accept-Language':'de'}});
+        data = await r.json();
+        // Filter to relevant types
+        if(type === 'railway'){
+          data = data.filter(function(x){
+            return x.type==='station' || x.type==='halt' || x.class==='railway'
+              || (x.display_name && x.display_name.toLowerCase().indexOf('bahnhof')>=0)
+              || (x.display_name && x.display_name.toLowerCase().indexOf('hbf')>=0);
+          });
+          if(!data.length){
+            // Fallback: search without filter
+            var r2 = await fetch(
+              'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(searchQ)
+              + '%20Bahnhof&format=json&limit=5&countrycodes=de,at,ch&addressdetails=1',
+              {headers:{'Accept-Language':'de'}});
+            data = await r2.json();
+          }
+        } else {
+          data = data.filter(function(x){
+            return x.type==='aerodrome' || x.class==='aeroway'
+              || (x.display_name && x.display_name.toLowerCase().indexOf('airport')>=0)
+              || (x.display_name && x.display_name.toLowerCase().indexOf('flughafen')>=0);
+          });
+          if(!data.length){
+            var r3 = await fetch(
+              'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(searchQ)
+              + '%20Flughafen&format=json&limit=5&countrycodes=de,at,ch&addressdetails=1',
+              {headers:{'Accept-Language':'de'}});
+            data = await r3.json();
+          }
+        }
+        nomCache[key] = data;
+      } catch(e){ return; }
+    }
+    if(!data || !data.length){
+      drop.innerHTML = '<div class="ditem"><div class="dmain" style="color:var(--muted)">Keine Ergebnisse — bitte manuell eingeben</div></div>';
+      drop.classList.add('open');
+      return;
+    }
+    drop.innerHTML = data.slice(0,6).map(function(x,i){
+      var name = x.display_name.split(',')[0].trim();
+      var sub  = x.display_name.split(',').slice(1,3).join(',').trim();
+      return '<div class="ditem" data-idx="'+i+'"><div class="dmain">'+name+'</div><div class="dsub">'+sub+'</div></div>';
+    }).join('');
+    drop.classList.add('open');
+    drop.querySelectorAll('.ditem').forEach(function(el){
+      el.addEventListener('mousedown', function(e){
+        e.preventDefault();
+        var x = data[+el.dataset.idx];
+        var name = x.display_name.split(',')[0].trim();
+        var inp = document.getElementById(inputId);
+        if(inp){ inp.value = name; inp.dispatchEvent(new Event('input')); }
+        drop.classList.remove('open'); drop.innerHTML='';
+      });
+    });
+  }, 350);
+}
+
+// Wire up bahn + flug station search
+(function(){
+  var bahnInp = document.getElementById('dest-manual-bahn-name');
+  var flugInp = document.getElementById('dest-manual-flug-name');
+  if(bahnInp){
+    bahnInp.addEventListener('input', function(){
+      searchStation(this.value, 'drop-bahn-station', 'dest-manual-bahn-name', 'railway');
+    });
+  }
+  if(flugInp){
+    flugInp.addEventListener('input', function(){
+      searchStation(this.value, 'drop-flug-station', 'dest-manual-flug-name', 'aerodrome');
+    });
+  }
+})();
+
+// Auto-trigger station search when GPS city is selected
+var _origInpZielCallback = null;
+
+// ── Start transfer auto-lookup ────────────────────────────────────────────────
+var startTransfer = {bahn: {station:'', minutes:0}, flug: {station:'', minutes:0}, auto: {name:'Fuhrpark', minutes:0}};
+
+function onSelectStation(type, selectEl){
+  var name = selectEl.value;
+  if(!name) return;
+  if(type === 'bahn') startTransfer.bahn.station = name;
+  if(type === 'flug') startTransfer.flug.station = name;
+  if(type === 'auto'){
+    startTransfer.auto.name = name;
+    // Find city coords and recalc OSRM
+    var city = FUHRPARK_STAEDTE.filter(function(s){ return s.name === name; })[0];
+    if(city && state.startGeo && state.startGeo.lat){
+      var minInp = document.getElementById('tt-auto-min');
+      if(minInp){ minInp.placeholder = '…'; }
+      getOsrmDriveMinutes(state.startGeo.lat, state.startGeo.lon, city.lat, city.lon).then(function(mins){
+        if(mins !== null && minInp){
+          minInp.value = mins;
+          minInp.dispatchEvent(new Event('change'));
+        } else if(minInp){
+          minInp.placeholder = '—';
+        }
+      });
+    }
+    return;
+  }
+  // Get coords from selected option's dataset
+  var selOpt = selectEl.options[selectEl.selectedIndex];
+  var toLat = parseFloat(selOpt.dataset.lat);
+  var toLon = parseFloat(selOpt.dataset.lon);
+  if(toLat && toLon){
+    calcAndSetMinutes(type, toLat, toLon);
+  }
+}
+
+function updateStartTransfer(type, val){
+  if(type === 'auto-name'){
+    startTransfer.auto.name = val;
+    return;
+  }
+  var mins = parseInt(val) || 0;
+  startTransfer[type].minutes = mins;
+  // Mirror to page 2 fields immediately
+  syncStartTransferToPage2(type);
+}
+
+function syncStartTransferToPage2(type){
+  if(type === 'bahn' || type === 'all'){
+    var el = document.getElementById('bahn-hin-ts');
+    if(el && !el.dataset.userEdited) el.value = startTransfer.bahn.minutes || '';
+    var el2 = document.getElementById('bahn-rueck-ts');
+    if(el2 && !el2.dataset.userEdited) el2.value = startTransfer.bahn.minutes || '';
+  }
+  if(type === 'flug' || type === 'all'){
+    var el3 = document.getElementById('flug-hin-ts');
+    if(el3 && !el3.dataset.userEdited) el3.value = startTransfer.flug.minutes || '';
+    var el4 = document.getElementById('flug-rueck-ts');
+    if(el4 && !el4.dataset.userEdited) el4.value = startTransfer.flug.minutes || '';
+  }
+  if(type === 'auto' || type === 'all'){
+    var el5 = document.getElementById('auto-tr-hs');
+    if(el5 && !el5.dataset.userEdited) el5.value = startTransfer.auto.minutes || '';
+    var el6 = document.getElementById('auto-tr-rs');
+    if(el6 && !el6.dataset.userEdited) el6.value = startTransfer.auto.minutes || '';
+  }
+}
+
+async function lookupStartStation(geo){
+  if(!geo || !geo.lat) return;
+  var lat = geo.lat, lon = geo.lon;
+  var RADIUS_BAHN = 75000;  // 75 km
+  var RADIUS_FLUG = 200000; // 200 km
+
+  // Helper: haversine distance in km
+  function haversine(lat1,lon1,lat2,lon2){
+    var R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+
+  // Helper: update tile with name + distance
+  function setTile(stationElId, stations){
+    var el = document.getElementById(stationElId);
+    if(!el) return;
+    // stations = array of {name, dist} sorted ascending
+    el.innerHTML = '';
+    if(!stations || !stations.length){
+      var opt = document.createElement('option');
+      opt.value = ''; opt.textContent = '— Kein Ergebnis —';
+      el.appendChild(opt);
+      return;
+    }
+    var MAX = 30;
+    var list = stations.slice(0, MAX);
+    var total = stations.length;
+    var placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = total > 1
+      ? '↕ ' + total + (total > MAX ? '+' : '') + ' Optionen — hier ändern'
+      : '— Auswählen —';
+    el.appendChild(placeholder);
+    list.forEach(function(s){
+      var opt = document.createElement('option');
+      opt.value = s.name;
+      opt.dataset.lat = s.lat || '';
+      opt.dataset.lon = s.lon || '';
+      opt.textContent = s.name + ' · ' + s.dist.toFixed(1) + ' km';
+      el.appendChild(opt);
+    });
+    // Auto-select closest + store coords on element for OSRM
+    if(list.length){
+      el.value = list[0].name;
+      el.dataset.autoLat = list[0].lat || '';
+      el.dataset.autoLon = list[0].lon || '';
+    }
+  }
+
+  try{
+    // Overpass query: nearest railway=station AND aeroway=aerodrome within 25km
+    // Bahnhöfe: railway=station, kein Tourismus/Museum/Miniatur
+    // Flughäfen: nur mit IATA-Code = Linienflugbetrieb
+    var query = '[out:json][timeout:25];('
+      + 'node["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS_BAHN+','+lat+','+lon+');'
+      + 'way["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS_BAHN+','+lat+','+lon+');'
+      + 'node["aeroway"="aerodrome"]["iata"](around:'+RADIUS_FLUG+','+lat+','+lon+');'
+      + 'way["aeroway"="aerodrome"]["iata"](around:'+RADIUS_FLUG+','+lat+','+lon+');'
+      + ');out center;';
+
+    var resp = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query,
+      headers: {'Content-Type': 'text/plain'}
+    });
+    var data = await resp.json();
+    var elements = data.elements || [];
+
+    // Separate stations and airports, calculate distances
+    // Ways use 'center' for coordinates, nodes use lat/lon directly
+    var stations = [], airports = [];
+    var seen = {};
+    elements.forEach(function(el){
+      var elLat = el.lat || (el.center && el.center.lat);
+      var elLon = el.lon || (el.center && el.center.lon);
+      if(!elLat || !elLon) return;
+      var name = (el.tags && (el.tags.name || el.tags['name:de'])) || '';
+      if(!name) return;
+      if(seen[name]) return; // deduplicate by name
+      seen[name] = true;
+      var dist = haversine(lat, lon, elLat, elLon);
+      if(el.tags.railway === 'station'){
+        // Exclude subway, light_rail, monorail, miniature
+        var stype = el.tags.station || '';
+        var usage  = el.tags.usage  || '';
+        if(stype === 'subway' || stype === 'light_rail' || stype === 'monorail') return;
+        if(usage === 'tourism' || usage === 'military') return;
+        // Exclude tram-only stations
+        if(el.tags.tram === 'yes' && el.tags.train !== 'yes' && el.tags.subway !== 'yes') return;
+        stations.push({name:name, dist:dist, lat:elLat, lon:elLon});
+      } else if(el.tags.aeroway === 'aerodrome'){
+        // Overpass already filtered iata tag — only scheduled airports
+        // Show IATA code in name if available
+        var iata = el.tags.iata || '';
+        var displayName = iata ? name + ' (' + iata + ')' : name;
+        airports.push({name:displayName, dist:dist, lat:elLat, lon:elLon});
+      }
+    });
+
+    // Sort by distance, pick closest
+    stations.sort(function(a,b){ return a.dist-b.dist; });
+    airports.sort(function(a,b){ return a.dist-b.dist; });
+
+    // Populate dropdowns sorted by distance
+    setTile('tt-bahn-station', stations);
+    setTile('tt-flug-station', airports);
+    // Set default (closest) in startTransfer + calc OSRM drive time
+    if(stations.length){
+      startTransfer.bahn.station = stations[0].name;
+      calcAndSetMinutes('bahn', stations[0].lat, stations[0].lon);
+    }
+    if(airports.length){
+      startTransfer.flug.station = airports[0].name;
+      calcAndSetMinutes('flug', airports[0].lat, airports[0].lon);
+    }
+
+  } catch(e){
+    console.error('Overpass lookup failed:', e);
+    // Fallback: show city name
+    var city = geo.short.split(',')[0].trim();
+    var stEl = document.getElementById('tt-bahn-station');
+    if(stEl) stEl.innerHTML = '<option value="">'+city+' Hbf (Fallback)</option>';
+    var apEl = document.getElementById('tt-flug-station');
+    if(apEl) apEl.innerHTML = '<option value="">'+city+' Flughafen (Fallback)</option>';
+  }
+}
+
+
+// ── Shared haversine (global scope) ─────────────────────────────────────────
+function haversineGlobal(lat1,lon1,lat2,lon2){
+  var R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// ── Fuhrpark: find nearest Landeshauptstadt ───────────────────────────────────
+var FUHRPARK_STAEDTE = [
+  {name:'Berlin',       lat:52.5200, lon:13.4050},
+  {name:'Bremen',       lat:53.0793, lon:8.8017},
+  {name:'Dresden',      lat:51.0504, lon:13.7373},
+  {name:'Düsseldorf',   lat:51.2217, lon:6.7762},
+  {name:'Erfurt',       lat:50.9848, lon:11.0299},
+  {name:'Hamburg',      lat:53.5753, lon:10.0153},
+  {name:'Hannover',     lat:52.3759, lon:9.7320},
+  {name:'Kiel',         lat:54.3233, lon:10.1228},
+  {name:'Magdeburg',    lat:52.1316, lon:11.6391},
+  {name:'Mainz',        lat:49.9929, lon:8.2473},
+  {name:'München',      lat:48.1351, lon:11.5820},
+  {name:'Potsdam',      lat:52.3906, lon:13.0645},
+  {name:'Saarbrücken',  lat:49.2354, lon:6.9969},
+  {name:'Schwerin',     lat:53.6288, lon:11.4148},
+  {name:'Stuttgart',    lat:48.7758, lon:9.1829},
+  {name:'Wiesbaden',    lat:50.0782, lon:8.2398},
+];
+
+function updateFuhrparkDropdown(geo){
+  if(!geo || !geo.lat) return;
+  var sel = document.getElementById('tt-auto-name');
+  if(!sel) return;
+  // Calculate distances to all Fuhrpark cities
+  var dists = FUHRPARK_STAEDTE.map(function(s){
+    return {name:s.name, dist:haversineGlobal(geo.lat, geo.lon, s.lat, s.lon)};
+  });
+  dists.sort(function(a,b){ return a.dist - b.dist; });
+  // Rebuild options
+  sel.innerHTML = '';
+  var ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = '↕ ' + dists.length + ' Standorte — hier ändern';
+  sel.appendChild(ph);
+  dists.forEach(function(d){
+    var opt = document.createElement('option');
+    opt.value = d.name;
+    opt.textContent = d.name + ' · ' + d.dist.toFixed(0) + ' km';
+    sel.appendChild(opt);
+  });
+  // Select nearest + calculate OSRM drive minutes
+  if(dists.length){
+    sel.value = dists[0].name;
+    startTransfer.auto.name = dists[0].name;
+    // Find lat/lon of nearest city for OSRM
+    var nearest = FUHRPARK_STAEDTE.filter(function(s){ return s.name === dists[0].name; })[0];
+    if(nearest){
+      var minInp = document.getElementById('tt-auto-min');
+      if(minInp){ minInp.placeholder = '…'; }
+      getOsrmDriveMinutes(geo.lat, geo.lon, nearest.lat, nearest.lon).then(function(mins){
+        if(mins !== null && minInp){
+          minInp.value = mins;
+          minInp.dispatchEvent(new Event('change'));
+        } else if(minInp){
+          minInp.placeholder = '—';
+        }
+      });
+    }
+  }
+}
+
+
+// ── OSRM Routing: drive time from start to station ───────────────────────────
+async function getOsrmDriveMinutes(fromLat, fromLon, toLat, toLon){
+  try{
+    var url = 'https://router.project-osrm.org/route/v1/driving/'
+      + fromLon + ',' + fromLat + ';'
+      + toLon + ',' + toLat
+      + '?overview=false&steps=false';
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if(data.code === 'Ok' && data.routes && data.routes[0]){
+      return Math.round(data.routes[0].duration / 60); // seconds → minutes
+    }
+  } catch(e){
+    console.warn('OSRM routing failed:', e);
+  }
+  return null;
+}
+
+async function calcAndSetMinutes(type, toLat, toLon){
+  if(!state.startGeo || !state.startGeo.lat || !toLat || !toLon) return;
+  var minInp = document.getElementById(type === 'bahn' ? 'tt-bahn-min' : 'tt-flug-min');
+  if(!minInp) return;
+  minInp.placeholder = '…';
+  var mins = await getOsrmDriveMinutes(state.startGeo.lat, state.startGeo.lon, toLat, toLon);
+  if(mins !== null){
+    minInp.value = mins;
+    minInp.dispatchEvent(new Event('change'));
+  } else {
+    minInp.placeholder = '—';
+  }
+}
+
+
+function toDbDate(d){if(!d)return'';var p=d.split('-');return p.length===3?p[2]+'.'+p[1]+'.'+p[0]:d;}
+function updateDbLink(dir){ /* not used */ }
+function updateBahnBadge(){}
+var DB_STATIONS = {
+  // EVA-IDs verifiziert gegen DB HAFAS
+  // Koordinaten im Mikro-Grad-Format (DB-intern)
+  "Berlin Hbf":           {eva:"8011160", x:"13369549", y:"52525589"},
+  "Bremen Hbf":           {eva:"8000050", x:"8813833",  y:"53083478"},
+  "Dortmund Hbf":         {eva:"8000080", x:"7459297",  y:"51517899"},
+  "Düsseldorf Hbf":       {eva:"8000085", x:"6794397",  y:"51219576"},
+  "Duesseldorf Hbf":      {eva:"8000085", x:"6794397",  y:"51219576"},
+  "Essen Hbf":            {eva:"8000098", x:"7014761",  y:"51451355"},
+  "Frankfurt (Main) Hbf": {eva:"8000105", x:"8663785",  y:"50106817"},
+  "Hamburg Hbf":          {eva:"8002549", x:"10006908", y:"53552736"},
+  "Hannover Hbf":         {eva:"8000152", x:"9741017",  y:"52376764"},
+  "Köln Hbf":             {eva:"8000207", x:"6958730",  y:"50943029"},
+  "Koeln Hbf":            {eva:"8000207", x:"6958730",  y:"50943029"},
+  "Leipzig Hbf":          {eva:"8010205", x:"12375812", y:"51345378"},
+  "München Hbf":          {eva:"8000261", x:"11558339", y:"48140229"},
+  "Muenchen Hbf":         {eva:"8000261", x:"11558339", y:"48140229"},
+  "Nürnberg Hbf":         {eva:"8000284", x:"11082989", y:"49445615"},
+  "Nuernberg Hbf":        {eva:"8000284", x:"11082989", y:"49445615"},
+  "Stuttgart Hbf":        {eva:"8000096", x:"9182760",  y:"48784782"},
+};
+
+async function lookupDbStation(name){
+  // 1. Exakter Match in lokaler Tabelle
+  if(DB_STATIONS[name]) return DB_STATIONS[name];
+  // 2. Fuzzy Match (case-insensitive, partial)
+  var nl = name.toLowerCase();
+  for(var k in DB_STATIONS){
+    if(k.toLowerCase()===nl) return DB_STATIONS[k];
+    if(nl.indexOf(k.toLowerCase())>=0 || k.toLowerCase().indexOf(nl)>=0) return DB_STATIONS[k];
+  }
+  // 3. transport.rest API Fallback
+  try {
+    var r = await fetch('https://v6.db.transport.rest/stations?query='
+      +encodeURIComponent(name)+'&results=1&fuzzy=true',
+      {headers:{'Accept':'application/json'}});
+    var data = await r.json();
+    var keys = Object.keys(data);
+    if(keys.length>0){
+      var st=data[keys[0]];
+      return {eva:st.id, x:null, y:null};
+    }
+  } catch(e){ console.warn('transport.rest:',e); }
+  return null;
+}
+
+function buildDbUrl(fromName, fromInfo, toName, toInfo, dateVal, timeVal, isArrival){
+  var enc = encodeURIComponent;
+  var dt = dateVal + 'T' + (timeVal||'00:00') + ':00';
+
+  function makeSoid(name, info){
+    if(!info) return null;
+    // EVA-Nummer ist der L-Parameter im soid
+    var s = 'A=1@O='+name;
+    if(info.x) s += '@X='+info.x;
+    if(info.y) s += '@Y='+info.y;
+    s += '@U=80@L='+info.eva+'@';
+    return s;
+  }
+
+  var url = 'https://www.bahn.de/buchung/fahrplan/suche'
+    + '#sts=true'
+    + '&so=' + enc(fromName)
+    + '&zo=' + enc(toName)
+    + '&kl=2';
+
+  var fromSoid = makeSoid(fromName, fromInfo);
+  var toSoid   = makeSoid(toName,   toInfo);
+  if(fromSoid) url += '&soid=' + enc(fromSoid) + '&sot=ST';
+  if(fromInfo) url += '&soei=' + fromInfo.eva;
+  if(toSoid)   url += '&zoid=' + enc(toSoid)   + '&zot=ST';
+  if(toInfo)   url += '&zoei=' + toInfo.eva;
+
+  url += '&hd=' + dt
+    + '&hza=' + (isArrival ? 'A' : 'D')
+    + '&hz=%5B%5D&ar=false&s=true&d=false'
+    + '&vm=00,01,02,03,04,05,06,07,08,09'
+    + '&fm=false&bp=false';
+  return url;
+}
+
+async function buildAndShowDb(){
+  var fromSt=(startTransfer&&startTransfer.bahn&&startTransfer.bahn.station)||state.startText||'-';
+  var dest=state.zielDest;
+  var toSt=dest?(dest.bahnStation||dest.name):(state.zielText||'-');
+
+  function set(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  set('db-hin-from', fromSt); set('db-hin-to', toSt);
+  set('db-rueck-from', toSt); set('db-rueck-to', fromSt);
+
+  // Meta-Zeilen mit Datum/Zeit aus Seite 1
+  function fmtDate(d){ if(!d) return '-'; var p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
+  set('db-hin-meta-text',  fmtDate(state.hD) + ' · Ankunft ' + (state.hT||'-') + ' Uhr');
+  set('db-rueck-meta-text', fmtDate(state.rD) + ' · Abfahrt ' + (state.rT||'-') + ' Uhr');
+
+  var card=document.getElementById('db-bahn-card');
+  if(card){
+    card.classList.add('open');
+    setTimeout(function(){window.scrollTo({top:card.offsetTop-16,behavior:'smooth'});},50);
+  }
+
+  // Links sofort mit Seite-1-Daten bauen
+  await updateDbLinks();
+}
+
+async function updateDbLinks(){
+  var fromSt=(startTransfer&&startTransfer.bahn&&startTransfer.bahn.station)||state.startText||'';
+  var dest=state.zielDest;
+  var toSt=dest?(dest.bahnStation||dest.name):(state.zielText||'');
+  if(!fromSt||!toSt) return;
+
+  var hinBtn=document.getElementById('db-hin-link');
+  var rueckBtn=document.getElementById('db-rueck-link');
+  if(hinBtn) hinBtn.textContent='&#128279; Suche Verbindung…';
+  if(rueckBtn) rueckBtn.textContent='&#128279; Suche Verbindung…';
+
+  // Stations-Infos parallel laden (gibt Objekt {soei, soid} zurück)
+  var infos = await Promise.all([
+    lookupDbStation(fromSt),
+    lookupDbStation(toSt)
+  ]);
+  var fromInfo=infos[0], toInfo=infos[1];
+
+  if(hinBtn && state.hD){
+    hinBtn.href = buildDbUrl(fromSt,fromInfo,toSt,toInfo,state.hD,state.hT,true);
+    hinBtn.innerHTML = '&#128279; Hinreise bei Deutsche Bahn suchen &#8599;';
+  }
+  if(rueckBtn && state.rD){
+    rueckBtn.href = buildDbUrl(toSt,toInfo,fromSt,fromInfo,state.rD,state.rT,false);
+    rueckBtn.innerHTML = '&#128279; Rückreise bei Deutsche Bahn suchen &#8599;';
+  }
+}
+// ── Setup autocomplete ────────────────────────────────────────────────────────
+const inpStart=document.getElementById("inp-start");
+const inpZiel=document.getElementById("inp-ziel");
+inpStart.addEventListener("input",()=>{state.startGeo=null;inpStart.classList.remove("invalid");nominatim(inpStart.value,"drop-start",h=>{state.startText=h.short;state.startGeo=h;inpStart.value=h.short;updateAutoKmHint();lookupStartStation(h);updateFuhrparkDropdown(h);});});
+inpZiel.addEventListener("input",()=>{state.zielGeo=null;inpZiel.classList.remove("invalid");nominatim(inpZiel.value,"drop-ziel",h=>{
+  state.zielText=h.short;state.zielGeo=h;inpZiel.value=h.short;
+  updateAutoKmHint(); state.zielText=h.short;
+  // Auto-fill station name fields with city name as search seed
+  var cityName=h.short.split(',')[0].trim();
+  var bahnInp=document.getElementById('dest-manual-bahn-name');
+  var flugInp=document.getElementById('dest-manual-flug-name');
+  // Only pre-fill if form is open and fields are empty
+  var form=document.getElementById('new-dest-form');
+  if(form&&form.classList.contains('open')){
+    if(bahnInp&&!bahnInp.value){ bahnInp.value=cityName+' Hbf'; }
+    if(flugInp&&!flugInp.value){ flugInp.value=cityName+' Flughafen'; }
+    // Also pre-fill dest name if empty
+    var nameInp=document.getElementById('dest-manual-name');
+    if(nameInp&&!nameInp.value) nameInp.value=cityName;
+  }
+});});
+
+// ── Swap button ───────────────────────────────────────────────────────────────
+document.getElementById("swap-btn").addEventListener("click",()=>{
+  [inpStart.value,inpZiel.value]=[inpZiel.value,inpStart.value];
+  [state.startText,state.zielText]=[state.zielText,state.startText];
+  [state.startGeo,state.zielGeo]=[state.zielGeo,state.startGeo];
+  updateAutoKmHint();
+});
+
+// ── Persons ───────────────────────────────────────────────────────────────────
+document.getElementById("persons-minus").addEventListener("click",()=>{state.persons=Math.max(1,state.persons-1);updatePersonsUI();});
+document.getElementById("persons-plus").addEventListener("click",()=>{state.persons=Math.min(20,state.persons+1);updatePersonsUI();});
+function updatePersonsUI(){
+  document.getElementById("persons-num").textContent=state.persons;
+  document.getElementById("persons-label").textContent=state.persons===1?"1 Person reist allein":state.persons+" Personen reisen gemeinsam";
+}
+
+// ── Licence checkbox ──────────────────────────────────────────────────────────
+document.getElementById("licence-cb").addEventListener("click",()=>{
+  state.hasLicence=!state.hasLicence;
+  const cb=document.getElementById("licence-check");
+  cb.checked=state.hasLicence;
+  document.getElementById("licence-cb").classList.toggle("checked",state.hasLicence);
+  document.getElementById("licence-note").textContent=state.hasLicence
+    ?"✓ Mindestens eine Person verfügt über einen gültigen Führerschein → Auto-Option wird berücksichtigt"
+    :"Kein gültiger Führerschein → Auto-Option wird ausgeschlossen";
+  updateAutoOverlay();
+  // Sync auto transport tile
+  state.transports.auto = state.hasLicence;
+  updateTransportTiles();
+  applyTransportVisibility();
+});
+
+function updateAutoOverlay(){
+  const ov=document.getElementById("auto-overlay");
+  if(ov) ov.classList.toggle("show",!state.hasLicence);
+}
+
+// ── Work-during-travel tiles ─────────────────────────────────────────────────
+const workHints = {
+  yes: "Arbeitszeit-Auswahl wird auf Seite 3 bei Bahn und Flug aktiviert. Produktive Zeit wird im Ergebnis ausgewiesen.",
+  no:  "Keine Arbeitszeit-Auswahl verfügbar. Die gesamte Reisezeit gilt als nicht produktiv."
+};
+document.querySelectorAll("[data-work]").forEach(function(t){
+  t.addEventListener("click", function(){
+    state.canWorkDuringTravel = (t.dataset.work === "yes");
+    document.querySelectorAll("[data-work]").forEach(function(x){ x.classList.remove("active"); });
+    t.classList.add("active");
+    var hint = document.getElementById("work-travel-hint");
+    hint.textContent = workHints[t.dataset.work];
+    hint.style.display = "block";
+    // Rebuild work table with current items when tile is clicked on page 3
+    if(_lastItems && _lastItems.length > 0){
+      buildOverview(_lastItems);
+    }
+  });
+});
+function updateWorkVisibility(){ /* no-op: work UI now on page 3 */ }
+
+// ── Priority tiles ────────────────────────────────────────────────────────────
+document.querySelectorAll("[data-prio]").forEach(t=>{
+  t.addEventListener("click",()=>{
+    state.priority=t.dataset.prio;
+    document.querySelectorAll("[data-prio]").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+  });
+});
+
+// ── Hotel ─────────────────────────────────────────────────────────────────────
+document.getElementById("hotel-price").addEventListener("input",()=>{
+  state.hotelPrice=parseFloat(document.getElementById("hotel-price").value)||0;
+  updateHotelUI();
+});
+function updateHotelUI(){
+  const nights=calcNights(state.hD,state.rD);
+  const total=nights*state.hotelPrice;
+  // S1: hotel managed on page 3 overview
+  const hpEl=document.getElementById("hotel-price");
+  if(hpEl) hpEl.value=state.hotelPrice;
+
+  // S3: hotel UI moved to page 3 overview
+  // S2 (hotel-box-s2 removed with screen 2)
+}
+
+// ── Date/time listeners ───────────────────────────────────────────────────────
+["hD","hT","rD","rT"].forEach(id=>{
+  document.getElementById(id).addEventListener("change",e=>{
+    state[id]=e.target.value;
+    e.target.classList.remove("invalid");
+    updateHotelUI();
+  });
+});
+
+// ── Auto km hint ──────────────────────────────────────────────────────────────
+function updateAutoKmHint(){
+  const km=autoKm();const hint=document.getElementById("auto-km-hint");
+  if(km&&hint){const fm=Math.round(km/CAR_SPEED*60);hint.style.display="block";hint.textContent=`Geschätzte Strecke: ~${km} km · Fahrzeit: ca. ${durS(fm)}`;updateWorkSelAuto();}
+  else if(hint){hint.style.display="none";}
+}
+function updateWorkSelAuto(){ /* auto work moved to page 3 overview */ }
+
+// ── Bahn/Flug time → work sel ─────────────────────────────────────────────────
+function setupWorkSel(depId,arrId,selId,wrapId,maxId){
+  [depId,arrId].forEach(id=>document.getElementById(id).addEventListener("change",()=>{
+    const dep=document.getElementById(depId).value;
+    const arr=document.getElementById(arrId).value;
+    const dur=tMin(dep,arr);const wrap=document.getElementById(wrapId);
+    if(dur>0&&state.canWorkDuringTravel){wrap.style.display="flex";fillWorkSel(selId,dur);document.getElementById(maxId).textContent="(max. "+durS(dur)+")";}
+    else{wrap.style.display="none";}
+  }));
+}
+// Work sel setup removed — work time now on page 3 overview only
+
+// ── Checkboxes ────────────────────────────────────────────────────────────────
+function setupCb(cbId,rowId,priceId,price){
+  var row=document.getElementById(rowId);if(!row)return;
+  row.addEventListener("click",()=>{
+    var cb=document.getElementById(cbId);if(!cb)return;
+    cb.checked=!cb.checked;row.classList.toggle("checked",cb.checked);
+    var pe=document.getElementById(priceId);if(pe)pe.textContent=cb.checked?eur(price):"—";
+  });
+}
+setupCb("seat-hin","seat-hin-cb","seat-hin-price",SEAT);
+setupCb("seat-rueck","seat-rueck-cb","seat-rueck-price",SEAT);
+setupCb("bag-hin","bag-hin-cb","bag-hin-price",BAG);
+setupCb("bag-rueck","bag-rueck-cb","bag-rueck-price",BAG);
+
+// ── Back buttons ──────────────────────────────────────────────────────────────
+document.querySelectorAll("[data-back]").forEach(btn=>{
+  btn.addEventListener("click",()=>showScreen(btn.dataset.back));
+});
+
+// ── Screen 1 → 2 ─────────────────────────────────────────────────────────────
+
+// ── Field validation helpers ──────────────────────────────────────────────────
+function markInvalid(ids){
+  ids.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.classList.add('invalid');
+  });
+}
+function clearInvalid(){
+  document.querySelectorAll('.req-field.invalid').forEach(function(el){
+    el.classList.remove('invalid');
+  });
+  var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
+}
+function isBlockComplete(prefix){
+  // Returns true if a transport block has all required fields filled
+  var fields = prefix==='auto'
+    ? ['auto-kosten','auto-tr-hs','auto-tr-rs']
+    : prefix==='bahn'
+    ? ['bahn-hin-dep','bahn-hin-arr','bahn-hin-price',
+       'bahn-rueck-dep','bahn-rueck-arr','bahn-rueck-price',
+       'bahn-hin-ts','bahn-hin-te','bahn-rueck-ts','bahn-rueck-te']
+    : ['flug-hin-dep','flug-hin-arr','flug-hin-price',
+       'flug-rueck-dep','flug-rueck-arr','flug-rueck-price',
+       'flug-hin-ts','flug-hin-te','flug-rueck-ts','flug-rueck-te'];
+  return fields.every(function(id){
+    var el=document.getElementById(id);
+    return el && el.value && el.value.trim()!=='';
+  });
+}
+function isBlockPartial(prefix){
+  // Returns true if at least one field is filled but block is not complete
+  var fields = prefix==='auto'
+    ? ['auto-kosten','auto-tr-hs','auto-tr-rs']
+    : prefix==='bahn'
+    ? ['bahn-hin-dep','bahn-hin-arr','bahn-hin-price',
+       'bahn-rueck-dep','bahn-rueck-arr','bahn-rueck-price',
+       'bahn-hin-ts','bahn-hin-te','bahn-rueck-ts','bahn-rueck-te']
+    : ['flug-hin-dep','flug-hin-arr','flug-hin-price',
+       'flug-rueck-dep','flug-rueck-arr','flug-rueck-price',
+       'flug-hin-ts','flug-hin-te','flug-rueck-ts','flug-rueck-te'];
+  var anyFilled = fields.some(function(id){
+    var el=document.getElementById(id);
+    return el && el.value && el.value.trim()!=='';
+  });
+  var allFilled = fields.every(function(id){
+    var el=document.getElementById(id);
+    return el && el.value && el.value.trim()!=='';
+  });
+  return anyFilled && !allFilled;
+}
+function getMissingInBlock(prefix){
+  var fields = prefix==='auto'
+    ? ['auto-kosten','auto-tr-hs','auto-tr-rs']
+    : prefix==='bahn'
+    ? ['bahn-hin-dep','bahn-hin-arr','bahn-hin-price',
+       'bahn-rueck-dep','bahn-rueck-arr','bahn-rueck-price',
+       'bahn-hin-ts','bahn-hin-te','bahn-rueck-ts','bahn-rueck-te']
+    : ['flug-hin-dep','flug-hin-arr','flug-hin-price',
+       'flug-rueck-dep','flug-rueck-arr','flug-rueck-price',
+       'flug-hin-ts','flug-hin-te','flug-rueck-ts','flug-rueck-te'];
+  return fields.filter(function(id){
+    var el=document.getElementById(id);
+    return !el || !el.value || el.value.trim()==='';
+  });
+}
+
+document.getElementById("btn-s1").addEventListener("click",()=>{
+  // Only update startText from field (zielText set by CDD or nominatim)
+  if(inpStart.value) state.startText=inpStart.value;
+  // Only update zielText from inp-ziel if manual section is open and has a value
+  var manSec=document.getElementById('manual-ziel-section');
+  var manOpen=manSec&&manSec.style.display!=='none';
+  if(manOpen&&inpZiel.value) state.zielText=inpZiel.value;
+  state.hD=document.getElementById("hD").value;state.hT=document.getElementById("hT").value;
+  state.rD=document.getElementById("rD").value;state.rT=document.getElementById("rT").value;
+  const err=document.getElementById("err-s1");
+  clearInvalid();
+  var missingS1=[];
+  if(!state.startText) missingS1.push('inp-start');
+  if(!state.zielText){ missingS1.push('inp-ziel'); var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='rgba(248,113,113,0.8)'; } else { var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor=''; }
+  if(!state.hD)        missingS1.push('hD');
+  if(!state.hT)        missingS1.push('hT');
+  if(!state.rD)        missingS1.push('rD');
+  if(!state.rT)        missingS1.push('rT');
+  if(missingS1.length){
+    markInvalid(missingS1);
+    var fieldLabels={'inp-start':'Startort','inp-ziel':'Reiseziel','hD':'Hinreisetag','hT':'Hinreiseuhrzeit','rD':'Rückreisetag','rT':'Rückreiseuhrzeit'};
+    var names=missingS1.map(function(id){ return '⚠️ '+( fieldLabels[id]||id); }).join(' &nbsp;·&nbsp; ');
+    err.innerHTML='<strong>Bitte noch ausfüllen:</strong> '+names;
+    err.classList.add("show");
+    return;
+  }
+  // startGeo required for Overpass lookup; zielGeo optional (CDD has no GPS)
+  if(!state.startGeo){
+    markInvalid(['inp-start']);
+    err.innerHTML="⚠ Bitte den Startort aus der Vorschlagsliste wählen.";
+    err.classList.add("show");
+    return;
+  }
+  // zielGeo only required if manual ziel section is open
+  if(manOpen && !state.zielGeo){
+    markInvalid(['inp-ziel']);
+    err.innerHTML="⚠ Bitte den Zielort aus der Vorschlagsliste wählen.";
+    err.classList.add("show");
+    return;
+  }
+  err.classList.remove("show");
+  updateAutoOverlay();
+  // Update rpills
+  const meta=`Hin: ${fDT(state.hD,state.hT)} · Rück: ${fDT(state.rD,state.rT)}`;
+  const rpill=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">${meta}</span>`;
+  (document.getElementById("rpill-prices")||document.createElement("div")).innerHTML=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">↗ ${fD(state.hD)} ${state.hT} Uhr &nbsp;·&nbsp; ↙ ${fD(state.rD)} ${state.rT} Uhr</span>`;
+  const nights=calcNights(state.hD,state.rD);
+  (document.getElementById("rpill-results")||document.createElement("div")).innerHTML=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">Hin: ${fD(state.hD)} · Rück: ${fD(state.rD)}${nights>0?" · "+nights+" Übernachtung"+(nights>1?"en":"")+" 🏨":""} · ${state.persons} Person${state.persons>1?"en":""}</span>`;
+  // Page 2: persons info — bahn/flug show "pro Person" hint only
+  var ph=document.getElementById("bahn-persons-hint");
+  if(ph) ph.textContent=state.persons>1?" (Preis pro Person)":"";
+  var phf=document.getElementById("flug-persons-hint");
+  if(phf) phf.textContent=state.persons>1?" (Preis pro Person)":"";
+  updateHotelUI();
+  buildAndShowDb();
+});
+
+// ── Screen 2 → 3 ─────────────────────────────────────────────────────────────
+// ── Calculate ─────────────────────────────────────────────────────────────────
+function g(id){return document.getElementById(id);}
+function gv(id){return parseFloat(g(id).value)||0;}
+function gs(id){return g(id).value||"";}
+
+function getSt(id){ var el=document.getElementById(id); return el?el.value:""; }
+
+(document.getElementById("btn-s3")||document.createElement("div")).addEventListener("click",()=>{
+  const items=[];
+  const err=document.getElementById("err-s3");
+  if(!err){buildAndShowDb();return;}
+  clearInvalid();
+  // Validate: partially filled blocks must be completed
+  var autoComplete  = isBlockComplete('auto') && state.hasLicence;
+  var bahnComplete  = isBlockComplete('bahn');
+  var flugComplete  = isBlockComplete('flug');
+  var autoPartial   = !autoComplete && state.hasLicence && isBlockPartial('auto');
+  var bahnPartial   = !bahnComplete && isBlockPartial('bahn');
+  var flugPartial   = !flugComplete && isBlockPartial('flug');
+
+  var partialErrors = [];
+  var partialMissing = [];
+
+  // Rule: any partially filled block MUST be completed
+  if(autoPartial){
+    partialErrors.push('Auto');
+    getMissingInBlock('auto').forEach(function(id){ partialMissing.push(id); });
+  }
+  if(bahnPartial){
+    partialErrors.push('Deutsche Bahn');
+    getMissingInBlock('bahn').forEach(function(id){ partialMissing.push(id); });
+  }
+  if(flugPartial){
+    partialErrors.push('Flug');
+    getMissingInBlock('flug').forEach(function(id){ partialMissing.push(id); });
+  }
+
+  if(partialErrors.length){
+    markInvalid(partialMissing);
+    err.textContent="⚠ Begonnene Blöcke müssen vollständig ausgefüllt werden: "
+      + partialErrors.join(', ')
+      + ". Bitte alle rot markierten Felder ausfüllen oder den Block vollständig leeren.";
+    err.classList.add("show");return;
+  }
+
+  // Rule: at least one block must be complete
+  if(!autoComplete && !bahnComplete && !flugComplete){
+    var missing=[];
+    ['auto','bahn','flug'].forEach(function(p){
+      if(p==='auto'&&!state.hasLicence) return;
+      getMissingInBlock(p).forEach(function(id){ missing.push(id); });
+    });
+    markInvalid(missing);
+    err.textContent="⚠ Bitte mindestens einen Block (Auto, Bahn oder Flug) vollständig ausfüllen – rot markierte Felder müssen befüllt sein, bevor die Reiseübersicht angezeigt werden kann.";
+    err.classList.add("show");return;
+  }
+  const nights=calcNights(state.hD,state.rD);
+  const hotelPerPerson=nights*state.hotelPrice;
+  const hotelTotal=hotelPerPerson*state.persons;
+  const p=state.priority;
+
+  function score(cost,timeMin){
+    if(p==="cost") return cost/10+timeMin/120;
+    if(p==="time") return cost/40+timeMin/30;
+    return cost/20+timeMin/60;
+  }
+
+  // AUTO
+  const autoK=parseFloat(g("auto-kosten").value);
+  if(!isNaN(autoK)&&g("auto-kosten").value!==""&&state.hasLicence){
+    const km=autoKm()||0;const fm=km?Math.round(km/CAR_SPEED*60):0;
+    const trHS=gv("auto-tr-hs"),trHE=gv("auto-tr-he"),trRS=gv("auto-tr-rs"),trRE=gv("auto-tr-re");
+    const AUTO_PUFFER_HIN=10, AUTO_PUFFER_RUECK=20; // Übernahme / Abgabe Fuhrpark
+    const dH=fm+trHS+trHE+AUTO_PUFFER_HIN,dR=fm+trRS+trRE+AUTO_PUFFER_RUECK;
+    const wH=parseInt(gs("auto-work-hin"))||0,wR=parseInt(gs("auto-work-rueck"))||0;
+    const hinDep=fm?addM(state.hT,-fm):"";
+    const rueckArr=fm?addM(state.rT,fm):"";
+    // Auto: user enters TOTAL cost for all cars combined
+    // numCars shown for info only (not used in cost calc)
+    const numCars=Math.ceil(state.persons/5);
+    const autoKTotal=autoK; // user already entered total for all autos
+    const total=autoKTotal+hotelTotal;
+    const autoPersonLabel=state.persons>1
+      ?(numCars>1
+        ?" ("+state.persons+" Personen, "+numCars+" Autos × "+eur(autoK)+")"
+        :" ("+state.persons+" Personen, 1 Auto)")
+      :"";
+    items.push({
+      id:"auto",icon:"🚗",label:"Auto",total,hotel:hotelTotal,nights,extras:0,
+      transport:"auto",persons:state.persons,numCars,
+      dH,dR,wH,wR,score:score(total,Math.max(0,dH+dR-(wH+wR)*WORK_EFFICIENCY)),
+      badge:nights>0?"Mit Übernachtung":"Gleichtag",badgeCls:nights>0?"rbo":"rbg",
+      costDetail:eur(autoKTotal)+" Fahrt"+autoPersonLabel+(hotelTotal>0?" + "+eurR(hotelTotal)+" Hotel":""),
+      detail:"Autokosten: "+eur(autoK)+" je Auto × "+numCars+(numCars>1?" Autos":" Auto")+" = "+eur(autoKTotal)+"."+(hotelTotal>0?" "+nights+" Übernachtung"+(nights>1?"en":"")+" × "+eur(state.hotelPrice)+" = "+eurR(hotelTotal)+".":""),
+      showTimes:fm>0,
+      trHinStart:trHS,trHinEnd:trHE,trRueckStart:trRS,trRueckEnd:trRE,
+      hinDep,hinArr:state.hT,hinDur:fm,
+      rueckDep:state.rT,rueckArr,rueckDur:fm,
+      transport:"auto",
+      numCars,persons:state.persons
+    });
+  }
+
+  // BAHN — price per person, multiply by state.persons
+  const bhPperPerson=gv("bahn-hin-price"),brPperPerson=gv("bahn-rueck-price");
+  const bhP=bhPperPerson*state.persons, brP=brPperPerson*state.persons;
+  if(bhP||brP){
+    const hinDep=gs("bahn-hin-dep"),hinArr=gs("bahn-hin-arr");
+    const rueckDep=gs("bahn-rueck-dep"),rueckArr=gs("bahn-rueck-arr");
+    const dm=tMin(hinDep,hinArr),dmR=tMin(rueckDep,rueckArr);
+    const trHS=gv("bahn-hin-ts"),trHE=gv("bahn-hin-te"),trRS=gv("bahn-rueck-ts"),trRE=gv("bahn-rueck-te");
+    const BAHN_PUFFER=15; // Puffer für Bahnhof Hin- und Rückweg
+    const dH=dm+trHS+trHE+BAHN_PUFFER,dR=dmR+trRS+trRE+BAHN_PUFFER;
+    const wH=parseInt(gs("bahn-hin-work"))||0,wR=parseInt(gs("bahn-rueck-work"))||0;
+    // Seat reservation per person
+    const seatH=g("seat-hin").checked?SEAT*state.persons:0,seatR=g("seat-rueck").checked?SEAT*state.persons:0;
+    const extras=seatH+seatR;
+    const transport=bhP+brP;const total=transport+extras+hotelTotal;
+    const bahnPersonLabel=state.persons>1?" ("+state.persons+" × "+eur(bhPperPerson+brPperPerson)+"/Pers.)":"";
+    items.push({
+      id:"bahn",icon:"🚆",label:"Deutsche Bahn",total,hotel:hotelTotal,nights,extras,
+      transport:"bahn",persons:state.persons,
+      dH,dR,wH,wR,score:score(total,Math.max(0,dH+dR-(wH+wR)*WORK_EFFICIENCY)),
+      badge:"Sparpreis",badgeCls:"rbg",
+      costDetail:eur(transport)+bahnPersonLabel+(extras?" + "+eur(extras)+" Extras":"")+(hotelTotal>0?" + "+eurR(hotelTotal)+" Hotel":""),
+      detail:"Hin: "+eur(bhPperPerson)+" · Rück: "+eur(brPperPerson)+" (je Person)"+(state.persons>1?" × "+state.persons+" Personen = "+eur(transport):"")+(extras?". Sitzplatz: "+eur(extras):"")+"."+(hotelTotal>0?" "+nights+" Übernachtung"+(nights>1?"en":"")+" × "+eur(state.hotelPrice)+" = "+eurR(hotelTotal)+".":""),
+      showTimes:!!(hinDep||rueckDep),
+      trHinStart:trHS,trHinEnd:trHE,trRueckStart:trRS,trRueckEnd:trRE,
+      hinDep,hinArr,hinDur:dm,rueckDep,rueckArr,rueckDur:dmR,
+      hinDepSt:getSt("bahn-hin-dep-station"),hinArrSt:getSt("bahn-hin-arr-station"),
+      rueckDepSt:getSt("bahn-rueck-dep-station"),rueckArrSt:getSt("bahn-rueck-arr-station"),
+      transport:"bahn",persons:state.persons,pricePerPerson:bhPperPerson+brPperPerson,
+      seatHin:g("seat-hin").checked,seatRueck:g("seat-rueck").checked
+    });
+  }
+
+  // FLUG
+  const FLUG_PUFFER=90; // Sicherheitskontrolle + Gate + Boarding
+  // FLUG — price per person
+  const fhPperPerson=gv("flug-hin-price"),frPperPerson=gv("flug-rueck-price");
+  const fhP=fhPperPerson*state.persons, frP=frPperPerson*state.persons;
+  if(fhP||frP){
+    const hinDep=gs("flug-hin-dep"),hinArr=gs("flug-hin-arr");
+    const rueckDep=gs("flug-rueck-dep"),rueckArr=gs("flug-rueck-arr");
+    const dm=tMin(hinDep,hinArr),dmR=tMin(rueckDep,rueckArr);
+    const trHS=gv("flug-hin-ts"),trHE=gv("flug-hin-te"),trRS=gv("flug-rueck-ts"),trRE=gv("flug-rueck-te");
+    const dH=dm+trHS+trHE+(hinDep?FLUG_PUFFER:0),dR=dmR+trRS+trRE+(rueckDep?FLUG_PUFFER:0);
+    const wH=(parseInt(gs("flug-hin-work"))||0)+(parseInt(gs("flug-hin-gate-work"))||0);
+    const wR=(parseInt(gs("flug-rueck-work"))||0)+(parseInt(gs("flug-rueck-gate-work"))||0);
+    const bagH=g("bag-hin").checked?BAG*state.persons:0,bagR=g("bag-rueck").checked?BAG*state.persons:0;
+    const extras=bagH+bagR;
+    const transport=fhP+frP;const total=transport+extras+hotelTotal;
+    const flugPersonLabel=state.persons>1?" ("+state.persons+" × "+eur(fhPperPerson+frPperPerson)+"/Pers.)":"";
+    items.push({
+      id:"flug",icon:"✈️",label:"Flug + Transfer",total,hotel:hotelTotal,nights,extras,
+      transport:"flug",persons:state.persons,pricePerPerson:fhPperPerson+frPperPerson,
+      dH,dR,wH,wR,score:score(total,Math.max(0,dH+dR-(wH+wR)*WORK_EFFICIENCY)),
+      badge:"Flug",badgeCls:"rbm",
+      costDetail:eur(transport)+flugPersonLabel+(extras?" + "+eur(extras)+" Gepäck":"")+(hotelTotal>0?" + "+eurR(hotelTotal)+" Hotel":""),
+      detail:"Hin: "+eur(fhPperPerson)+" · Rück: "+eur(frPperPerson)+" (je Person)"+(state.persons>1?" × "+state.persons+" Personen = "+eur(transport):"")+(extras?". Gepäck: "+eur(extras):"")+"."+(hotelTotal>0?" "+nights+" Übernachtung"+(nights>1?"en":"")+" × "+eur(state.hotelPrice)+" = "+eurR(hotelTotal)+".":""),
+      showTimes:!!(hinDep||rueckDep),
+      trHinStart:trHS,trHinEnd:trHE,trRueckStart:trRS,trRueckEnd:trRE,
+      hinDep,hinArr,hinDur:dm,rueckDep,rueckArr,rueckDur:dmR,
+      hinDepSt:getSt("flug-hin-dep-station"),hinArrSt:getSt("flug-hin-arr-station"),
+      rueckDepSt:getSt("flug-rueck-dep-station"),rueckArrSt:getSt("flug-rueck-arr-station"),
+      transport:"flug",
+      bagHin:g("bag-hin").checked,bagRueck:g("bag-rueck").checked
+    });
+  }
+
+  // Validate: need at least one price entered (any transport)
+  // Also check: if bahn or flug has times but no price → warn
+  const bahnHinP = gv("bahn-hin-price"), bahnRueckP = gv("bahn-rueck-price");
+  const flugHinP = gv("flug-hin-price"), flugRueckP = gv("flug-rueck-price");
+  const autoK2 = parseFloat(g("auto-kosten").value);
+  const hasBahnPrice = bahnHinP > 0 || bahnRueckP > 0;
+  const hasFlugPrice = flugHinP > 0 || flugRueckP > 0;
+  const hasAutoPrice = !isNaN(autoK2) && g("auto-kosten").value !== "" && state.hasLicence;
+  if(!items.length && !hasBahnPrice && !hasFlugPrice && !hasAutoPrice){
+    err.textContent="⚠ Bitte bei mindestens einer Option (Auto, Bahn oder Flug) einen Preis eintragen.";
+    err.classList.add("show");return;
+  }
+  // Build cross-mode combo: bahn-hin + flug-rueck or flug-hin + bahn-rueck
+  const bahnHinDep=gs("bahn-hin-dep"), bahnRueckDep=gs("bahn-rueck-dep");
+  const flugHinDep=gs("flug-hin-dep"), flugRueckDep=gs("flug-rueck-dep");
+  // Combo A: Bahn Hin + Flug Rück
+  if(bahnHinP>0 && flugRueckP>0 && bahnHinDep && flugRueckDep){
+    const dmH=tMin(bahnHinDep,gs("bahn-hin-arr")), dmR=tMin(flugRueckDep,gs("flug-rueck-arr"));
+    const trHS=gv("bahn-hin-ts"),trHE=gv("bahn-hin-te"),trRS=gv("flug-rueck-ts"),trRE=gv("flug-rueck-te");
+    const bagR=g("bag-rueck").checked?BAG:0, seatH=g("seat-hin").checked?SEAT:0;
+    const total=bahnHinP+flugRueckP+seatH+bagR+hotelTotal;
+    items.push({
+      id:"kombi-bahn-flug",icon:"🚆✈️",label:"Bahn hin · Flug zurück",
+      total,hotel:hotelTotal,nights,extras:seatH+bagR,
+      dH:dmH+trHS+trHE+15,dR:dmR+trRS+trRE+FLUG_PUFFER,
+      wH:parseInt(gs("bahn-hin-work"))||0,
+      wR:(parseInt(gs("flug-rueck-work"))||0)+(parseInt(gs("flug-rueck-gate-work"))||0),
+      score:score(total,Math.max(0,(dmH+trHS+trHE+15+dmR+trRS+trRE+FLUG_PUFFER)-((parseInt(gs("bahn-hin-work"))||0)+(parseInt(gs("flug-rueck-work"))||0)+(parseInt(gs("flug-rueck-gate-work"))||0)))),
+      badge:"Kombination",badgeCls:"rbm",
+      costDetail:eur(bahnHinP)+" Bahn + "+eur(flugRueckP)+" Flug"+(hotelTotal>0?" + "+eurR(hotelTotal)+" Hotel":""),
+      detail:"Hinreise: Bahn ("+eur(bahnHinP)+") · Rückreise: Flug ("+eur(flugRueckP)+")",
+      showTimes:true,
+      trHinStart:trHS,trHinEnd:trHE,trRueckStart:trRS,trRueckEnd:trRE,
+      hinTransport:"bahn",rueckTransport:"flug",
+      hinDepSt:getSt("bahn-hin-dep-station"),hinArrSt:getSt("bahn-hin-arr-station"),
+      rueckDepSt:getSt("flug-rueck-dep-station"),rueckArrSt:getSt("flug-rueck-arr-station"),
+      hinDep:bahnHinDep,hinArr:gs("bahn-hin-arr"),hinDur:dmH,
+      rueckDep:flugRueckDep,rueckArr:gs("flug-rueck-arr"),rueckDur:dmR
+    });
+  }
+  // Combo B: Flug Hin + Bahn Rück
+  if(flugHinP>0 && bahnRueckP>0 && flugHinDep && bahnRueckDep){
+    const dmH=tMin(flugHinDep,gs("flug-hin-arr")), dmR=tMin(bahnRueckDep,gs("bahn-rueck-arr"));
+    const trHS=gv("flug-hin-ts"),trHE=gv("flug-hin-te"),trRS=gv("bahn-rueck-ts"),trRE=gv("bahn-rueck-te");
+    const bagH=g("bag-hin").checked?BAG:0, seatR=g("seat-rueck").checked?SEAT:0;
+    const total=flugHinP+bahnRueckP+bagH+seatR+hotelTotal;
+    items.push({
+      id:"kombi-flug-bahn",icon:"✈️🚆",label:"Flug hin · Bahn zurück",
+      total,hotel:hotelTotal,nights,extras:bagH+seatR,
+      dH:dmH+trHS+trHE+FLUG_PUFFER,dR:dmR+trRS+trRE+15,
+      wH:(parseInt(gs("flug-hin-work"))||0)+(parseInt(gs("flug-hin-gate-work"))||0),
+      wR:parseInt(gs("bahn-rueck-work"))||0,
+      score:score(total,Math.max(0,(dmH+trHS+trHE+FLUG_PUFFER+dmR+trRS+trRE+15)-((parseInt(gs("flug-hin-work"))||0)+(parseInt(gs("flug-hin-gate-work"))||0)+(parseInt(gs("bahn-rueck-work"))||0)))),
+      badge:"Kombination",badgeCls:"rbm",
+      costDetail:eur(flugHinP)+" Flug + "+eur(bahnRueckP)+" Bahn"+(hotelTotal>0?" + "+eurR(hotelTotal)+" Hotel":""),
+      detail:"Hinreise: Flug ("+eur(flugHinP)+") · Rückreise: Bahn ("+eur(bahnRueckP)+")",
+      showTimes:true,
+      trHinStart:trHS,trHinEnd:trHE,trRueckStart:trRS,trRueckEnd:trRE,
+      hinTransport:"flug",rueckTransport:"bahn",
+      hinDepSt:getSt("flug-hin-dep-station"),hinArrSt:getSt("flug-hin-arr-station"),
+      rueckDepSt:getSt("bahn-rueck-dep-station"),rueckArrSt:getSt("bahn-rueck-arr-station"),
+      hinDep:flugHinDep,hinArr:gs("flug-hin-arr"),hinDur:dmH,
+      rueckDep:bahnRueckDep,rueckArr:gs("bahn-rueck-arr"),rueckDur:dmR
+    });
+  }
+  if(!items.length){
+    err.textContent="⚠ Bitte bei mindestens einer Option einen Preis eintragen.";
+    err.classList.add("show");return;
+  }
+  err.classList.remove("show");
+  items.sort((a,b)=>a.score-b.score);
+  _lastItems = items.slice();
+  // Always reset to "Ausgewogen" on new calculation
+  state.priority = "balanced";
+  document.querySelectorAll('[data-prio-r]').forEach(function(x){
+    x.classList.toggle('active', x.dataset.prioR==='balanced');
+  });
+  buildOverview(_lastItems);
+  showScreen("s-overview");
+});
+
+// ── Render results ────────────────────────────────────────────────────────────
+function renderResults(items){
+  const best=items[0];
+  const pLabel={cost:"Kosten",time:"Reisezeit",balanced:"Kosten & Zeit"}[state.priority];
+  var cvCard=document.getElementById('cost-view-card');
+  if(cvCard){
+    var hasMulti=items.some(function(it){return (it.persons||1)>1;});
+   if(cvCard)cvCard.style.display=hasMulti?'block':'none';
+    if(!hasMulti) state.costView='perperson';
+    document.getElementById('cv-perperson').classList.toggle('active',state.costView==='perperson');
+    document.getElementById('cv-total').classList.toggle('active',state.costView==='total');
+  }
+
+  // Recommendation
+  const recMap={
+    auto:"Auto – günstigste Option ("+eurR(best.total)+" gesamt), kein Umsteigen.",
+    bahn:"Deutsche Bahn – bestes Preis-Zeit-Verhältnis ("+eurR(best.total)+" gesamt).",
+    flug:"Flug – effizienteste Option ("+eurR(best.total)+" gesamt).",
+    "kombi-bahn-flug":"Kombination Bahn hin / Flug zurück – bestes Gesamtergebnis ("+eurR(best.total)+").",
+    "kombi-flug-bahn":"Kombination Flug hin / Bahn zurück – bestes Gesamtergebnis ("+eurR(best.total)+")."
+  };
+  const nights=calcNights(state.hD,state.rD);
+  document.getElementById("recom-text").innerHTML=`<strong>Empfehlung (${pLabel}):</strong> ${recMap[best.id]||""}${nights>0?" Inkl. "+nights+" Übernachtung"+(nights>1?"en":"")+" ("+eurR(nights*state.hotelPrice)+").":""}`;
+
+  // Cards
+  const container=document.getElementById("results-container");
+  container.innerHTML=items.map((item,i)=>renderCard(item,i===0,items)).join("");
+
+  // Print header
+  document.getElementById("print-header").innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div style="font-size:18pt;font-weight:700;color:#111">Reisekostenvergleich</div><div style="font-size:11pt;color:#555;margin-top:3px">${state.startText} ↔ ${state.zielText}</div></div>
+      <div style="text-align:right;font-size:10pt;color:#555">
+        <div>Hinreise: ${fDT(state.hD,state.hT)}</div><div>Rückreise: ${fDT(state.rD,state.rT)}</div>
+        ${nights>0?`<div>${nights} Übernachtung${nights>1?"en":""} à ${eur(state.hotelPrice)}</div>`:""}
+      </div>
+    </div>`;
+
+  // Print footer
+  const now=new Date();
+  const ts=now.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"})+" um "+now.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr";
+  document.getElementById("print-footer").innerHTML=`
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+      <span>Optimierungsziel: ${pLabel} · Preise aus Omio · Auto: individuell · Hotel: ${eur(state.hotelPrice)}/Nacht · OpenStreetMap</span>
+      <span style="font-weight:600">Erstellt: ${ts}</span>
+    </div>`;
+
+  document.getElementById("results-footnote").textContent=`Optimierungsziel: ${pLabel} · Preise aus Omio · Auto: individuell · Hotel: ${eur(state.hotelPrice)}/Nacht`;
+}
+
+function renderCard(item,isBest,allItems){
+  const totalMin=item.dH+item.dR;
+  // Inverted score: higher = better (score is raw cost/time metric, lower=better internally)
+  // Normalize against all items: best item gets 100, worst gets ~10
+  const scores = allItems.map(function(x){ return x.score; });
+  const minScore = Math.min.apply(null,scores);
+  const maxScore = Math.max.apply(null,scores);
+  const scoreRange = maxScore - minScore || 1;
+  // Efficiency = inverted: best (lowest raw score) → 100%, worst → 15%
+  const bw = Math.round(100 - ((item.score - minScore) / scoreRange) * 85);
+  const barColor=isBest?"linear-gradient(90deg,#fbbf24,#f59e0b)":bw>=70?"#34d399":bw>=45?"#60a5fa":"#94a3b8";
+  const wTotal=(item.wH||0)+(item.wR||0);
+
+  // Build score explanation
+  const avgCost = allItems.reduce(function(s,x){return s+x.total;},0)/allItems.length;
+  const avgTime = allItems.reduce(function(s,x){return s+(x.dH+x.dR);},0)/allItems.length;
+  const costDiff = Math.round((item.total - avgCost)/avgCost*100);
+  const timeDiff = Math.round((totalMin - avgTime)/avgTime*100);
+  const costWord = costDiff<=-10?"deutlich günstiger":costDiff<=-2?"günstiger":costDiff<=2?"durchschnittlich":costDiff<=10?"teurer":"deutlich teurer";
+  const timeWord = timeDiff<=-10?"deutlich schneller":timeDiff<=-2?"schneller":timeDiff<=2?"durchschnittlich":timeDiff<=10?"langsamer":"deutlich langsamer";
+  const prioName = state.priority==="cost"?"Kosten-Effizienz":state.priority==="time"?"Zeit-Effizienz":"Gesamt-Effizienz";
+  // Per-person cost calculation
+  const persons = item.persons || 1;
+  const transportCost = item.total - (item.hotel||0) - (item.extras||0);
+  // Hotel: each person pays FULL price (own room) — item.hotel = group total
+  const hotelPerPersonDisplay = item.hotel>0 ? (item.hotel/persons) : 0;
+  const hotelPerPerson = hotelPerPersonDisplay; // alias for rnums template
+
+  const costPerPerson = (item.transport === "auto")
+    ? (transportCost/persons) + hotelPerPersonDisplay   // shared car + own hotel
+    : (item.pricePerPerson||0)                          // ticket already per person
+      + hotelPerPersonDisplay                           // hotel: each pays full
+      + (item.extras>0 ? (item.extras/persons) : 0);   // extras shared
+  const autoTransportPerPerson = (item.transport==="auto") ? (transportCost/persons) : 0;
+
+  // Cost view toggle (depends on costPerPerson, must come after)
+  
+  const cardId = "score-info-"+item.id.replace(/[^a-z0-9]/g,"");
+  var showTotal = (state.costView === "total");
+  var displayCost = showTotal ? item.total : costPerPerson;
+  var displayAvgCost = showTotal ? allItems.reduce(function(s,x){return s+x.total;},0)/allItems.length
+    : allItems.reduce(function(s,x){return s+(x.total/(x.persons||1));},0)/allItems.length;
+  var displayDiff = Math.round((displayCost - displayAvgCost) / displayAvgCost * 100);
+  // ── Score explanation: reference-based comparison ──────────────────────────
+  var scoreExpl;
+  if(allItems.length <= 1){
+    // Only one option available
+    scoreExpl = "Diese Option ist die einzige verfügbare · Effizienz-Score: "+bw+"% ("+prioName+")";
+  } else {
+    // Platz 1 compares with Platz 2; all others compare with Platz 1
+    var isBestItem = (allItems[0].id === item.id && allItems[0].label === item.label);
+    var refItem = isBestItem ? allItems[1] : allItems[0];
+
+    // Helper: cost per person for any item
+    function calcDisplayCost(it, showTot){
+      var p = it.persons || 1;
+      var tc = it.total - (it.hotel||0) - (it.extras||0);
+      var cpp = (it.transport==="auto")
+        ? tc/p + (it.hotel>0 ? it.hotel/p : 0)
+        : (it.pricePerPerson||0) + (it.hotel>0 ? it.hotel/p : 0) + (it.extras>0 ? it.extras/p : 0);
+      return showTot ? it.total : cpp;
+    }
+    var refDisplayCost = calcDisplayCost(refItem, showTotal);
+    var refEffTime = Math.max(0, ((refItem.dH||0)+(refItem.dR||0)) - ((refItem.wH||0)+(refItem.wR||0))*WORK_EFFICIENCY);
+    var myEffTime  = Math.max(0, totalMin - ((item.wH||0)+(item.wR||0))*WORK_EFFICIENCY);
+
+    var costDeltaAbs = Math.abs(displayCost - refDisplayCost);
+    var costBetter   = displayCost < refDisplayCost;
+    var timeDeltaMin = Math.abs(myEffTime - refEffTime);
+    var timeBetter   = myEffTime < refEffTime;
+    var refLabel     = refItem.label;
+
+    // Cost sentence
+    var costSentence = "Kosten: "+eurR(displayCost)+(showTotal?" gesamt":" /Person");
+    if(Math.round(costDeltaAbs) > 0){
+      costSentence += " ("+eurR(Math.round(costDeltaAbs))+(costBetter?" günstiger":" teurer")+" als "+refLabel+")";
+    } else {
+      costSentence += " (gleich wie "+refLabel+")";
+    }
+
+    // Time sentence
+    var timeSentence = "Reisezeit: "+durS(totalMin);
+    if(Math.round(timeDeltaMin) >= 5){
+      timeSentence += " ("+durS(Math.round(timeDeltaMin))+(timeBetter?" schneller":" langsamer")+" als "+refLabel+")";
+    } else {
+      timeSentence += " (nahezu gleich wie "+refLabel+")";
+    }
+
+    // Reversal explanation: only for best item when a parameter is worse than Platz 2
+    var reversalLine = "";
+    if(isBestItem && Math.round(costDeltaAbs) > 0 && Math.round(timeDeltaMin) >= 5){
+      if(!costBetter && timeBetter){
+        // More expensive but faster → wins on time
+        reversalLine = "⚖️ Obwohl "+eurR(Math.round(costDeltaAbs))+" teurer als "+refLabel
+          +", gewinnt diese Option durch "+durS(Math.round(timeDeltaMin))
+          +" kürzere Reisezeit — das Ziel '"+prioName+"' gewichtet Schnelligkeit stärker.";
+      } else if(costBetter && !timeBetter){
+        // Cheaper but slower → wins on cost
+        reversalLine = "⚖️ Obwohl "+durS(Math.round(timeDeltaMin))+" langsamer als "+refLabel
+          +", gewinnt diese Option durch "+eurR(Math.round(costDeltaAbs))
+          +" geringere Kosten — das Ziel '"+prioName+"' gewichtet den Preis stärker.";
+      }
+    }
+
+    scoreExpl = costSentence+" · "+timeSentence;
+    if(reversalLine){
+      scoreExpl += '<br><span style="color:rgba(254,240,138,0.97);font-size:11px">'+reversalLine+'</span>';
+    }
+    scoreExpl += " · Effizienz-Score: "+bw+"% ("+prioName+")";
+  }
+
+
+
+
+  // Times block
+  let timesRows="";
+  const hasAnyTime=item.showTimes||item.trHinStart>0||item.trHinEnd>0||item.trRueckStart>0||item.trRueckEnd>0;
+  // Smart station labels
+  // For combos: use hinTransport/rueckTransport; for pure: use transport
+  var tHin   = item.hinTransport   || item.transport || "auto";
+  var tRueck = item.rueckTransport || item.transport || "auto";
+  function tLabel(mode, role, st) {
+    if (mode === "bahn") {
+      if (role === "hinStart")   return "Fahrt von Zuhause zum Bahnhof " + (st || "");
+      if (role === "hinEnd")     return "Fahrt vom Bahnhof " + (st || "") + " zum Ziel";
+      if (role === "rueckStart") return "Fahrt zum Bahnhof " + (st || "");
+      if (role === "rueckEnd")   return "Fahrt vom Bahnhof " + (st || "") + " nach Hause";
+    } else if (mode === "flug") {
+      if (role === "hinStart")   return "Fahrt zum Flughafen " + (st || "");
+      if (role === "hinEnd")     return "Fahrt vom Flughafen " + (st || "") + " zum Ziel";
+      if (role === "rueckStart") return "Fahrt zum Flughafen " + (st || "");
+      if (role === "rueckEnd")   return "Fahrt vom Flughafen " + (st || "") + " nach Hause";
+    } else {
+      if (role === "hinStart")   return "Fahrt von Zuhause zum Fuhrpark";
+      if (role === "hinEnd")     return "Fahrt vom Parkplatz zum Ziel";
+      if (role === "rueckStart") return "Fahrt zum Fahrzeug";
+      if (role === "rueckEnd")   return "Fahrt vom Fuhrpark nach Hause";
+    }
+    return "";
+  }
+  var tLbl = {
+    hinStart:   tLabel(tHin,   "hinStart",   item.hinDepSt   || ""),
+    hinEnd:     tLabel(tHin,   "hinEnd",     item.hinArrSt   || ""),
+    rueckStart: tLabel(tRueck, "rueckStart", item.rueckDepSt || ""),
+    rueckEnd:   tLabel(tRueck, "rueckEnd",   item.rueckArrSt || "")
+  };
+
+  if(hasAnyTime){
+    if(item.trHinStart>0) timesRows+=`<div class="times-row"><span class="times-leg blue">🚌 ${tLbl.hinStart}</span><span class="times-val blue">${durS(item.trHinStart)}</span></div>`;
+    if(item.showTimes&&item.hinDep) timesRows+=`<div class="times-row"><span class="times-leg">↗ Hinreise</span><span class="times-val">${item.hinDep} → ${item.hinArr} (${durS(item.hinDur)})</span></div>`;
+    if(item.trHinEnd>0) timesRows+=`<div class="times-row"><span class="times-leg blue">🚌 ${tLbl.hinEnd}</span><span class="times-val blue">${durS(item.trHinEnd)}</span></div>`;
+    if(item.trRueckStart>0) timesRows+=`<div class="times-row"><span class="times-leg blue">🚌 ${tLbl.rueckStart}</span><span class="times-val blue">${durS(item.trRueckStart)}</span></div>`;
+    if(item.showTimes&&item.rueckDep) timesRows+=`<div class="times-row"><span class="times-leg">↙ Rückreise</span><span class="times-val">${item.rueckDep} → ${item.rueckArr} (${durS(item.rueckDur)})</span></div>`;
+    if(item.trRueckEnd>0) timesRows+=`<div class="times-row"><span class="times-leg blue">🚌 ${tLbl.rueckEnd}</span><span class="times-val blue">${durS(item.trRueckEnd)}</span></div>`;
+  }
+
+  return `
+  <div class="rcard${isBest?" best":""}">
+    ${isBest?'<div class="bestbadge">★ BESTE WAHL</div>':""}
+    <div class="rcard-hdr">
+      <div class="ricon${isBest?" best":""}">${item.icon}</div>
+      <div>
+        <span class="rname">${item.label}</span>
+        <span class="rbadge ${item.badgeCls}">${item.badge}</span>
+        ${persons>1&&showTotal?`<span class="persons-badge">👥 ${persons} Personen</span>`:""}
+      </div>
+      <div class="rcard-total ${isBest?"gold":"normal"}" style="font-size:14px;text-align:right">
+        <div class="cost-per-person-lbl">${showTotal?"Gesamt ("+persons+" Pers.)":"pro Person"}</div>
+        <div class="cost-per-person ${isBest?"gold":""}">${eurR(displayCost)}</div>
+        ${persons>1&&!showTotal?`<div class="cost-total-small">Gesamt: ${eurR(item.total)}</div>`:""}
+        ${persons>1&&showTotal?`<div class="cost-total-small">Ø ${eurR(costPerPerson)}/Person</div>`:""}
+      </div>
+    </div>
+    <div class="rnums">
+      <div>
+        <div class="rnl">${showTotal?"Fahrtkosten gesamt":item.transport==="auto"&&persons>1?"Fahrtkosten (geteilt)":"Fahrtkosten"+(persons>1?" /Person":"")}</div>
+        <div class="rnv">${showTotal?eurR(transportCost):eurR(transportCost/persons)}</div>
+        <div class="rns">${item.costDetail}</div>
+      </div>
+      ${persons>1?`<div>
+        <div class="rnl">${showTotal?"davon pro Person":item.transport==="auto"?"Gesamtfahrtkosten":"Gesamt"}</div>
+        <div class="rnv" style="color:var(--blue)">${showTotal?eurR(transportCost/persons):eurR(transportCost)}</div>
+        <div class="rns">${item.transport==="auto"?item.numCars>1?item.numCars+" Autos, "+persons+" Personen":persons+" Personen, 1 Auto":persons+" Personen"}</div>
+      </div>`:""}
+
+      ${item.hotel>0?`<div>
+        <div class="rnl">${showTotal?"Hotel gesamt":"Hotel /Person"}</div>
+        <div class="rnv" style="color:var(--orange)">+${showTotal?eurR(item.hotel):eurR(hotelPerPersonDisplay)}</div>
+        <div class="rns">${item.nights} Nacht${item.nights>1?"e":""}${persons>1&&showTotal?" · je "+eurR(hotelPerPersonDisplay)+"/Pers.":""}</div>
+      </div>`:""}
+      ${item.extras>0?`<div>
+        <div class="rnl">Extras${showTotal?"":" /Person"}</div>
+        <div class="rnv" style="color:var(--gold)">+${showTotal?eur(item.extras):eur(item.extras/persons)}</div>
+        <div class="rns">${[item.seatHin&&"🎫 Sitz Hin",item.seatRueck&&"🎫 Sitz Rück",item.bagHin&&"🧳 Gepäck Hin",item.bagRueck&&"🧳 Gepäck Rück"].filter(Boolean).join(" · ")}</div>
+      </div>`:""}
+      ${item.numCars>1?`<div><div class="rnl">Fahrzeuge</div><div class="rnv" style="font-size:15px">${item.numCars}</div><div class="rns">Autos (max. 5 Pers./Auto)</div></div>`:""}
+    </div>
+    ${totalMin>0?`<div class="total-time-row"><span style="font-size:16px">⏱</span><div><div class="total-time-lbl">Gesamtreisezeit (Hin + Rück)</div><div class="total-time-val">${durS(totalMin)}</div></div>${item.dH>0?`<div class="total-time-aside">↗ Hin: ${durS(item.dH)}<br>${item.dR>0?"↙ Rück: "+durS(item.dR):""}</div>`:""}</div>`:""}
+    ${hasAnyTime?`<div class="times-block">${timesRows}</div>`:""}
+    ${wTotal>0?`<div class="work-row"><span style="font-size:14px">💼</span><span style="font-size:12px;color:var(--muted)">Produktive Reisezeit gesamt:</span><span class="work-val">${durS(wTotal)}</span>${item.wH>0&&item.wR>0?`<span style="font-size:11px;color:var(--muted);margin-left:6px">(Hin: ${durS(item.wH)} / Rück: ${durS(item.wR)})</span>`:""}</div>`:""}
+    <div class="sbar">
+      <div class="sbarlbl" style="display:flex;align-items:center;gap:6px">
+        Effizienz-Score (${bw}%)
+        <span style="position:relative;display:inline-block">
+          <button onclick="var el=document.getElementById('${cardId}');el.style.display=el.style.display==='none'?'block':'none'" style="background:rgba(255,255,255,0.06);border:1px solid var(--br);border-radius:50%;width:16px;height:16px;cursor:pointer;color:var(--muted);font-size:9px;font-weight:700;line-height:1;padding:0">?</button>
+          <div id="${cardId}" style="display:none;position:absolute;left:0;bottom:22px;z-index:50;width:300px;background:#1a1a2e;border:1px solid rgba(96,165,250,0.3);border-radius:8px;padding:12px;font-size:11px;color:var(--text);line-height:1.6;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+            <strong style="color:var(--gold)">Warum dieser Score?</strong><br>
+            ${scoreExpl}
+          </div>
+        </span>
+      </div>
+      <div class="sbartr"><div class="sbarfi" style="width:${bw}%;background:${barColor}"></div></div>
+    </div>
+    ${item.detail?`<div class="rdetail">${item.detail}</div>`:""}
+  </div>`;
+}
+
+function renderResults(items){
+  const best=items[0];
+  const pLabel={cost:"Kosten",time:"Reisezeit",balanced:"Kosten & Zeit"}[state.priority];
+  var cvCard=document.getElementById('cost-view-card');
+  if(cvCard){
+    var hasMulti=items.some(function(it){return (it.persons||1)>1;});
+   if(cvCard)cvCard.style.display=hasMulti?'block':'none';
+    if(!hasMulti) state.costView='perperson';
+    document.getElementById('cv-perperson').classList.toggle('active',state.costView==='perperson');
+    document.getElementById('cv-total').classList.toggle('active',state.costView==='total');
+  }
+
+  // Recommendation
+  const recMap={
+    auto:"Auto – günstigste Option ("+eurR(best.total)+" gesamt), kein Umsteigen.",
+    bahn:"Deutsche Bahn – bestes Preis-Zeit-Verhältnis ("+eurR(best.total)+" gesamt).",
+    flug:"Flug – effizienteste Option ("+eurR(best.total)+" gesamt).",
+    "kombi-bahn-flug":"Kombination Bahn hin / Flug zurück – bestes Gesamtergebnis ("+eurR(best.total)+").",
+    "kombi-flug-bahn":"Kombination Flug hin / Bahn zurück – bestes Gesamtergebnis ("+eurR(best.total)+")."
+  };
+  const nights=calcNights(state.hD,state.rD);
+  document.getElementById("recom-text").innerHTML=
+    "<strong>Empfehlung ("+pLabel+"):</strong> "+(recMap[best.id]||"")
+    +(nights>0?" Inkl. "+nights+" Übernachtung"+(nights>1?"en":"")+" ("+eurR(nights*state.hotelPrice)+").":"");
+
+  const container=document.getElementById("results-container");
+  container.innerHTML=items.map((item,i)=>renderCard(item,i===0,items)).join("");
+
+  // Print header
+  const now=new Date();
+  const ts=now.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"})
+    +" um "+now.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr";
+  document.getElementById("print-header").innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+    +'<div><div style="font-size:18pt;font-weight:700;color:#111">Reisekostenvergleich</div>'
+    +'<div style="font-size:11pt;color:#555;margin-top:3px">'+state.startText+' ↔ '+state.zielText+'</div></div>'
+    +'<div style="text-align:right;font-size:10pt;color:#555">'
+    +'<div>Hinreise: '+fDT(state.hD,state.hT)+'</div>'
+    +'<div>Rückreise: '+fDT(state.rD,state.rT)+'</div>'
+    +(nights>0?'<div>'+nights+' Übernachtung'+(nights>1?"en":"")+" à "+eur(state.hotelPrice)+'</div>':"")
+    +'</div></div>';
+
+  document.getElementById("print-footer").innerHTML=
+    '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">'
+    +'<span>Optimierungsziel: '+pLabel+' · Preise aus Omio · Auto: individuell · Hotel: '
+    +eur(state.hotelPrice)+'/Nacht · OpenStreetMap</span>'
+    +'<span style="font-weight:600">Erstellt: '+ts+'</span></div>';
+
+  document.getElementById("results-footnote").textContent=
+    "Optimierungsziel: "+pLabel+" · Preise aus Omio · Auto: individuell · Hotel: "+eur(state.hotelPrice)+"/Nacht";
+}
+
+// ── New search ────────────────────────────────────────────────────────────────
+(document.getElementById("btn-new-search")||document.createElement("div")).addEventListener("click",()=>{
+  ["inp-start","inp-ziel","hD","rD","auto-kosten",
+   "bahn-hin-dep","bahn-hin-arr","bahn-hin-price","bahn-rueck-dep","bahn-rueck-arr","bahn-rueck-price",
+   "flug-hin-dep","flug-hin-arr","flug-hin-price","flug-rueck-dep","flug-rueck-arr","flug-rueck-price",
+   "auto-tr-hs","auto-tr-he","auto-tr-rs","auto-tr-re",
+   "bahn-hin-ts","bahn-hin-te","bahn-rueck-ts","bahn-rueck-te",
+   "flug-hin-ts","flug-hin-te","flug-rueck-ts","flug-rueck-te",
+   "flug-hin-gate-work","flug-rueck-gate-work"
+  ].forEach(id=>{const el=g(id);if(el)el.value="";});
+  g("hT").value="10:00";g("rT").value="17:00";
+  ["seat-hin","seat-rueck","bag-hin","bag-rueck"].forEach(id=>{const el=g(id);if(el)el.checked=false;});
+  ["seat-hin-cb","seat-rueck-cb","bag-hin-cb","bag-rueck-cb"].forEach(id=>{const el=g(id);if(el)el.classList.remove("checked");});
+  ["seat-hin-price","seat-rueck-price","bag-hin-price","bag-rueck-price"].forEach(id=>{const el=g(id);if(el)el.textContent="—";});
+  // Reset price total hints
+  ['bahn-hin-price','bahn-rueck-price','flug-hin-price','flug-rueck-price'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    delete el.dataset.priceTotal;
+    el.placeholder='—';
+    el.addEventListener('input', function(){
+      if(id.includes('bahn')) updateBahnBadge(); else updateFlugBadge();
+    });
+  });
+  state.transports={bahn:true,flug:true,auto:false};
+  updateTransportTiles();
+  applyTransportVisibility();
+  state.startText="";state.zielText="";state.startGeo=null;state.zielGeo=null;
+  state.hD="";state.hT="10:00";state.rD="";state.rT="17:00";
+  state.persons=1;state.hasLicence=false;state.priority="balanced";state.hotelPrice=100;
+  updatePersonsUI();
+  g("licence-check").checked=false;g("licence-cb").classList.remove("checked");
+  g("licence-note").textContent="Kein gültiger Führerschein → Auto-Option wird ausgeschlossen";
+  // prio-tile reset handled via data-prio-r tiles on results page
+  state.costView = 'perperson';
+  var cvp=document.getElementById('cv-perperson'); if(cvp) cvp.classList.add('active');
+  var cvt=document.getElementById('cv-total'); if(cvt) cvt.classList.remove('active');
+  // Clear mirror override flags
+  ['bahn-rueck-te','bahn-rueck-ts','flug-rueck-te','flug-rueck-ts','auto-tr-re','auto-tr-rs'].forEach(function(id){
+    var el=document.getElementById(id); if(el) delete el.dataset.userEdited;
+  });
+  inpStart.value="";inpZiel.value="";
+  startTransfer={bahn:{station:'',minutes:0},flug:{station:'',minutes:0},auto:{name:'Fuhrpark',minutes:0}};
+  ['tt-bahn-station','tt-flug-station'].forEach(function(id){
+    var e=document.getElementById(id);
+    if(e){ e.innerHTML='<option value="">— suche läuft… —</option>'; }
+  });
+  var autoSel=document.getElementById('tt-auto-name');
+  if(autoSel) autoSel.value='';
+  ['tt-bahn-min','tt-flug-min','tt-auto-min'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  var an=document.getElementById('tt-auto-name');if(an)an.value='';
+  var cddTxt=document.getElementById('cdd-selected-text');
+  if(cddTxt){ cddTxt.className='cdd-placeholder'; cddTxt.textContent='— Ziel aus Datenbank wählen —'; }
+  document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
+  var manSec=document.getElementById('manual-ziel-section'); if(manSec) manSec.style.display='none';
+  var appEl=document.getElementById('dest-applied'); if(appEl) appEl.style.display='none';
+  var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
+  closeNewDestForm();
+  applyDestTransferTimes(null);
+  document.querySelectorAll("[data-work]").forEach(function(t){ t.classList.toggle("active", t.dataset.work==="no"); });
+  var wh = document.getElementById("work-travel-hint"); if(wh) wh.style.display="none";
+  state.canWorkDuringTravel=false;
+  updateHotelUI();updateAutoKmHint();
+  ["bahn-hin-work-wrap","bahn-rueck-work-wrap","flug-hin-work-wrap","flug-rueck-work-wrap"].forEach(function(id){const el=g(id);if(el)el.style.display="none";});
+  clearInvalid();
+  _lastItems=[];
+  showScreen("s-form");
+});
+
+var _lastItems = []; // stores last calculated items for re-render
+
+(document.getElementById('btn-s-overview')||document.createElement('div')).addEventListener('click',function(){
+  if(_lastItems.length === 0){
+    document.getElementById('btn-s3').click();
+    return;
+  }
+  _lastItems.forEach(function(item){
+    var cost=item.total, timeMin=(item.dH||0)+(item.dR||0), p=state.priority;
+    // Effective time = total time minus productive work time
+    var effTime = Math.max(0, timeMin - ((item.wH||0)+(item.wR||0))*WORK_EFFICIENCY);
+    item.score = p==='cost'? cost/10+effTime/120
+               : p==='time'? cost/40+effTime/30
+               : cost/20+effTime/60;
+  });
+  _lastItems.sort(function(a,b){ return a.score-b.score; });
+  document.querySelectorAll('[data-prio-r]').forEach(function(x){
+    x.classList.toggle('active', x.dataset.prioR===state.priority);
+  });
+  renderResults(_lastItems);
+  showScreen('s-results');
+});
+
+
+
+// ── Omio parser helpers ───────────────────────────────────────────────────────
+function padTime(t){
+  var parts=String(t).split(':');
+  var h=parseInt(parts[0]),m=parseInt(parts[1]||0);
+  return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+}
+
+function showParseResult(el,type,msg,duration){
+  el.className='parse-result '+type;
+  el.innerHTML='';
+  var lines=msg.split('\n');
+  lines.forEach(function(line,i){
+    if(i>0) el.appendChild(document.createElement('br'));
+    el.appendChild(document.createTextNode(line));
+  });
+  el.style.display='block';
+  var ms=duration||(msg.length>80?12000:8000);
+  setTimeout(function(){el.style.display='none';},ms);
+}
+
+function parseOmio(transport,leg){
+  var pasteId=transport+'-'+leg+'-paste';
+  var resultId=transport+'-'+leg+'-parse-result';
+  var text=document.getElementById(pasteId)&&document.getElementById(pasteId).value.trim();
+  var result=document.getElementById(resultId);
+  if(!text){showParseResult(result,'err','Bitte erst Text einfügen.');return;}
+  var depId=transport+'-'+leg+'-dep';
+  var arrId=transport+'-'+leg+'-arr';
+  var priceId=transport+'-'+leg+'-price';
+  var found=[];
+  var depOmio=text.match(/Abreise\s*:\s*(.+?)\s+am\s+[\d.]+\s+um\s+(\d{1,2}:\d{2})/i);
+  var arrOmio=text.match(/Ankunft\s*:\s*(.+?)\s+am\s+[\d.]+\s+um\s+(\d{1,2}:\d{2})/i);
+  var priceOmio=text.match(/Preis\s+f[üu]r\s+\d+\s+Reiseg[ae]st[a-z]*\s*:\s*([\d.,]+)\s*€/i);
+  if(depOmio||arrOmio||priceOmio){
+    if(depOmio){var depT=padTime(depOmio[2]);document.getElementById(depId).value=depT;document.getElementById(depId).dispatchEvent(new Event('change'));found.push('Abfahrt: '+depT+' ('+depOmio[1].trim()+')');}
+    if(arrOmio){var arrT=padTime(arrOmio[2]);document.getElementById(arrId).value=arrT;document.getElementById(arrId).dispatchEvent(new Event('change'));found.push('Ankunft: '+arrT+' ('+arrOmio[1].trim()+')');}
+    if(priceOmio){var price=parseFloat(priceOmio[1].replace(',','.'));document.getElementById(priceId).value=price.toFixed(2);found.push('Preis: '+price.toFixed(2).replace('.',',')+' €');}
+    showParseResult(result,'ok','✓ '+found.join(' · '));return;
+  }
+  var timeRx=/\b(\d{1,2})[:.](\ d{2})\b/g,times=[],m;
+  while((m=timeRx.exec(text))!==null){var h=parseInt(m[1]),mn=parseInt(m[2]);if(h<=23&&mn<=59)times.push(padTime(h+':'+mn));}
+  var priceRx=/(?:ab\s+|EUR\s*|€\s*)([\d]+(?:[.,]\d{1,2})?)|(\d+(?:[.,]\d{1,2})?)\s*(?:€|EUR)/gi,prices=[];
+  while((m=priceRx.exec(text))!==null){var raw=(m[1]||m[2]).replace(',','.');var val=parseFloat(raw);if(val>0&&val<10000)prices.push(val);}
+  if(times.length>=1){document.getElementById(depId).value=times[0];document.getElementById(depId).dispatchEvent(new Event('change'));found.push('Abfahrt: '+times[0]);}
+  if(times.length>=2){var arrTime=times.find(function(t){return t!==times[0];})||times[1];document.getElementById(arrId).value=arrTime;document.getElementById(arrId).dispatchEvent(new Event('change'));found.push('Ankunft: '+arrTime);}
+  if(prices.length>=1){var p=Math.min.apply(null,prices);document.getElementById(priceId).value=p.toFixed(2);found.push('Preis: '+p.toFixed(2).replace('.',',')+' €');}
+  if(!found.length){showParseResult(result,'err','Nicht erkannt. Tipp: Vollständigen Omio-Teilen-Text einfügen.');}
+  else{showParseResult(result,'ok','✓ Erkannt (allgemein): '+found.join(' · '));}
+}
+
+function parseOmioCombined(transport){
+  var pasteId=transport+'-combined-paste';
+  var resultId=transport+'-combined-parse-result';
+  var el=document.getElementById(pasteId);
+  var text=el?el.value.trim():'';
+  var result=document.getElementById(resultId);
+  if(!text){showParseResult(result,'err','Bitte erst Text einfügen.');return;}
+  var depRx=/Abreise\s*:\s*(.+?)\s+am\s+[\d.]+\s+um\s+(\d{1,2}:\d{2})/gi;
+  var arrRx=/Ankunft\s*:\s*(.+?)\s+am\s+[\d.]+\s+um\s+(\d{1,2}:\d{2})/gi;
+  var priceRx=/Preis\s+f[üu]r\s+(\d+)\s+Reiseg[ae]st[a-z]*\s*:\s*([\d.,]+)\s*€/i;
+  var deps=[],arrs=[],m;
+  while((m=depRx.exec(text))!==null) deps.push({station:m[1].trim(),time:padTime(m[2])});
+  while((m=arrRx.exec(text))!==null) arrs.push({station:m[1].trim(),time:padTime(m[2])});
+  var priceMatch=text.match(priceRx);
+  if(!deps.length&&!arrs.length){showParseResult(result,'err','Keine strukturierten Omio-Daten erkannt.');return;}
+  var found=[];
+  var isRoundTrip=deps.length>=2&&arrs.length>=2;
+  if(deps.length>=1){
+    document.getElementById(transport+'-hin-dep').value=deps[0].time;
+    document.getElementById(transport+'-hin-dep').dispatchEvent(new Event('change'));
+    var hinDepSt=document.getElementById(transport+'-hin-dep-station');
+    if(hinDepSt) hinDepSt.value=deps[0].station;
+    found.push('↗ Abfahrt: '+deps[0].time+' ('+deps[0].station+')');
+  }
+  if(arrs.length>=1){
+    document.getElementById(transport+'-hin-arr').value=arrs[0].time;
+    document.getElementById(transport+'-hin-arr').dispatchEvent(new Event('change'));
+    var hinArrSt=document.getElementById(transport+'-hin-arr-station');
+    if(hinArrSt) hinArrSt.value=arrs[0].station;
+    found.push('Ankunft: '+arrs[0].time+' ('+arrs[0].station+')');
+  }
+  if(isRoundTrip){
+    document.getElementById(transport+'-rueck-dep').value=deps[1].time;
+    document.getElementById(transport+'-rueck-dep').dispatchEvent(new Event('change'));
+    var rueckDepSt=document.getElementById(transport+'-rueck-dep-station');
+    if(rueckDepSt) rueckDepSt.value=deps[1].station;
+    found.push('↙ Abfahrt: '+deps[1].time+' ('+deps[1].station+')');
+    document.getElementById(transport+'-rueck-arr').value=arrs[1].time;
+    document.getElementById(transport+'-rueck-arr').dispatchEvent(new Event('change'));
+    var rueckArrSt=document.getElementById(transport+'-rueck-arr-station');
+    if(rueckArrSt) rueckArrSt.value=arrs[1].station;
+    found.push('Ankunft: '+arrs[1].time+' ('+arrs[1].station+')');
+  }
+  var priceNote='';
+  if(priceMatch){
+    var pax=parseInt(priceMatch[1]);
+    var total=parseFloat(priceMatch[2].replace(',','.'));
+    // Price is per person — Omio shows price for pax people, we want per person
+    var pricePerPerson=(total/pax);
+    priceNote='💡 Preis pro Person: '+pricePerPerson.toFixed(2).replace('.',',')+'€';
+    priceNote+=' — Hinpreis eintragen → Rückpreis wird automatisch berechnet';
+    var hinEl=document.getElementById(transport+'-hin-price');
+    var rueckEl=document.getElementById(transport+'-rueck-price');
+    if(hinEl){hinEl.value='';hinEl.dataset.priceTotal=pricePerPerson.toFixed(2);hinEl.placeholder='z.B. '+(pricePerPerson/2).toFixed(0)+' (Summe: '+pricePerPerson.toFixed(0)+' € /Person)';}
+    if(rueckEl){rueckEl.value='';rueckEl.dataset.priceTotal=pricePerPerson.toFixed(2);rueckEl.placeholder='z.B. '+(pricePerPerson/2).toFixed(0)+' (Summe: '+pricePerPerson.toFixed(0)+' € /Person)';}
+    activatePriceMirror(transport);
+    var badge=document.getElementById(transport+'-cost-badge');
+    if(badge){badge.textContent=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(pricePerPerson);badge.title='Preis pro Person (aus Omio)';}
+  }
+  var msg='✓ Zeiten eingetragen: '+found.join(' · ');
+  if(!isRoundTrip&&deps.length===1) msg+=' — nur Hinreise erkannt';
+  if(priceNote) msg+='\n'+priceNote;
+  showParseResult(result,'ok',msg);
+}
+
+function activatePriceMirror(transport){
+  var hinEl=document.getElementById(transport+'-hin-price');
+  var rueckEl=document.getElementById(transport+'-rueck-price');
+  if(!hinEl||!rueckEl) return;
+  // Remove stale mirror listeners by replacing with fresh clones (no dataset carry-over)
+  var newHin=document.createElement('input');
+  var newRueck=document.createElement('input');
+  // Copy essential attributes only (NOT dataset.priceTotal — that's set fresh by parser)
+  ['type','class','id','min','step','placeholder','style'].forEach(function(a){
+    if(hinEl.hasAttribute(a)) newHin.setAttribute(a,hinEl.getAttribute(a));
+    if(rueckEl.hasAttribute(a)) newRueck.setAttribute(a,rueckEl.getAttribute(a));
+  });
+  // Copy req-field class explicitly
+  newHin.className = hinEl.className;
+  newRueck.className = rueckEl.className;
+  hinEl.parentNode.replaceChild(newHin, hinEl);
+  rueckEl.parentNode.replaceChild(newRueck, rueckEl);
+  // Now set the per-person priceTotal on the fresh elements from parser data
+  // (caller sets this after activatePriceMirror, so read from original element's dataset)
+  // Actually parser sets priceTotal on original BEFORE calling activatePriceMirror
+  // We need to transfer it to the new elements
+  // Solution: let caller pass priceTotal explicitly
+  function setupMirror(srcEl, dstEl, updateFn){
+    srcEl.addEventListener('input', function(){
+      var total = parseFloat(srcEl.dataset.priceTotal);
+      if(!isNaN(total) && total > 0){
+        var entered = parseFloat(srcEl.value) || 0;
+        var other = Math.max(0, total - entered);
+        dstEl.value = other.toFixed(2);
+      }
+      updateFn();
+    });
+  }
+  var updateFn = transport==='bahn' ? updateBahnBadge : updateFlugBadge;
+  setupMirror(newHin, newRueck, updateFn);
+  setupMirror(newRueck, newHin, updateFn);
+  // Transfer priceTotal from original elements (already set by parser)
+  if(hinEl.dataset && hinEl.dataset.priceTotal) newHin.dataset.priceTotal = hinEl.dataset.priceTotal;
+  if(rueckEl.dataset && rueckEl.dataset.priceTotal) newRueck.dataset.priceTotal = rueckEl.dataset.priceTotal;
+}
+
+// ── Transfer time mirroring ───────────────────────────────────────────────────
+function mirrorTransfer(changedId,mirrorId){
+  var src=document.getElementById(changedId);
+  var dst=document.getElementById(mirrorId);
+  if(!src||!dst) return;
+  src.addEventListener('input',function(){
+    if(dst.dataset.userEdited!=='1') dst.value=src.value;
+  });
+  dst.addEventListener('input',function(){dst.dataset.userEdited='1';});
+  src.addEventListener('change',function(){
+    if(dst.dataset.userEdited!=='1') dst.value=src.value;
+  });
+}
+mirrorTransfer('bahn-hin-ts','bahn-rueck-te');
+mirrorTransfer('bahn-hin-te','bahn-rueck-ts');
+mirrorTransfer('flug-hin-ts','flug-rueck-te');
+mirrorTransfer('flug-hin-te','flug-rueck-ts');
+mirrorTransfer('auto-tr-hs','auto-tr-re');
+mirrorTransfer('auto-tr-he','auto-tr-rs');
+
+// ── Omio Guide ────────────────────────────────────────────────────────────────
+function toggleOmioInfo(){
+  var btn=document.getElementById('omio-info-toggle');
+  var body=document.getElementById('omio-info-body');
+  if(!btn)return;
+  if(body)body.classList.toggle('open');
+  body.classList.toggle('open');
+}
+function toggleGuide(){
+  var btn=document.getElementById('guide-toggle-btn');
+  var box=document.getElementById('guide-box');
+  if(!btn)return;
+  if(box)box.classList.toggle('open');
+  btn.classList.toggle('open');
+  box.classList.toggle('open');
+}
+function switchGuideTab(tab){
+  document.getElementById('tab-bahn').classList.toggle('active',tab==='bahn');
+  document.getElementById('tab-flug').classList.toggle('active',tab==='flug');
+  document.getElementById('guide-bahn').classList.toggle('active',tab==='bahn');
+  document.getElementById('guide-flug').classList.toggle('active',tab==='flug');
+}
+
+// ── Overview helpers ──────────────────────────────────────────────────────────
+function getSt(id){var el=document.getElementById(id);return el?el.value:'';}
+
+function updateOvHotel(){
+  var nights=calcNights(state.hD,state.rD);
+  var total=nights*state.hotelPrice;
+  var box=document.getElementById('ov-hotel');
+  if(!box) return;
+  box.style.display=nights>0?'block':'none';
+  document.getElementById('ov-hotel-chip').textContent=nights+' Übernachtung'+(nights>1?'en':'');
+  document.getElementById('ov-hotel-price').value=state.hotelPrice;
+  document.getElementById('ov-hotel-total').textContent='= '+new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(total);
+}
+
+function updateOvPrice(itemId,newVal){
+  var parsed=parseFloat(newVal)||0;
+  if(itemId==='auto'){var el=document.getElementById('auto-kosten');if(el){el.value=parsed.toFixed(2);updateAutoBadge();}}
+  else if(itemId==='bahn'){var half=(parsed/2).toFixed(2);var h=document.getElementById('bahn-hin-price'),r=document.getElementById('bahn-rueck-price');if(h)h.value=half;if(r)r.value=half;updateBahnBadge();}
+  else if(itemId==='flug'){var half2=(parsed/2).toFixed(2);var h2=document.getElementById('flug-hin-price'),r2=document.getElementById('flug-rueck-price');if(h2)h2.value=half2;if(r2)r2.value=half2;updateFlugBadge();}
+}
+function updateOvPriceById(itemId,newVal){updateOvPrice(itemId,newVal);}
+
+// ── Work table helpers ────────────────────────────────────────────────────────
+function buildWorkOpts15(maxMin,currentVal){
+  var opts='<option value="0">Keine</option>';
+  for(var m=10;m<=maxMin;m+=10){
+    var h=Math.floor(m/60),r=m%60;
+    var lbl=h>0?(r>0?h+'h '+r+'min':h+'h'):r+'min';
+    opts+='<option value="'+m+'"'+(m===currentVal?' selected':'')+'>'+lbl+'</option>';
+  }
+  return opts;
+}
+function ovWorkRow(icon,label,durMin,fieldId,disabled){
+  var durStr=durMin>0?durS(durMin):'—';
+  if(disabled||durMin<=0){
+    return '<tr><td class="ov-work-seg">'+icon+' '+label+'</td><td class="ov-work-dur">'+durStr+'</td><td><span class="ov-work-na">nicht arbeitsfähig</span></td></tr>';
+  }
+  var cur=parseInt(document.getElementById(fieldId)?document.getElementById(fieldId).value:0)||0;
+  return '<tr><td class="ov-work-seg">'+icon+' '+label+'</td><td class="ov-work-dur">'+durStr+'</td>'
+    +'<td><select class="ov-work-sel" data-field-id="'+fieldId+'" onchange="syncWorkField(this.dataset.fieldId,this.value)">'
+    +buildWorkOpts15(durMin,cur)+'</select></td></tr>';
+}
+function syncWorkField(fieldId,val){var el=document.getElementById(fieldId);if(el){el.value=val;el.dispatchEvent(new Event('change'));}}
+
+
+function updateWorkVisibility(){/* work UI on page 3 */}
+
+function buildOverview(items){
+  var nights=calcNights(state.hD,state.rD);
+  var zr=document.getElementById('ov-zeitraum');
+  if(zr){
+    zr.innerHTML='<div>↗ <strong>Hinreise:</strong> '+fDT(state.hD,state.hT)+'</div>'
+      +'<div>↙ <strong>Rückreise:</strong> '+fDT(state.rD,state.rT)+'</div>';
+  }
+  var rp=document.getElementById('rpill-overview');
+  if(rp) rp.innerHTML='<strong>'+state.startText+'</strong> <span class="rarrow">⇄</span> <strong>'+state.zielText+'</strong>'
+    +'<span class="rmeta">↗ '+fD(state.hD)+' · ↙ '+fD(state.rD)+'</span>';
+  var con=document.getElementById('ov-transport-container');
+  if(!con) return;
+  var ORDER={auto:0,bahn:1,flug:2};
+  var sortedItems=items.filter(function(item){return item.id==='auto'||item.id==='bahn'||item.id==='flug';})
+    .sort(function(a,b){return (ORDER[a.id]||9)-(ORDER[b.id]||9);});
+  var html='';
+  var icons={auto:'🚗',bahn:'🚆',flug:'✈️'};
+  sortedItems.forEach(function(item){
+    var tColor={auto:'rgba(251,191,36,0.15)',bahn:'rgba(52,211,153,0.12)',flug:'rgba(96,165,250,0.12)'}[item.transport||item.id]||'rgba(255,255,255,0.06)';
+    var borderColor={auto:'rgba(251,191,36,0.3)',bahn:'rgba(52,211,153,0.3)',flug:'rgba(96,165,250,0.3)'}[item.transport||item.id]||'var(--br)';
+    html+='<div style="background:'+tColor+';border:1.5px solid '+borderColor+';border-radius:var(--rs);padding:14px 16px;margin-bottom:10px">';
+    html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+    html+='<span style="font-size:20px">'+(icons[item.id]||'🚌')+'</span>';
+    html+='<strong style="font-size:14px">'+item.label+'</strong>';
+    var itemId=item.id;
+    // Show price as entered on page 2:
+    // Auto: total for all autos (as entered)
+    // Bahn/Flug: per person price (as entered) — NOT the group total
+    var transportCostRaw=item.total-(item.hotel||0)-(item.extras||0);
+    var displayPrice = (item.transport==='auto')
+      ? transportCostRaw              // Auto: user entered total directly
+      : (item.pricePerPerson||0);     // Bahn/Flug: per-person as entered on p2
+    var priceLabel = (item.transport==='auto')
+      ? 'Gesamtpreis:'
+      : 'Preis/Person:';
+    html+='<div style="margin-left:auto;display:flex;align-items:center;gap:6px">';
+    html+='<span style="font-size:11px;color:var(--muted)">'+priceLabel+'</span>';
+    html+='<input class="inpsm" type="number" min="0" step="0.01" style="max-width:90px;text-align:right" '
+      +'data-item-id="'+itemId+'" value="'+displayPrice.toFixed(2)+'" '
+      +'oninput="updateOvPriceById(this.dataset.itemId,this.value)">';
+    html+='<span style="font-size:11px;color:var(--muted)">€</span></div>';
+    html+='</div>';
+    if(item.showTimes&&item.hinDep){
+      html+='<div style="font-size:12px;color:var(--muted);line-height:1.8">';
+      html+='↗ '+item.hinDep+' → '+item.hinArr+' ('+durS(item.hinDur)+')';
+      if(item.rueckDep) html+='&nbsp;&nbsp;↙ '+item.rueckDep+' → '+item.rueckArr+' ('+durS(item.rueckDur)+')';
+      html+='</div>';
+    }
+    var tparts=[];
+    if(item.trHinStart>0) tparts.push('Anreise Hin: '+durS(item.trHinStart));
+    if(item.trHinEnd>0) tparts.push('Transfer Ziel: '+durS(item.trHinEnd));
+    if(item.trRueckStart>0) tparts.push('Anreise Rück: '+durS(item.trRueckStart));
+    if(item.trRueckEnd>0) tparts.push('Transfer Heim: '+durS(item.trRueckEnd));
+    if(tparts.length) html+='<div style="font-size:11px;color:var(--blue);margin-top:4px">🚌 '+tparts.join(' · ')+'</div>';
+    html+='</div>';
+  });
+  con.innerHTML=html||'<p style="color:var(--muted);font-size:13px">Keine Optionen eingetragen.</p>';
+  updateOvHotel();
+
+  // Work table
+  var workSection=document.getElementById('ov-work-section');
+  var workCon=document.getElementById('ov-work-container');
+  if(!workSection||!workCon){return;}
+  if(!workSection)return;
+  if(!state.canWorkDuringTravel){workSection.style.display='none';return;}
+  workSection.style.display='block';
+  var workHtml='';
+  var workItems=items.filter(function(it){return it.id==='bahn'||it.id==='flug';})
+    .sort(function(a,b){return (a.id==='bahn'?0:1)-(b.id==='bahn'?0:1);});
+  workItems.forEach(function(item){
+    var isBahn=item.id==='bahn';
+    var icon=isBahn?'🚆':'✈️';
+    var trHinStart=item.trHinStart||0,trHinEnd=item.trHinEnd||0;
+    var trRueckStart=item.trRueckStart||0,trRueckEnd=item.trRueckEnd||0;
+    var mainHinDur=item.hinDur||0,mainRueckDur=item.rueckDur||0;
+    var gateDur=isBahn?0:60;
+    var hinDepSt=item.hinDepSt||'',hinArrSt=item.hinArrSt||'';
+    var rueckDepSt=item.rueckDepSt||'',rueckArrSt=item.rueckArrSt||'';
+    workHtml+='<div style="background:var(--s1);border:1.5px solid var(--br);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px">';
+    workHtml+='<div style="font-size:13px;font-weight:700;margin-bottom:8px">'+icon+' '+item.label+' – Hinreise</div>';
+    workHtml+='<table class="ov-work-table">';
+    if(isBahn){
+      workHtml+=ovWorkRow('🚌','Weg zum Bahnhof '+(hinDepSt||''),trHinStart,'',true);
+      workHtml+=ovWorkRow('🚆','Fahrt '+(hinDepSt||'')+(hinArrSt?' → '+hinArrSt:''),mainHinDur,'bahn-hin-work',false);
+      workHtml+=ovWorkRow('🚌','Weg zum Ziel '+(hinArrSt||''),trHinEnd,'',true);
+    } else {
+      var noTimesHint=mainHinDur===0?' <span style="color:var(--muted);font-size:10px">(Zeiten auf Seite 2 eintragen)</span>':'';
+      workHtml+=ovWorkRow('🚌','Weg zum Flughafen '+(hinDepSt||''),trHinStart,'',true);
+      workHtml+=ovWorkRow('🛂','Am Gate'+noTimesHint,gateDur,'flug-hin-gate-work',false);
+      workHtml+=ovWorkRow('✈️','Flugzeit '+(hinDepSt&&hinArrSt?hinDepSt+' → '+hinArrSt:(hinDepSt||'')),mainHinDur,'flug-hin-work',mainHinDur===0);
+      workHtml+=ovWorkRow('🚌','Weg zum Ziel '+(hinArrSt||''),trHinEnd,'',true);
+    }
+    workHtml+='</table>';
+    workHtml+='<div style="font-size:13px;font-weight:700;margin:12px 0 8px">'+icon+' '+item.label+' – Rückreise</div>';
+    workHtml+='<table class="ov-work-table">';
+    if(isBahn){
+      workHtml+=ovWorkRow('🚌','Weg zum Bahnhof '+(rueckDepSt||''),trRueckStart,'',true);
+      workHtml+=ovWorkRow('🚆','Fahrt '+(rueckDepSt||'')+(rueckArrSt?' → '+rueckArrSt:''),mainRueckDur,'bahn-rueck-work',false);
+      workHtml+=ovWorkRow('🚌','Weg nach Hause '+(rueckArrSt||''),trRueckEnd,'',true);
+    } else {
+      var noTimesHintR=mainRueckDur===0?' <span style="color:var(--muted);font-size:10px">(Zeiten auf Seite 2 eintragen)</span>':'';
+      workHtml+=ovWorkRow('🚌','Weg zum Flughafen '+(rueckDepSt||''),trRueckStart,'',true);
+      workHtml+=ovWorkRow('🛂','Am Gate'+noTimesHintR,gateDur,'flug-rueck-gate-work',false);
+      workHtml+=ovWorkRow('✈️','Flugzeit '+(rueckDepSt&&rueckArrSt?rueckDepSt+' → '+rueckArrSt:(rueckDepSt||'')),mainRueckDur,'flug-rueck-work',mainRueckDur===0);
+      workHtml+=ovWorkRow('🚌','Weg nach Hause '+(rueckArrSt||''),trRueckEnd,'',true);
+    }
+    workHtml+='</table></div>';
+  });
+  if(!workHtml) workHtml='<p style="color:var(--muted);font-size:13px">Keine Verbindungszeiten eingetragen.</p>';
+  workCon.innerHTML=workHtml;
+}
+
+
+// ── Live cost badges (page 2) ─────────────────────────────────────────────────
+function updateCostBadge(id, val){
+  var el=document.getElementById(id);
+  if(!el) return;
+  if(!val||isNaN(val)||val<=0){el.textContent='—';return;}
+  el.textContent=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(val);
+}
+function updateAutoBadge(){
+  var k=parseFloat(document.getElementById('auto-kosten').value)||0;
+  // Auto: cost is per car (entered by user) — show as-is (no hotel)
+  updateCostBadge('auto-cost-badge', k);
+}
+function updateBahnBadge(){
+  var hp=parseFloat(document.getElementById('bahn-hin-price').value)||0;
+  var rp=parseFloat(document.getElementById('bahn-rueck-price').value)||0;
+  var sh=document.getElementById('seat-hin').checked?5.50:0;
+  var sr=document.getElementById('seat-rueck').checked?5.50:0;
+  // Show per-person total (no hotel, no persons multiplier)
+  var total=hp+rp+sh+sr;
+  updateCostBadge('bahn-cost-badge', total>0?total:0);
+}
+function updateFlugBadge(){
+  var hp=parseFloat(document.getElementById('flug-hin-price').value)||0;
+  var rp=parseFloat(document.getElementById('flug-rueck-price').value)||0;
+  var bh=document.getElementById('bag-hin').checked?20:0;
+  var br=document.getElementById('bag-rueck').checked?20:0;
+  // Show per-person total (no hotel, no persons multiplier)
+  var total=hp+rp+bh+br;
+  updateCostBadge('flug-cost-badge', total>0?total:0);
+}
+// Hook badge updates to inputs
+['auto-kosten'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el) el.addEventListener('input',updateAutoBadge);
+});
+['bahn-hin-price','bahn-rueck-price'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el) el.addEventListener('input',updateBahnBadge);
+});
+['flug-hin-price','flug-rueck-price'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el) el.addEventListener('input',updateFlugBadge);
+});
+['seat-hin-cb','seat-rueck-cb'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el) el.addEventListener('click',function(){setTimeout(updateBahnBadge,50);});
+});
+['bag-hin-cb','bag-rueck-cb'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el) el.addEventListener('click',function(){setTimeout(updateFlugBadge,50);});
+});
+
+// ── Results page prio tiles ──────────────────────────────────────────────────
+document.addEventListener('click', function(e){
+  var infoBox = document.getElementById('prio-info-box');
+  var infoBtn = document.getElementById('prio-info-btn');
+  if(infoBox && !infoBox.contains(e.target) && infoBtn && !infoBtn.contains(e.target)){
+    infoBox.style.display='none';
+  }
+});
+
+document.querySelectorAll('[data-prio-r]').forEach(function(t){
+  t.addEventListener('click', function(){
+    state.priority = t.dataset.prioR;
+    document.querySelectorAll('[data-prio]').forEach(function(x){ x.classList.toggle('active', x.dataset.prio===state.priority); });
+    document.querySelectorAll('[data-prio-r]').forEach(function(x){ x.classList.toggle('active', x.dataset.prioR===state.priority); });
+    if(_lastItems.length > 0){
+      var scoreItem=function(item){
+        var p=state.priority, cost=item.total;
+        var timeMin=(item.dH||0)+(item.dR||0);
+        var effTime=Math.max(0, timeMin - ((item.wH||0)+(item.wR||0))*WORK_EFFICIENCY);
+        if(p==='cost') return cost/10+effTime/120;
+        if(p==='time') return cost/40+effTime/30;
+        return cost/20+effTime/60;
+      };
+      _lastItems.forEach(function(item){ item.score=scoreItem(item); });
+      // Sort fresh copy, update _lastItems, then render
+      var sorted=_lastItems.slice().sort(function(a,b){ return a.score-b.score; });
+      _lastItems.length=0;
+      sorted.forEach(function(x){ _lastItems.push(x); });
+      renderResults(_lastItems);
+    }
+  });
+});
+
+// ── Cost view toggle ─────────────────────────────────────────────────────────
+function setCostView(view){
+  state.costView = view;
+  document.getElementById('cv-perperson').classList.toggle('active', view==='perperson');
+  document.getElementById('cv-total').classList.toggle('active', view==='total');
+  if(_lastItems.length > 0){ renderResults(_lastItems); }
+}
+
+// ── Transport selector ───────────────────────────────────────────────────────
+function toggleTransportTile(type){
+  if(type === 'auto'){
+    if(!state.hasLicence){
+      // Show hint, don't activate
+      var hint = document.getElementById('tt-auto-hint');
+      if(hint){
+        hint.style.display = 'block';
+        setTimeout(function(){ hint.style.display = 'none'; }, 3000);
+      }
+      return;
+    }
+  }
+  state.transports[type] = !state.transports[type];
+  updateTransportTiles();
+  applyTransportVisibility();
+}
+
+function updateTransportTiles(){
+  ['bahn','flug','auto'].forEach(function(type){
+    var tile = document.getElementById('tt-'+type);
+    if(!tile) return;
+    var active = state.transports[type];
+    tile.classList.toggle('active', active);
+    // Disable auto tile if no licence
+    if(type === 'auto'){
+      tile.classList.toggle('disabled', !state.hasLicence);
+    }
+  });
+}
+
+function applyTransportVisibility(){
+  ['bahn','flug','auto'].forEach(function(type){
+    var el = document.querySelector('[data-transport="'+type+'"]');
+    if(!el) return;
+    el.style.display = state.transports[type] ? 'block' : 'none';
+  });
+}
+
+// ── Easter Egg ───────────────────────────────────────────────────────────────
+(function(){
+  var toastTimer;
+  function showEeToast(msg){
+    var t=document.getElementById('ee-toast');
+    if(!t) return;
+    clearTimeout(toastTimer);
+    t.textContent=msg;
+    t.classList.add('show');
+    toastTimer=setTimeout(function(){ t.classList.remove('show'); }, 4500);
+  }
+  var autoEl=document.getElementById('auto-kosten');
+  if(autoEl){
+    autoEl.addEventListener('change',function(){
+      if(parseFloat(this.value)===0 && this.value.trim()!==''){
+        setTimeout(function(){
+          showEeToast('🎁 Kostenloser Firmenwagen? Jemand hat gute Karten beim nächsten Mitarbeitergespräch.');
+        }, 300);
+      }
+    });
+  }
+})();
+
+
+// ── Destination Database ─────────────────────────────────────────────────────
+var DEFAULT_DESTINATIONS = [
+  {name:"Berlin",    bahnStation:"Berlin Hbf",           bahnMinutes:12,flugStation:"Berlin Brandenburg (BER)",flugMinutes:45},
+  {name:"Dortmund",  bahnStation:"Dortmund Hbf",         bahnMinutes:10,flugStation:"Dortmund Airport (DTM)",  flugMinutes:25},
+  {name:"Frankfurt", bahnStation:"Frankfurt (Main) Hbf", bahnMinutes:10,flugStation:"Frankfurt Airport (FRA)", flugMinutes:15},
+  {name:"Hamburg",   bahnStation:"Hamburg Hbf",          bahnMinutes:8, flugStation:"Hamburg Airport (HAM)",   flugMinutes:30},
+  {name:"Koeln",     bahnStation:"Koeln Hbf",            bahnMinutes:5, flugStation:"Koeln/Bonn Airport (CGN)",flugMinutes:25},
+  {name:"Leipzig",   bahnStation:"Leipzig Hbf",          bahnMinutes:8, flugStation:"Leipzig/Halle Airport",   flugMinutes:30},
+  {name:"Muenchen",  bahnStation:"Muenchen Hbf",         bahnMinutes:10,flugStation:"Muenchen Airport (MUC)",  flugMinutes:40},
+  {name:"Stuttgart", bahnStation:"Stuttgart Hbf",        bahnMinutes:12,flugStation:"Stuttgart Airport (STR)", flugMinutes:30},
+  {name:"Duesseldorf",bahnStation:"Duesseldorf Hbf",     bahnMinutes:8, flugStation:"Duesseldorf Airport (DUS)",flugMinutes:20},
+  {name:"Essen",     bahnStation:"Essen Hbf",            bahnMinutes:5, flugStation:"Duesseldorf Airport (DUS)",flugMinutes:30},
+];
+
+function loadDestinations(){
+  var saved = [];
+  try{ saved = JSON.parse(localStorage.getItem('rkt_destinations')||'[]'); }catch(e){}
+  var all = DEFAULT_DESTINATIONS.concat(saved);
+  all.sort(function(a,b){ return a.name.localeCompare(b.name,'de'); });
+  return all;
+}
+
+function saveNewDest(){
+  var name     = document.getElementById('dest-manual-name').value.trim();
+  var bahnSt   = document.getElementById('dest-manual-bahn-name') ? document.getElementById('dest-manual-bahn-name').value.trim() : name+' Hbf';
+  var flugSt   = document.getElementById('dest-manual-flug-name') ? document.getElementById('dest-manual-flug-name').value.trim() : name+' Flughafen';
+  var bahn     = parseInt(document.getElementById('dest-manual-bahn').value)||0;
+  var flug     = parseInt(document.getElementById('dest-manual-flug').value)||0;
+  if(!name){alert('Bitte einen Namen für das Ziel eingeben.');return;}
+  if(!bahn && !flug){alert('Bitte mindestens eine Transferzeit eingeben.');return;}
+  var saved = [];
+  try{ saved = JSON.parse(localStorage.getItem('rkt_destinations')||'[]'); }catch(e){}
+  var existing = saved.findIndex(function(d){return d.name.toLowerCase()===name.toLowerCase();});
+  var newEntry = {name:name, bahnStation:bahnSt||name+' Hbf', bahnMinutes:bahn, flugStation:flugSt||name+' Flughafen', flugMinutes:flug, custom:true};
+  if(existing>=0) saved[existing]=newEntry; else saved.push(newEntry);
+  localStorage.setItem('rkt_destinations', JSON.stringify(saved));
+  closeNewDestForm();
+  rebuildDestSelect();
+  var allDests=loadDestinations();
+  var newIdx=allDests.findIndex(function(d){ return d.name===name; });
+  if(newIdx>=0){ selectCddItem(newIdx); }
+}
+
+function rebuildDestSelect(){
+  var container = document.getElementById('cdd-options');
+  if(!container) return;
+  var dests = loadDestinations();
+  container.innerHTML = '';
+  dests.forEach(function(d,i){
+    var div = document.createElement('div');
+    div.className = 'cdd-option';
+    div.dataset.idx = String(i);
+    var left = document.createElement('span');
+    left.textContent = (d.custom ? '★ ' : '') + d.name;
+    var right = document.createElement('span');
+    right.style.cssText = 'font-size:11px;color:rgba(110,231,183,0.7)';
+    right.textContent = '🚆 ' + d.bahnMinutes + 'min  ✈️ ' + d.flugMinutes + 'min';
+    div.appendChild(left); div.appendChild(right);
+    div.onclick = (function(ii){ return function(){ selectCddItem(ii); }; })(i);
+    container.appendChild(div);
+  });
+  // Always add "Neues Ziel hinzufügen" at bottom
+  var addDiv = document.createElement('div');
+  addDiv.className = 'cdd-add-option';
+  addDiv.innerHTML = '<span>➕</span><span>Neues Ziel hinzufügen</span>';
+  addDiv.onclick = function(){ openNewDestForm(); };
+  container.appendChild(addDiv);
+}
+
+function filterCdd(q){
+  document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){
+    o.style.display = o.querySelector('span').textContent.toLowerCase().indexOf(q.toLowerCase())>=0 ? '' : 'none';
+  });
+  // Always keep "Neues Ziel" visible
+  var addOpt = document.querySelector('#cdd-options .cdd-add-option');
+  if(addOpt) addOpt.style.display = '';
+}
+
+function toggleCdd(){
+  var trigger=document.getElementById('cdd-trigger');
+  var menu=document.getElementById('cdd-menu');
+  if(menu.classList.contains('open')){ closeCdd(); return; }
+  trigger.classList.add('open'); menu.classList.add('open');
+  setTimeout(function(){ var s=document.getElementById('cdd-search'); if(s) s.focus(); }, 50);
+}
+
+function closeCdd(){
+  var t=document.getElementById('cdd-trigger'); if(t) t.classList.remove('open');
+  var m=document.getElementById('cdd-menu'); if(m) m.classList.remove('open');
+}
+
+function selectCddItem(idx){
+  var dest=loadDestinations()[idx];
+  if(!dest) return;
+  var txt=document.getElementById('cdd-selected-text');
+  if(txt){ txt.className=''; txt.style.color=''; txt.textContent=dest.name+'  🚆 '+dest.bahnMinutes+'min  ✈️ '+dest.flugMinutes+'min'; }
+  document.querySelectorAll('#cdd-options .cdd-option').forEach(function(o){ o.classList.remove('selected'); });
+  var sel=document.querySelector('#cdd-options .cdd-option[data-idx="'+idx+'"]');
+  if(sel) sel.classList.add('selected');
+  state.zielText=dest.name; state.zielGeo=null; state.zielDest=dest;
+  var ct=document.getElementById('cdd-trigger'); if(ct) ct.style.borderColor='';
+  applyDestTransferTimes(dest);
+  var a=document.getElementById('dest-applied'); if(a) a.style.display='block';
+  var ms=document.getElementById('manual-ziel-section'); if(ms) ms.style.display='none';
+  var bm=document.getElementById('btn-manual-ziel');
+  if(bm) bm.textContent='✏️ Anderes Ziel (Freitext / Neu speichern)';
+  closeCdd();
+}
+
+function openNewDestForm(){
+  closeCdd();
+  var form=document.getElementById('new-dest-form');
+  if(form){ form.classList.add('open'); }
+  // Clear fields
+  ['drop-bahn-station','drop-flug-station'].forEach(function(id){
+    var d=document.getElementById(id); if(d){ d.classList.remove('open'); d.innerHTML=''; }
+  });
+  ['dest-manual-name','dest-manual-bahn-name','dest-manual-flug-name','inp-ziel'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  ['dest-manual-bahn','dest-manual-flug'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  setTimeout(function(){ var el=document.getElementById('dest-manual-name'); if(el) el.focus(); },50);
+}
+
+function closeNewDestForm(){
+  var form=document.getElementById('new-dest-form');
+  if(form) form.classList.remove('open');
+}
+
+function toggleManualZiel(){ openNewDestForm(); }
+
+document.addEventListener('click',function(e){
+  var wrap=document.getElementById('cdd-wrap');
+  if(wrap&&!wrap.contains(e.target)) closeCdd();
+});
+
+
+function onDestSelect(val){
+  var timesDiv  = document.getElementById('dest-times-display');
+  var manualDiv = document.getElementById('dest-manual');
+  var appliedEl = document.getElementById('dest-applied');
+  if(!val || val===''){
+    if(timesDiv)timesDiv.style.display='none';
+   if(manualDiv)manualDiv.classList.remove('open');
+    // Clear auto-filled fields
+    applyDestTransferTimes(null);
+    return;
+  }
+  if(val==='manual'){
+    timesDiv.style.display='none';
+    manualDiv.classList.add('open');
+    applyDestTransferTimes(null);
+    return;
+  }
+ if(manualDiv)manualDiv.classList.remove('open');
+  var dests = loadDestinations();
+  var dest = dests[parseInt(val)];
+  if(!dest) return;
+  document.getElementById('dest-bahn-te-val').textContent = dest.bahnMinutes+' Min';
+  document.getElementById('dest-flug-te-val').textContent = dest.flugMinutes+' Min';
+  timesDiv.style.display='block';
+  appliedEl.style.display='block';
+  applyDestTransferTimes(dest);
+}
+
+function applyDestTransferTimes(dest){
+  // Fill bahn-hin-te, bahn-rueck-ts, flug-hin-te, flug-rueck-ts
+  var fields = ['bahn-hin-te','bahn-rueck-ts','flug-hin-te','flug-rueck-ts'];
+  fields.forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    if(!dest){ 
+      if(el.dataset.destFilled==='1'){ el.value=''; delete el.dataset.destFilled; }
+      el.style.borderColor='';
+      return;
+    }
+    var minutes = (id.indexOf('bahn')>=0) ? dest.bahnMinutes : dest.flugMinutes;
+    el.value = minutes;
+    el.dataset.destFilled = '1';
+    el.style.borderColor = 'rgba(52,211,153,0.6)';
+    el.dispatchEvent(new Event('change'));
+  });
+}
+
+function showDestCard(){
+  var card = document.getElementById('dest-card');
+  if(card) card.style.display = (state.zielText && state.zielText.length > 1) ? 'block' : 'none';
+}
+
+// Show dest card when ziel is selected
+var origZielSelect = null; // patched below after inpZiel listener setup
+
+// ── Init ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',function(){
+  try{updateHotelUI();}catch(e){console.warn(e);}
+  try{updateAutoOverlay();}catch(e){console.warn(e);}
+  try{rebuildDestSelect();}catch(e){console.warn(e);}
+});
+window.addEventListener('load',function(){
+  var c=document.getElementById('cdd-options');
+  if(c&&c.children.length===0){try{rebuildDestSelect();}catch(e){}}
+});
+
+</script>
 </body>
 </html>
