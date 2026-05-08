@@ -803,8 +803,8 @@ const STATION_EVA_LOOKUP = {
 
 
 const STATION_DB_INFO = {
-  "syke": {eva:"8005809", x:"8809700", y:"52916360"},
-  "stuttgart neckarpark": {eva:"8006743", x:"9240833", y:"48792222"},
+  "syke": {eva:"8005809", x:"8809788", y:"52916162", p:"1778090607", i:"U×008021048"},
+  "stuttgart neckarpark": {eva:"8006743", x:"9241055", y:"48792001", p:"1778090607", i:"U×008029377"},
   "frankfurt(main)hbf": {eva:"8000105", x:"8663785", y:"50106817"},
   "frankfurt hbf": {eva:"8000105", x:"8663785", y:"50106817"},
   "frankfurt(main) hbf": {eva:"8000105", x:"8663785", y:"50106817"},
@@ -869,7 +869,10 @@ function stationLocationRef(name, info){
   let s = `A=1@O=${name}`;
   if(info.x) s += `@X=${info.x}`;
   if(info.y) s += `@Y=${info.y}`;
-  s += `@U=80@L=${info.eva}@`;
+  s += `@U=80@L=${info.eva}`;
+  if(info.p) s += `@p=${info.p}`;
+  if(info.i) s += `@i=${info.i}`;
+  s += `@`;
   return s;
 }
 
@@ -1405,15 +1408,18 @@ function buildDbUrl(fromName, fromInfo, toName, toInfo, dateVal, timeVal, isArri
     + "#sts=true"
     + "&so=" + enc(fromName)
     + "&zo=" + enc(toName)
-    + "&kl=2";
+    + "&kl=2"
+    + "&r=13:16:KLASSENLOS:1";
 
   const fromSoid = stationLocationRef(fromName, fromInfo);
   const toSoid = stationLocationRef(toName, toInfo);
 
-  if(fromSoid) url += "&soid=" + enc(fromSoid) + "&sot=ST";
-  if(fromInfo && fromInfo.eva) url += "&soei=" + enc(fromInfo.eva);
+  if(fromSoid) url += "&soid=" + enc(fromSoid);
+  if(toSoid) url += "&zoid=" + enc(toSoid);
 
-  if(toSoid) url += "&zoid=" + enc(toSoid) + "&zot=ST";
+  url += "&sot=ST&zot=ST";
+
+  if(fromInfo && fromInfo.eva) url += "&soei=" + enc(fromInfo.eva);
   if(toInfo && toInfo.eva) url += "&zoei=" + enc(toInfo.eva);
 
   if(dt){
@@ -1423,7 +1429,7 @@ function buildDbUrl(fromName, fromInfo, toName, toInfo, dateVal, timeVal, isArri
 
   url += "&hz=%5B%5D&ar=false&s=true&d=false"
     + "&vm=00,01,02,03,04,05,06,07,08,09"
-    + "&fm=false&bp=false";
+    + "&fm=false&bp=false&dlt=false&dltv=false";
 
   return url;
 }
@@ -1501,11 +1507,14 @@ async function showBahnSearch(){
   document.getElementById("rueck-from").textContent = bahnZielStation;
   document.getElementById("rueck-to").textContent = bahnStartStation;
 
-  document.getElementById("hin-db-link").href =
-    buildDbUrl(bahnStartStation, bahnStartInfo, bahnZielStation, bahnZielInfo, hinDate, hinArrivalTarget, true);
+  const hinUrl = buildDbUrl(bahnStartStation, bahnStartInfo, bahnZielStation, bahnZielInfo, hinDate, hinArrivalTarget, true);
+  const rueckUrl = buildDbUrl(bahnZielStation, bahnZielInfo, bahnStartStation, bahnStartInfo, rueckDate, rueckDepartureTarget, false);
 
-  document.getElementById("rueck-db-link").href =
-    buildDbUrl(bahnZielStation, bahnZielInfo, bahnStartStation, bahnStartInfo, rueckDate, rueckDepartureTarget, false);
+  document.getElementById("hin-db-link").href = hinUrl;
+  document.getElementById("hin-db-link").title = hinUrl;
+
+  document.getElementById("rueck-db-link").href = rueckUrl;
+  document.getElementById("rueck-db-link").title = rueckUrl;
 
   document.getElementById("bahn-card").scrollIntoView({behavior:"smooth", block:"start"});
 }
