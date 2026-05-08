@@ -402,35 +402,29 @@ select.invalid ~ .field-warn{display:block;}
 .version-badge{font-size:10px;color:rgba(148,163,184,0.5);text-align:right;
   margin-bottom:6px;font-family:'DM Mono',monospace;letter-spacing:0.04em;}
 
-/* ── Screen 2: Bahn ── */
-.s2-route-box{background:var(--s2);border-radius:10px;padding:16px;margin-bottom:14px;}
-.s2-route-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-.s2-station{font-size:15px;font-weight:700;color:var(--text);}
-.s2-arrow{font-size:18px;color:var(--muted);}
-.s2-date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-.s2-field-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
-.s2-db-btn{display:block;width:100%;padding:13px;background:rgba(220,38,38,0.13);
-  border:1.5px solid rgba(220,38,38,0.45);border-radius:8px;color:#fca5a5;
-  font-size:14px;font-weight:700;text-align:center;text-decoration:none;
-  cursor:pointer;transition:background .15s;margin-bottom:12px;box-sizing:border-box;}
-.s2-db-btn:hover{background:rgba(220,38,38,0.25);}
-.s2-price-row{display:flex;align-items:center;gap:12px;}
-.s2-price-lbl{font-size:13px;color:var(--muted);white-space:nowrap;}
-.s2-divider{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:16px 0;}
-.s2-hint{font-size:11px;color:rgba(148,163,184,0.65);margin-top:6px;}
+.db-card{background:var(--s1);border:1px solid var(--br);border-radius:var(--r);padding:22px;margin-top:14px;display:none;}
+.db-card.open{display:block;animation:fadeIn 0.3s ease;}
+.db-section{background:var(--s2);border-radius:8px;padding:14px 16px;margin-bottom:12px;}
+.db-route-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+.db-station{font-size:15px;font-weight:700;color:var(--text);}
+.db-date-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.db-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.db-btn{display:block;width:100%;padding:12px;background:rgba(220,38,38,0.12);border:1.5px solid rgba(220,38,38,0.45);border-radius:8px;color:#fca5a5;font-size:14px;font-weight:700;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box;}
+.db-btn:hover{background:rgba(220,38,38,0.24);}
+.db-price-row{display:flex;align-items:center;gap:12px;}
+.db-price-lbl{font-size:13px;color:var(--muted);white-space:nowrap;}
+.db-hint{font-size:11px;color:rgba(148,163,184,0.6);margin-top:5px;}
+.db-divider{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:14px 0;}
 </style>
 <body>
 <div class="app">
-
 <div class="hero">
-  <div class="hero-pill">● 100 % KOSTENLOS · KEINE REGISTRIERUNG</div>
+  <div class="hero-pill">&#x25CF; 100% KOSTENLOS - KEINE REGISTRIERUNG</div>
   <h1>Reisekostentool</h1>
   <p class="hero-sub">In weniger als 10 Minuten zum Ergebnis.</p>
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
-
-<div class="version-badge">v 08.05.2026 12:35</div>
-
+<div class="version-badge">v 08.05.2026 13:19</div>
 <div class="screen active" id="s-form">
 
   <div class="version-badge">v 07.05.2026 20:13</div>
@@ -653,137 +647,35 @@ select.invalid ~ .field-warn{display:block;}
   <div class="err" id="err-s1"></div>
   <button class="btnp" id="btn-s1">Verbindungssuche →</button>
 </div>
-  <div class="card" id="db-bahn-card" style="display:none;margin-top:12px">
-    <div class="ctitle">
-      <span class="cdot" style="background:#ef4444"></span>
-      🚆 Deutsche Bahn — Verbindung suchen
+  <div class="db-card" id="db-bahn-card">
+    <div class="ctitle"><span class="cdot" style="background:#ef4444"></span>&#x1F686; Deutsche Bahn</div>
+    <div class="db-section">
+      <div class="db-lbl" style="color:rgba(52,211,153,0.85);margin-bottom:10px">&#8599; Hinreise</div>
+      <div class="db-route-row"><span class="db-station" id="db-hin-from">-</span><span style="color:var(--muted);font-size:18px">&#8594;</span><span class="db-station" id="db-hin-to">-</span></div>
+      <div class="db-date-grid">
+        <div><div class="db-lbl">Datum</div><input class="inpsm req-field" type="date" id="db-hin-date" style="width:100%" onchange="updateDbLink('hin')"></div>
+        <div><div class="db-lbl">Ankunftszeit</div><input class="inpsm req-field" type="time" id="db-hin-time" style="width:100%" onchange="updateDbLink('hin')"></div>
+      </div>
+      <a class="db-btn" id="db-hin-link" href="#" target="_blank" rel="noopener">&#128279; Hinreise bei Deutsche Bahn suchen &#8599;</a>
+      <div class="db-price-row"><label class="db-price-lbl">Preis Hinreise (&#8364;/Person):</label><input class="inpsm" type="number" id="bahn-hin-price" min="0" step="0.01" placeholder="z. B. 49" style="max-width:110px"></div>
+      <div class="db-hint">Preis nach der Suche eintragen</div>
     </div>
-    <div style="background:var(--s2);border-radius:8px;padding:14px 16px;margin-bottom:12px">
-      <div class="tleg-lbl" style="margin-bottom:8px">↗ Hinreise</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-        <span style="font-size:14px;font-weight:700;color:var(--text)" id="db-hin-from">—</span>
-        <span style="color:var(--muted)">→</span>
-        <span style="font-size:14px;font-weight:700;color:var(--text)" id="db-hin-to">—</span>
+    <hr class="db-divider">
+    <div class="db-section">
+      <div class="db-lbl" style="color:rgba(52,211,153,0.85);margin-bottom:10px">&#8600; R&#252;ckreise</div>
+      <div class="db-route-row"><span class="db-station" id="db-rueck-from">-</span><span style="color:var(--muted);font-size:18px">&#8594;</span><span class="db-station" id="db-rueck-to">-</span></div>
+      <div class="db-date-grid">
+        <div><div class="db-lbl">Datum</div><input class="inpsm req-field" type="date" id="db-rueck-date" style="width:100%" onchange="updateDbLink('rueck')"></div>
+        <div><div class="db-lbl">Abfahrtszeit</div><input class="inpsm req-field" type="time" id="db-rueck-time" style="width:100%" onchange="updateDbLink('rueck')"></div>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px" id="db-hin-meta">—</div>
-      <a id="db-hin-link" href="#" target="_blank" rel="noopener"
-        style="display:block;padding:11px;background:rgba(220,38,38,0.12);border:1.5px solid rgba(220,38,38,0.4);border-radius:8px;color:#fca5a5;font-size:13px;font-weight:700;text-align:center;text-decoration:none;margin-bottom:10px">
-        🔗 Hinreise bei Deutsche Bahn suchen ↗
-      </a>
-      <div style="display:flex;align-items:center;gap:10px">
-        <label style="font-size:12px;color:var(--muted);white-space:nowrap">Preis Hinreise (€/Person):</label>
-        <input class="inpsm" type="number" id="bahn-hin-price" min="0" step="0.01"
-          placeholder="z. B. 49" style="max-width:100px" oninput="updateBahnBadge()">
-      </div>
-    </div>
-    <div style="background:var(--s2);border-radius:8px;padding:14px 16px">
-      <div class="tleg-lbl" style="margin-bottom:8px">↙ Rückreise</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-        <span style="font-size:14px;font-weight:700;color:var(--text)" id="db-rueck-from">—</span>
-        <span style="color:var(--muted)">→</span>
-        <span style="font-size:14px;font-weight:700;color:var(--text)" id="db-rueck-to">—</span>
-      </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px" id="db-rueck-meta">—</div>
-      <a id="db-rueck-link" href="#" target="_blank" rel="noopener"
-        style="display:block;padding:11px;background:rgba(220,38,38,0.12);border:1.5px solid rgba(220,38,38,0.4);border-radius:8px;color:#fca5a5;font-size:13px;font-weight:700;text-align:center;text-decoration:none;margin-bottom:10px">
-        🔗 Rückreise bei Deutsche Bahn suchen ↗
-      </a>
-      <div style="display:flex;align-items:center;gap:10px">
-        <label style="font-size:12px;color:var(--muted);white-space:nowrap">Preis Rückreise (€/Person):</label>
-        <input class="inpsm" type="number" id="bahn-rueck-price" min="0" step="0.01"
-          placeholder="z. B. 39" style="max-width:100px" oninput="updateBahnBadge()">
-      </div>
+      <a class="db-btn" id="db-rueck-link" href="#" target="_blank" rel="noopener">&#128279; R&#252;ckreise bei Deutsche Bahn suchen &#8599;</a>
+      <div class="db-price-row"><label class="db-price-lbl">Preis R&#252;ckreise (&#8364;/Person):</label><input class="inpsm" type="number" id="bahn-rueck-price" min="0" step="0.01" placeholder="z. B. 39" style="max-width:110px"></div>
+      <div class="db-hint">Preis nach der Suche eintragen</div>
     </div>
   </div>
-</div>
-
-
-<!-- ════════════════════════════════════════════
-     SCREEN 2 – BAHN
-════════════════════════════════════════════ -->
-<div class="screen" id="s-prices">
-  <button class="backbtn" data-back="s-form">← Zurück</button>
-  <div class="rpill" id="rpill-prices"></div>
-  <div style="height:8px"></div>
-
-  <div class="card">
-    <div class="ctitle">
-      <span class="cdot" style="background:#34d399"></span>
-      🚆 Deutsche Bahn
-    </div>
-
-    <!-- Hinreise -->
-    <div class="s2-route-box">
-      <div style="font-size:11px;font-weight:700;color:rgba(52,211,153,0.8);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">↗ Hinreise</div>
-      <div class="s2-route-row">
-        <span class="s2-station" id="s2-hin-from">—</span>
-        <span class="s2-arrow">→</span>
-        <span class="s2-station" id="s2-hin-to">—</span>
-      </div>
-      <div class="s2-date-row">
-        <div>
-          <div class="s2-field-lbl">Datum</div>
-          <input class="inpsm req-field" type="date" id="s2-hin-date" style="width:100%"
-            onchange="updateDbLink('hin')">
-        </div>
-        <div>
-          <div class="s2-field-lbl">Ankunftszeit</div>
-          <input class="inpsm req-field" type="time" id="s2-hin-time" style="width:100%"
-            onchange="updateDbLink('hin')">
-        </div>
-      </div>
-      <a class="s2-db-btn" id="s2-hin-link" href="#" target="_blank" rel="noopener">
-        🔗 Hinreise bei Deutsche Bahn suchen ↗
-      </a>
-      <div class="s2-price-row">
-        <label class="s2-price-lbl">Preis Hinreise (€ / Person):</label>
-        <input class="inpsm" type="number" id="bahn-hin-price" min="0" step="0.01"
-          placeholder="z. B. 49" style="max-width:110px" oninput="updateBahnBadge()">
-      </div>
-      <div class="s2-hint">Nach der DB-Suche: Preis hier eintragen</div>
-    </div>
-
-    <hr class="s2-divider">
-
-    <!-- Rückreise -->
-    <div class="s2-route-box">
-      <div style="font-size:11px;font-weight:700;color:rgba(52,211,153,0.8);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">↙ Rückreise</div>
-      <div class="s2-route-row">
-        <span class="s2-station" id="s2-rueck-from">—</span>
-        <span class="s2-arrow">→</span>
-        <span class="s2-station" id="s2-rueck-to">—</span>
-      </div>
-      <div class="s2-date-row">
-        <div>
-          <div class="s2-field-lbl">Datum</div>
-          <input class="inpsm req-field" type="date" id="s2-rueck-date" style="width:100%"
-            onchange="updateDbLink('rueck')">
-        </div>
-        <div>
-          <div class="s2-field-lbl">Abfahrtszeit</div>
-          <input class="inpsm req-field" type="time" id="s2-rueck-time" style="width:100%"
-            onchange="updateDbLink('rueck')">
-        </div>
-      </div>
-      <a class="s2-db-btn" id="s2-rueck-link" href="#" target="_blank" rel="noopener">
-        🔗 Rückreise bei Deutsche Bahn suchen ↗
-      </a>
-      <div class="s2-price-row">
-        <label class="s2-price-lbl">Preis Rückreise (€ / Person):</label>
-        <input class="inpsm" type="number" id="bahn-rueck-price" min="0" step="0.01"
-          placeholder="z. B. 39" style="max-width:110px" oninput="updateBahnBadge()">
-      </div>
-      <div class="s2-hint">Nach der DB-Suche: Preis hier eintragen</div>
-    </div>
-
-  </div>
-
-  <div class="err" id="err-s2"></div>
-  <button class="btnp" id="btn-s2">Weiter →</button>
 </div>
 <div class="ee-toast" id="ee-toast"></div>
 </div>
-
 <script>
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -1298,138 +1190,37 @@ async function calcAndSetMinutes(type, toLat, toLon){
 }
 
 
-// ── DB Bahn Deeplink ──────────────────────────────────────────────────────────
-function toDbDate(d){
-  if(!d) return '';
-  var p = d.split('-');
-  return p.length === 3 ? p[2]+'.'+p[1]+'.'+p[0] : d;
-}
-function updateBahnBadge(){
-  var hinEl = document.getElementById('bahn-hin-price');
-  var rueckEl = document.getElementById('bahn-rueck-price');
-  var hp = hinEl ? (parseFloat(hinEl.value) || 0) : 0;
-  var rp = rueckEl ? (parseFloat(rueckEl.value) || 0) : 0;
-  var badge = document.getElementById('bahn-cost-badge');
-  if(badge){
-    badge.textContent = (hp+rp) > 0
-      ? new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(hp+rp)
-      : '\u2014';
-  }
-}
-function buildAndShowDb(){
-  var fromSt = (startTransfer && startTransfer.bahn && startTransfer.bahn.station)
-    || state.startText || '\u2014';
-  var dest = state.zielDest;
-  var toSt = dest ? (dest.bahnStation || dest.name) : (state.zielText || '\u2014');
-  var enc = encodeURIComponent;
-  function set(id, v){ var el=document.getElementById(id); if(el) el.textContent=v; }
-  function setH(id, v){ var el=document.getElementById(id); if(el) el.href=v; }
-  set('db-hin-from',   fromSt);
-  set('db-hin-to',     toSt);
-  set('db-hin-meta',   state.hD ? toDbDate(state.hD)+' \u00b7 Ankunft: '+state.hT+' Uhr' : '\u2014');
-  set('db-rueck-from', toSt);
-  set('db-rueck-to',   fromSt);
-  set('db-rueck-meta', state.rD ? toDbDate(state.rD)+' \u00b7 Abfahrt: '+state.rT+' Uhr' : '\u2014');
-  if(state.hD){
-    setH('db-hin-link',
-      'https://www.bahn.de/buchung/fahrplan/suche#ld=&so='+enc(fromSt)
-      +'&zo='+enc(toSt)+'&hd='+toDbDate(state.hD)+'&hza=A&ar='+state.hT+'&s=true');
-  }
-  if(state.rD){
-    setH('db-rueck-link',
-      'https://www.bahn.de/buchung/fahrplan/suche#ld=&so='+enc(toSt)
-      +'&zo='+enc(fromSt)+'&hd='+toDbDate(state.rD)+'&hza=D&ab='+state.rT+'&s=true');
-  }
-  var card = document.getElementById('db-bahn-card');
-  if(card){
-    card.style.display = 'block';
-    setTimeout(function(){ window.scrollTo({top: card.offsetTop - 20, behavior: 'smooth'}); }, 50);
-  }
-}
-
-// ── Screen 2: Bahn ───────────────────────────────────────────────────────────
-function toDbDate(d){
-  if(!d) return '';
-  var p=d.split('-');
-  return p.length===3 ? p[2]+'.'+p[1]+'.'+p[0] : d;
-}
-
-function fillScreen2(){
-  var fromSt = (startTransfer.bahn && startTransfer.bahn.station) || state.startText || '—';
-  var dest    = state.zielDest;
-  var toSt    = dest ? (dest.bahnStation || dest.name) : (state.zielText || '—');
-
-  // Route labels
-  var set = function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
-  set('s2-hin-from',  fromSt);
-  set('s2-hin-to',    toSt);
-  set('s2-rueck-from',toSt);
-  set('s2-rueck-to',  fromSt);
-
-  // Pre-fill dates + times from page 1
-  var hinDate  = document.getElementById('s2-hin-date');
-  var hinTime  = document.getElementById('s2-hin-time');
-  var rueckDate= document.getElementById('s2-rueck-date');
-  var rueckTime= document.getElementById('s2-rueck-time');
-  if(hinDate  && !hinDate.value)  hinDate.value   = state.hD || '';
-  if(hinTime  && !hinTime.value)  hinTime.value   = state.hT || '';
-  if(rueckDate&& !rueckDate.value)rueckDate.value = state.rD || '';
-  if(rueckTime&& !rueckTime.value)rueckTime.value = state.rT || '';
-
-  // Build initial DB links
-  updateDbLink('hin');
-  updateDbLink('rueck');
-}
-
+function toDbDate(d){if(!d)return'';var p=d.split('-');return p.length===3?p[2]+'.'+p[1]+'.'+p[0]:d;}
 function updateDbLink(dir){
-  var fromSt = (startTransfer.bahn && startTransfer.bahn.station) || state.startText || '';
-  var dest   = state.zielDest;
-  var toSt   = dest ? (dest.bahnStation || dest.name) : (state.zielText || '');
-  var enc    = encodeURIComponent;
-
-  if(dir === 'hin'){
-    var dateEl = document.getElementById('s2-hin-date');
-    var timeEl = document.getElementById('s2-hin-time');
-    var d = dateEl ? dateEl.value : state.hD;
-    var t = timeEl ? timeEl.value : state.hT;
-    var link = document.getElementById('s2-hin-link');
-    if(link && d && fromSt && toSt){
-      link.href = 'https://www.bahn.de/buchung/fahrplan/suche'
-        + '#ld=&so=' + enc(fromSt)
-        + '&zo='     + enc(toSt)
-        + '&hd='     + toDbDate(d)
-        + '&hza=A&ar='+ t + '&s=true';
-    }
-  } else {
-    var dateEl2 = document.getElementById('s2-rueck-date');
-    var timeEl2 = document.getElementById('s2-rueck-time');
-    var d2 = dateEl2 ? dateEl2.value : state.rD;
-    var t2 = timeEl2 ? timeEl2.value : state.rT;
-    var link2 = document.getElementById('s2-rueck-link');
-    if(link2 && d2 && fromSt && toSt){
-      link2.href = 'https://www.bahn.de/buchung/fahrplan/suche'
-        + '#ld=&so=' + enc(toSt)
-        + '&zo='     + enc(fromSt)
-        + '&hd='     + toDbDate(d2)
-        + '&hza=D&ab='+ t2 + '&s=true';
-    }
+  var fromSt=(startTransfer&&startTransfer.bahn&&startTransfer.bahn.station)||state.startText||'';
+  var dest=state.zielDest; var toSt=dest?(dest.bahnStation||dest.name):(state.zielText||'');
+  var enc=encodeURIComponent;
+  if(dir==='hin'){
+    var dv=(document.getElementById('db-hin-date')||{}).value||state.hD;
+    var tv=(document.getElementById('db-hin-time')||{}).value||state.hT;
+    var lnk=document.getElementById('db-hin-link');
+    if(lnk&&dv&&fromSt&&toSt)lnk.href='https://www.bahn.de/buchung/fahrplan/suche#ld=&so='+enc(fromSt)+'&zo='+enc(toSt)+'&hd='+toDbDate(dv)+'&hza=A&ar='+tv+'&s=true';
+  }else{
+    var dv2=(document.getElementById('db-rueck-date')||{}).value||state.rD;
+    var tv2=(document.getElementById('db-rueck-time')||{}).value||state.rT;
+    var lnk2=document.getElementById('db-rueck-link');
+    if(lnk2&&dv2&&fromSt&&toSt)lnk2.href='https://www.bahn.de/buchung/fahrplan/suche#ld=&so='+enc(toSt)+'&zo='+enc(fromSt)+'&hd='+toDbDate(dv2)+'&hza=D&ab='+tv2+'&s=true';
   }
 }
-
-function updateBahnBadge(){
-  var hp = parseFloat((document.getElementById('bahn-hin-price')||{}).value) || 0;
-  var rp = parseFloat((document.getElementById('bahn-rueck-price')||{}).value) || 0;
-  var badge = document.getElementById('bahn-cost-badge');
-  if(badge) badge.textContent = (hp+rp) > 0
-    ? new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(hp+rp)
-    : '—';
+function updateBahnBadge(){}
+function buildAndShowDb(){
+  var fromSt=(startTransfer&&startTransfer.bahn&&startTransfer.bahn.station)||state.startText||'-';
+  var dest=state.zielDest; var toSt=dest?(dest.bahnStation||dest.name):(state.zielText||'-');
+  function set(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  set('db-hin-from',fromSt);set('db-hin-to',toSt);set('db-rueck-from',toSt);set('db-rueck-to',fromSt);
+  var hd=document.getElementById('db-hin-date');if(hd&&!hd.value)hd.value=state.hD||'';
+  var ht=document.getElementById('db-hin-time');if(ht&&!ht.value)ht.value=state.hT||'';
+  var rd=document.getElementById('db-rueck-date');if(rd&&!rd.value)rd.value=state.rD||'';
+  var rt=document.getElementById('db-rueck-time');if(rt&&!rt.value)rt.value=state.rT||'';
+  updateDbLink('hin');updateDbLink('rueck');
+  var card=document.getElementById('db-bahn-card');
+  if(card){card.classList.add('open');setTimeout(function(){window.scrollTo({top:card.offsetTop-16,behavior:'smooth'});},50);}
 }
-
-
-(document.getElementById('btn-s2')||document.createElement('div')).addEventListener('click', function(){
-  // Weiter zu Seite 3 (noch nicht gebaut)
-  alert('Seite 3 folgt im nächsten Schritt.');
-});
 // ── Setup autocomplete ────────────────────────────────────────────────────────
 const inpStart=document.getElementById("inp-start");
 const inpZiel=document.getElementById("inp-ziel");
@@ -1500,7 +1291,8 @@ document.querySelectorAll("[data-work]").forEach(function(t){
     document.querySelectorAll("[data-work]").forEach(function(x){ x.classList.remove("active"); });
     t.classList.add("active");
     var hint = document.getElementById("work-travel-hint");
-    if(hint){ hint.textContent = workHints[t.dataset.work]; hint.style.display = "block"; }
+    hint.textContent = workHints[t.dataset.work];
+    hint.style.display = "block";
     // Rebuild work table with current items when tile is clicked on page 3
     if(_lastItems && _lastItems.length > 0){
       buildOverview(_lastItems);
@@ -1565,13 +1357,11 @@ function setupWorkSel(depId,arrId,selId,wrapId,maxId){
 
 // ── Checkboxes ────────────────────────────────────────────────────────────────
 function setupCb(cbId,rowId,priceId,price){
-  var row=document.getElementById(rowId);
-  if(!row) return;
+  var row=document.getElementById(rowId);if(!row)return;
   row.addEventListener("click",()=>{
-    var cb=document.getElementById(cbId); if(!cb) return;
-    cb.checked=!cb.checked;
-    row.classList.toggle("checked",cb.checked);
-    var priceEl=document.getElementById(priceId); if(priceEl) priceEl.textContent=cb.checked?eur(price):"—";
+    var cb=document.getElementById(cbId);if(!cb)return;
+    cb.checked=!cb.checked;row.classList.toggle("checked",cb.checked);
+    var pe=document.getElementById(priceId);if(pe)pe.textContent=cb.checked?eur(price):"—";
   });
 }
 setupCb("seat-hin","seat-hin-cb","seat-hin-price",SEAT);
@@ -1706,18 +1496,7 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   var phf=document.getElementById("flug-persons-hint");
   if(phf) phf.textContent=state.persons>1?" (Preis pro Person)":"";
   updateHotelUI();
-  try {
-    fillScreen2();
-  } catch(e) {
-    console.error('fillScreen2 error:', e);
-    alert('Fehler in fillScreen2: ' + e.message);
-  }
-  try {
-    showScreen("s-prices");
-  } catch(e) {
-    console.error('showScreen error:', e);
-    alert('Fehler in showScreen: ' + e.message);
-  }
+  buildAndShowDb();
 });
 
 // ── Screen 2 → 3 ─────────────────────────────────────────────────────────────
@@ -1728,10 +1507,10 @@ function gs(id){return g(id).value||"";}
 
 function getSt(id){ var el=document.getElementById(id); return el?el.value:""; }
 
-(document.getElementById("btn-s3")||document.createElement('div')).addEventListener("click",()=>{
+(document.getElementById("btn-s3")||document.createElement("div")).addEventListener("click",()=>{
   const items=[];
   const err=document.getElementById("err-s3");
-  if(!err){ buildAndShowDb(); return; }
+  if(!err){buildAndShowDb();return;}
   clearInvalid();
   // Validate: partially filled blocks must be completed
   var autoComplete  = isBlockComplete('auto') && state.hasLicence;
@@ -1979,7 +1758,7 @@ function renderResults(items){
   var cvCard=document.getElementById('cost-view-card');
   if(cvCard){
     var hasMulti=items.some(function(it){return (it.persons||1)>1;});
-    if(cvCard) cvCard.style.display=hasMulti?'block':'none';
+   if(cvCard)cvCard.style.display=hasMulti?'block':'none';
     if(!hasMulti) state.costView='perperson';
     document.getElementById('cv-perperson').classList.toggle('active',state.costView==='perperson');
     document.getElementById('cv-total').classList.toggle('active',state.costView==='total');
@@ -1998,7 +1777,6 @@ function renderResults(items){
 
   // Cards
   const container=document.getElementById("results-container");
-  if(!container) return;
   container.innerHTML=items.map((item,i)=>renderCard(item,i===0,items)).join("");
 
   // Print header
@@ -2246,7 +2024,7 @@ function renderResults(items){
   var cvCard=document.getElementById('cost-view-card');
   if(cvCard){
     var hasMulti=items.some(function(it){return (it.persons||1)>1;});
-    if(cvCard) cvCard.style.display=hasMulti?'block':'none';
+   if(cvCard)cvCard.style.display=hasMulti?'block':'none';
     if(!hasMulti) state.costView='perperson';
     document.getElementById('cv-perperson').classList.toggle('active',state.costView==='perperson');
     document.getElementById('cv-total').classList.toggle('active',state.costView==='total');
@@ -2266,7 +2044,6 @@ function renderResults(items){
     +(nights>0?" Inkl. "+nights+" Übernachtung"+(nights>1?"en":"")+" ("+eurR(nights*state.hotelPrice)+").":"");
 
   const container=document.getElementById("results-container");
-  if(!container) return;
   container.innerHTML=items.map((item,i)=>renderCard(item,i===0,items)).join("");
 
   // Print header
@@ -2294,7 +2071,7 @@ function renderResults(items){
 }
 
 // ── New search ────────────────────────────────────────────────────────────────
-(document.getElementById("btn-new-search")||document.createElement('div')).addEventListener("click",()=>{
+(document.getElementById("btn-new-search")||document.createElement("div")).addEventListener("click",()=>{
   ["inp-start","inp-ziel","hD","rD","auto-kosten",
    "bahn-hin-dep","bahn-hin-arr","bahn-hin-price","bahn-rueck-dep","bahn-rueck-arr","bahn-rueck-price",
    "flug-hin-dep","flug-hin-arr","flug-hin-price","flug-rueck-dep","flug-rueck-arr","flug-rueck-price",
@@ -2567,16 +2344,17 @@ mirrorTransfer('auto-tr-he','auto-tr-rs');
 function toggleOmioInfo(){
   var btn=document.getElementById('omio-info-toggle');
   var body=document.getElementById('omio-info-body');
-  if(!btn) return;
-  if(body) body.classList.toggle('open');
-  btn.classList.toggle('open');
+  if(!btn)return;
+  if(body)body.classList.toggle('open');
+  body.classList.toggle('open');
 }
 function toggleGuide(){
   var btn=document.getElementById('guide-toggle-btn');
   var box=document.getElementById('guide-box');
-  if(!btn) return;
-  if(box) box.classList.toggle('open');
+  if(!btn)return;
+  if(box)box.classList.toggle('open');
   btn.classList.toggle('open');
+  box.classList.toggle('open');
 }
 function switchGuideTab(tab){
   document.getElementById('tab-bahn').classList.toggle('active',tab==='bahn');
@@ -2695,7 +2473,7 @@ function buildOverview(items){
   var workSection=document.getElementById('ov-work-section');
   var workCon=document.getElementById('ov-work-container');
   if(!workSection||!workCon){return;}
-  if(!workSection) return;
+  if(!workSection)return;
   if(!state.canWorkDuringTravel){workSection.style.display='none';return;}
   workSection.style.display='block';
   var workHtml='';
@@ -2760,8 +2538,8 @@ function updateAutoBadge(){
 function updateBahnBadge(){
   var hp=parseFloat(document.getElementById('bahn-hin-price').value)||0;
   var rp=parseFloat(document.getElementById('bahn-rueck-price').value)||0;
-  var sh=(document.getElementById('seat-hin')||{checked:false}).checked?5.50:0;
-  var sr=(document.getElementById('seat-rueck')||{checked:false}).checked?5.50:0;
+  var sh=document.getElementById('seat-hin').checked?5.50:0;
+  var sr=document.getElementById('seat-rueck').checked?5.50:0;
   // Show per-person total (no hotel, no persons multiplier)
   var total=hp+rp+sh+sr;
   updateCostBadge('bahn-cost-badge', total>0?total:0);
@@ -2769,8 +2547,8 @@ function updateBahnBadge(){
 function updateFlugBadge(){
   var hp=parseFloat(document.getElementById('flug-hin-price').value)||0;
   var rp=parseFloat(document.getElementById('flug-rueck-price').value)||0;
-  var bh=(document.getElementById('bag-hin')||{checked:false}).checked?20:0;
-  var br=(document.getElementById('bag-rueck')||{checked:false}).checked?20:0;
+  var bh=document.getElementById('bag-hin').checked?20:0;
+  var br=document.getElementById('bag-rueck').checked?20:0;
   // Show per-person total (no hotel, no persons multiplier)
   var total=hp+rp+bh+br;
   updateCostBadge('flug-cost-badge', total>0?total:0);
@@ -2903,17 +2681,16 @@ function applyTransportVisibility(){
 
 // ── Destination Database ─────────────────────────────────────────────────────
 var DEFAULT_DESTINATIONS = [
-  // Entfernung Stadtmitte → Hbf / Flughafen in Minuten (Taxi/ÖPNV-Schätzwert)
-  {name:"Berlin",     bahnStation:"Berlin Hbf",           bahnMinutes:12, flugStation:"Berlin Brandenburg (BER)", flugMinutes:45},
-  {name:"Dortmund",   bahnStation:"Dortmund Hbf",         bahnMinutes:10, flugStation:"Dortmund Airport (DTM)",   flugMinutes:25},
-  {name:"Düsseldorf", bahnStation:"Düsseldorf Hbf",       bahnMinutes:8,  flugStation:"Düsseldorf Airport (DUS)", flugMinutes:20},
-  {name:"Essen",      bahnStation:"Essen Hbf",            bahnMinutes:5,  flugStation:"Düsseldorf Airport (DUS)", flugMinutes:30},
-  {name:"Frankfurt",  bahnStation:"Frankfurt (Main) Hbf", bahnMinutes:10, flugStation:"Frankfurt Airport (FRA)",  flugMinutes:15},
-  {name:"Hamburg",    bahnStation:"Hamburg Hbf",          bahnMinutes:8,  flugStation:"Hamburg Airport (HAM)",    flugMinutes:30},
-  {name:"Köln",       bahnStation:"Köln Hbf",             bahnMinutes:5,  flugStation:"Köln/Bonn Airport (CGN)", flugMinutes:25},
-  {name:"Leipzig",    bahnStation:"Leipzig Hbf",          bahnMinutes:8,  flugStation:"Leipzig/Halle Airport",    flugMinutes:30},
-  {name:"München",    bahnStation:"München Hbf",          bahnMinutes:10, flugStation:"München Airport (MUC)",    flugMinutes:40},
-  {name:"Stuttgart",  bahnStation:"Stuttgart Hbf",        bahnMinutes:12, flugStation:"Stuttgart Airport (STR)",  flugMinutes:30},
+  {name:"Berlin",    bahnStation:"Berlin Hbf",           bahnMinutes:12,flugStation:"Berlin Brandenburg (BER)",flugMinutes:45},
+  {name:"Dortmund",  bahnStation:"Dortmund Hbf",         bahnMinutes:10,flugStation:"Dortmund Airport (DTM)",  flugMinutes:25},
+  {name:"Frankfurt", bahnStation:"Frankfurt (Main) Hbf", bahnMinutes:10,flugStation:"Frankfurt Airport (FRA)", flugMinutes:15},
+  {name:"Hamburg",   bahnStation:"Hamburg Hbf",          bahnMinutes:8, flugStation:"Hamburg Airport (HAM)",   flugMinutes:30},
+  {name:"Koeln",     bahnStation:"Koeln Hbf",            bahnMinutes:5, flugStation:"Koeln/Bonn Airport (CGN)",flugMinutes:25},
+  {name:"Leipzig",   bahnStation:"Leipzig Hbf",          bahnMinutes:8, flugStation:"Leipzig/Halle Airport",   flugMinutes:30},
+  {name:"Muenchen",  bahnStation:"Muenchen Hbf",         bahnMinutes:10,flugStation:"Muenchen Airport (MUC)",  flugMinutes:40},
+  {name:"Stuttgart", bahnStation:"Stuttgart Hbf",        bahnMinutes:12,flugStation:"Stuttgart Airport (STR)", flugMinutes:30},
+  {name:"Duesseldorf",bahnStation:"Duesseldorf Hbf",     bahnMinutes:8, flugStation:"Duesseldorf Airport (DUS)",flugMinutes:20},
+  {name:"Essen",     bahnStation:"Essen Hbf",            bahnMinutes:5, flugStation:"Duesseldorf Airport (DUS)",flugMinutes:30},
 ];
 
 function loadDestinations(){
@@ -3046,8 +2823,8 @@ function onDestSelect(val){
   var manualDiv = document.getElementById('dest-manual');
   var appliedEl = document.getElementById('dest-applied');
   if(!val || val===''){
-    if(timesDiv) timesDiv.style.display='none';
-    if(manualDiv) manualDiv.classList.remove('open');
+    if(timesDiv)timesDiv.style.display='none';
+   if(manualDiv)manualDiv.classList.remove('open');
     // Clear auto-filled fields
     applyDestTransferTimes(null);
     return;
@@ -3058,7 +2835,7 @@ function onDestSelect(val){
     applyDestTransferTimes(null);
     return;
   }
-  if(manualDiv) manualDiv.classList.remove('open');
+ if(manualDiv)manualDiv.classList.remove('open');
   var dests = loadDestinations();
   var dest = dests[parseInt(val)];
   if(!dest) return;
@@ -3096,17 +2873,15 @@ function showDestCard(){
 // Show dest card when ziel is selected
 var origZielSelect = null; // patched below after inpZiel listener setup
 
-// ── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function(){
-  try{ updateHotelUI(); }catch(e){ console.warn('updateHotelUI:',e); }
-  try{ updateAutoOverlay(); }catch(e){ console.warn('updateAutoOverlay:',e); }
-  try{ rebuildDestSelect(); }catch(e){ console.warn('rebuildDestSelect:',e); }
-  try{ applyTransportVisibility(); }catch(e){ console.warn('applyTransportVisibility:',e); }
+// ── Init ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',function(){
+  try{updateHotelUI();}catch(e){console.warn(e);}
+  try{updateAutoOverlay();}catch(e){console.warn(e);}
+  try{rebuildDestSelect();}catch(e){console.warn(e);}
 });
-// Fallback: also run on window load in case DOMContentLoaded already fired
-window.addEventListener('load', function(){
-  var container = document.getElementById('cdd-options');
-  if(container && container.children.length === 0){ rebuildDestSelect(); }
+window.addEventListener('load',function(){
+  var c=document.getElementById('cdd-options');
+  if(c&&c.children.length===0){try{rebuildDestSelect();}catch(e){}}
 });
 
 </script>
