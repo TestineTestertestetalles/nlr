@@ -540,6 +540,23 @@ input[type=date],input[type=time]{color-scheme:dark}
   font-weight:800;
 }
 
+
+.reservation-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.reservation-price{
+  margin-left:auto;
+  font-size:13px;
+  font-weight:800;
+  color:var(--gold);
+  white-space:nowrap;
+}
+@media(max-width:560px){
+  .reservation-grid{grid-template-columns:1fr}
+}
+
 @media(max-width:560px){
   .grid2,.time-grid{grid-template-columns:1fr}
   .card{padding:20px}
@@ -617,6 +634,30 @@ input[type=date],input[type=time]{color-scheme:dark}
     </label>
   </section>
 
+
+  <section class="card">
+    <div class="ctitle"><span class="cdot" style="background:var(--gold)"></span> Sitzplatzreservierung</div>
+
+    <div class="reservation-grid">
+      <label class="cb-row" id="seat-hin-row">
+        <input type="checkbox" id="seat-hin">
+        <div>
+          <div class="cb-label">Sitzplatzreservierung Hinreise</div>
+          <div class="cb-note">Optional zur Bahnverbindung hinzufügen</div>
+        </div>
+        <span class="reservation-price">5,50 €</span>
+      </label>
+
+      <label class="cb-row" id="seat-rueck-row">
+        <input type="checkbox" id="seat-rueck">
+        <div>
+          <div class="cb-label">Sitzplatzreservierung Rückreise</div>
+          <div class="cb-note">Optional zur Bahnverbindung hinzufügen</div>
+        </div>
+        <span class="reservation-price">5,50 €</span>
+      </label>
+    </div>
+  </section>
 
   <section class="card">
     <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Verfügbare Verkehrsmittel</div>
@@ -995,8 +1036,7 @@ function fillSelect(type, items, placeholder, autoSelectNearest=false){
   sel.innerHTML = `<option value="">${placeholder}</option>` + items
     .map((x, idx) => {
       const eva = x.eva || stationEvaByName(x.name);
-      const evaText = eva ? ` · EVA ${eva}` : "";
-      return `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" data-lat="${x.lat || ""}" data-lon="${x.lon || ""}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name} · ca. ${x.minutes} min · ${Math.round(x.km)} km${type === "bahn" ? evaText : ""}</option>`;
+      return `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" data-lat="${x.lat || ""}" data-lon="${x.lon || ""}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name} · ca. ${x.minutes} min · ${Math.round(x.km)} km</option>`;
     })
     .join("");
 
@@ -1301,9 +1341,8 @@ function onTransportPointChange(type){
 
   if(note){
     const minutesText = selected && selected.dataset.min ? ` · ca. ${selected.dataset.min} min` : "";
-    const evaText = type === "bahn" && selected && selected.dataset.eva ? ` · EVA ${selected.dataset.eva}` : "";
     note.textContent = sel.value
-      ? `Gewählt: ${sel.value}${minutesText}${evaText}`
+      ? `Gewählt: ${sel.value}${minutesText}`
       : (type === "auto" ? "Fuhrpark auswählen" : type === "flug" ? "Startflughafen auswählen" : "Startbahnhof auswählen");
   }
 }
@@ -1340,7 +1379,10 @@ function updateTransportUi(){
 
 const tripState = {
   persons: 1,
-  hasLicence: false
+  hasLicence: false,
+  seatReservationHin: false,
+  seatReservationRueck: false,
+  seatReservationPrice: 5.50
 };
 
 function updatePersonsUi(){
@@ -1352,6 +1394,37 @@ function updatePersonsUi(){
   label.textContent = tripState.persons === 1
     ? "1 Person reist allein"
     : `${tripState.persons} Personen reisen gemeinsam`;
+}
+
+
+function initSeatReservations(){
+  const hin = document.getElementById("seat-hin");
+  const rueck = document.getElementById("seat-rueck");
+  const hinRow = document.getElementById("seat-hin-row");
+  const rueckRow = document.getElementById("seat-rueck-row");
+
+  if(hin){
+    hin.addEventListener("change", () => {
+      tripState.seatReservationHin = hin.checked;
+      if(hinRow) hinRow.classList.toggle("checked", hin.checked);
+    });
+  }
+
+  if(rueck){
+    rueck.addEventListener("change", () => {
+      tripState.seatReservationRueck = rueck.checked;
+      if(rueckRow) rueckRow.classList.toggle("checked", rueck.checked);
+    });
+  }
+}
+
+function seatReservationSummary(){
+  const parts = [];
+  if(tripState.seatReservationHin) parts.push("Hinreise");
+  if(tripState.seatReservationRueck) parts.push("Rückreise");
+  if(!parts.length) return "keine Sitzplatzreservierung";
+  const total = parts.length * tripState.seatReservationPrice * tripState.persons;
+  return `Sitzplatzreservierung ${parts.join(" + ")} · ${parts.length} × ${tripState.persons} Person(en) × 5,50 € = ${total.toLocaleString("de-DE",{style:"currency",currency:"EUR"})}`;
 }
 
 function initTravelers(){
@@ -1379,9 +1452,15 @@ function initTravelers(){
     licence.addEventListener("change", () => {
       tripState.hasLicence = licence.checked;
       row.classList.toggle("checked", tripState.hasLicence);
+      if(tripState.hasLicence){
+        transportState.auto.active = true;
+      }else{
+        transportState.auto.active = false;
+      }
+
       note.textContent = tripState.hasLicence
-        ? "Auto-/Fuhrpark-Option kann später berücksichtigt werden."
-        : "Ohne gültige Fahrerlaubnis wird die Auto-/Fuhrpark-Option später ausgeschlossen.";
+        ? "Auto-/Fuhrpark-Option wurde automatisch ausgewählt."
+        : "Ohne gültige Fahrerlaubnis wird die Auto-/Fuhrpark-Option ausgeschlossen.";
       updateTransportUi();
     });
   }
@@ -1392,7 +1471,10 @@ function initTravelers(){
   updateTransportUi();
 }
 
-document.addEventListener("DOMContentLoaded", initTravelers);
+document.addEventListener("DOMContentLoaded", () => {
+  initTravelers();
+  initSeatReservations();
+});
 
 function formatDateForDb(date){
   if(!date) return "";
@@ -1498,6 +1580,7 @@ async function showBahnSearch(){
     `<span>${zielAdresse}</span><br>` +
     `<span>${tripState.persons} ${tripState.persons === 1 ? "reisende Person" : "reisende Personen"} · ${licenceText}</span><br>` +
     `<span>Verkehrsmittel: ${activeTransports}</span><br>` +
+    `<span>${seatReservationSummary()}</span><br>` +
     `<span>Bahnlink: ${bahnStartStation}${bahnStartInfo && bahnStartInfo.eva ? " (EVA " + bahnStartInfo.eva + ")" : ""} → ${bahnZielStation}${bahnZielInfo && bahnZielInfo.eva ? " (EVA " + bahnZielInfo.eva + ")" : ""}</span>`;
 
   document.getElementById("bahn-card").style.display = "block";
