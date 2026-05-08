@@ -412,7 +412,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
 
-<div class="version-badge">v 08.05.2026 07:48</div>
+<div class="version-badge">v 08.05.2026 07:59</div>
 
 <div class="screen active" id="s-form">
 
@@ -1315,8 +1315,7 @@ document.querySelectorAll("[data-work]").forEach(function(t){
     document.querySelectorAll("[data-work]").forEach(function(x){ x.classList.remove("active"); });
     t.classList.add("active");
     var hint = document.getElementById("work-travel-hint");
-    if(hint) hint.textContent = workHints[t.dataset.work];
-    hint.style.display = "block";
+    if(hint){ hint.textContent = workHints[t.dataset.work]; hint.style.display = "block"; }
     // Rebuild work table with current items when tile is clicked on page 3
     if(_lastItems && _lastItems.length > 0){
       buildOverview(_lastItems);
@@ -1362,8 +1361,8 @@ function updateHotelUI(){
 // ── Auto km hint ──────────────────────────────────────────────────────────────
 function updateAutoKmHint(){
   const km=autoKm();const hint=document.getElementById("auto-km-hint");
-  if(km){const fm=Math.round(km/CAR_SPEED*60);hint.style.display="block";hint.textContent=`Geschätzte Strecke: ~${km} km · Fahrzeit: ca. ${durS(fm)}`;updateWorkSelAuto();}
-  else{hint.style.display="none";}
+  if(km&&hint){const fm=Math.round(km/CAR_SPEED*60);hint.style.display="block";hint.textContent=`Geschätzte Strecke: ~${km} km · Fahrzeit: ca. ${durS(fm)}`;updateWorkSelAuto();}
+  else if(hint){hint.style.display="none";}
 }
 function updateWorkSelAuto(){ /* auto work moved to page 3 overview */ }
 
@@ -1781,7 +1780,7 @@ function renderResults(items){
   var cvCard=document.getElementById('cost-view-card');
   if(cvCard){
     var hasMulti=items.some(function(it){return (it.persons||1)>1;});
-    cvCard.style.display=hasMulti?'block':'none';
+    if(cvCard) cvCard.style.display=hasMulti?'block':'none';
     if(!hasMulti) state.costView='perperson';
     document.getElementById('cv-perperson').classList.toggle('active',state.costView==='perperson');
     document.getElementById('cv-total').classList.toggle('active',state.costView==='total');
@@ -2048,7 +2047,7 @@ function renderResults(items){
   var cvCard=document.getElementById('cost-view-card');
   if(cvCard){
     var hasMulti=items.some(function(it){return (it.persons||1)>1;});
-    cvCard.style.display=hasMulti?'block':'none';
+    if(cvCard) cvCard.style.display=hasMulti?'block':'none';
     if(!hasMulti) state.costView='perperson';
     document.getElementById('cv-perperson').classList.toggle('active',state.costView==='perperson');
     document.getElementById('cv-total').classList.toggle('active',state.costView==='total');
@@ -2369,16 +2368,16 @@ mirrorTransfer('auto-tr-he','auto-tr-rs');
 function toggleOmioInfo(){
   var btn=document.getElementById('omio-info-toggle');
   var body=document.getElementById('omio-info-body');
-  if(!btn||!body) return;
+  if(!btn) return;
+  if(body) body.classList.toggle('open');
   btn.classList.toggle('open');
-  body.classList.toggle('open');
 }
 function toggleGuide(){
   var btn=document.getElementById('guide-toggle-btn');
   var box=document.getElementById('guide-box');
-  if(!btn||!box) return;
+  if(!btn) return;
+  if(box) box.classList.toggle('open');
   btn.classList.toggle('open');
-  box.classList.toggle('open');
 }
 function switchGuideTab(tab){
   document.getElementById('tab-bahn').classList.toggle('active',tab==='bahn');
@@ -2497,6 +2496,7 @@ function buildOverview(items){
   var workSection=document.getElementById('ov-work-section');
   var workCon=document.getElementById('ov-work-container');
   if(!workSection||!workCon){return;}
+  if(!workSection) return;
   if(!state.canWorkDuringTravel){workSection.style.display='none';return;}
   workSection.style.display='block';
   var workHtml='';
@@ -2848,7 +2848,7 @@ function onDestSelect(val){
   var appliedEl = document.getElementById('dest-applied');
   if(!val || val===''){
     if(timesDiv) timesDiv.style.display='none';
-    manualDiv.classList.remove('open');
+    if(manualDiv) manualDiv.classList.remove('open');
     // Clear auto-filled fields
     applyDestTransferTimes(null);
     return;
@@ -2859,7 +2859,7 @@ function onDestSelect(val){
     applyDestTransferTimes(null);
     return;
   }
-  manualDiv.classList.remove('open');
+  if(manualDiv) manualDiv.classList.remove('open');
   var dests = loadDestinations();
   var dest = dests[parseInt(val)];
   if(!dest) return;
