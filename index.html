@@ -424,7 +424,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub">In weniger als 10 Minuten zum Ergebnis.</p>
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
-<div class="version-badge">v 08.05.2026 13:42</div>
+<div class="version-badge">v 08.05.2026 13:50</div>
 <div class="screen active" id="s-form">
 
   <div class="version-badge">v 07.05.2026 20:13</div>
@@ -963,7 +963,7 @@ function syncStartTransferToPage2(type){
 async function lookupStartStation(geo){
   if(!geo || !geo.lat) return;
   var lat = geo.lat, lon = geo.lon;
-  var RADIUS = 100000; // 100 km
+  var RADIUS = 200000; // 200 km
 
   // Helper: haversine distance in km
   function haversine(lat1,lon1,lat2,lon2){
