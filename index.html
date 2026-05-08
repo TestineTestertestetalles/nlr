@@ -424,7 +424,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub">In weniger als 10 Minuten zum Ergebnis.</p>
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
-<div class="version-badge">v 08.05.2026 13:50</div>
+<div class="version-badge">v 08.05.2026 13:56</div>
 <div class="screen active" id="s-form">
 
   <div class="version-badge">v 07.05.2026 20:13</div>
@@ -963,7 +963,8 @@ function syncStartTransferToPage2(type){
 async function lookupStartStation(geo){
   if(!geo || !geo.lat) return;
   var lat = geo.lat, lon = geo.lon;
-  var RADIUS = 200000; // 200 km
+  var RADIUS_BAHN = 75000;  // 75 km
+  var RADIUS_FLUG = 200000; // 200 km
 
   // Helper: haversine distance in km
   function haversine(lat1,lon1,lat2,lon2){
@@ -980,7 +981,7 @@ async function lookupStartStation(geo){
     el.innerHTML = '';
     if(!stations || !stations.length){
       var opt = document.createElement('option');
-      opt.value = ''; opt.textContent = '— Kein Ergebnis in 100 km —';
+      opt.value = ''; opt.textContent = '— Kein Ergebnis —';
       el.appendChild(opt);
       return;
     }
@@ -1013,11 +1014,11 @@ async function lookupStartStation(geo){
     // Overpass query: nearest railway=station AND aeroway=aerodrome within 25km
     // Bahnhöfe: railway=station, kein Tourismus/Museum/Miniatur
     // Flughäfen: nur mit IATA-Code = Linienflugbetrieb
-    var query = '[out:json][timeout:20];('
-      + 'node["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'way["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'node["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
-      + 'way["aeroway"="aerodrome"]["iata"](around:'+RADIUS+','+lat+','+lon+');'
+    var query = '[out:json][timeout:25];('
+      + 'node["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS_BAHN+','+lat+','+lon+');'
+      + 'way["railway"="station"]["usage"!="tourism"]["usage"!="military"]["railway"!="miniature"](around:'+RADIUS_BAHN+','+lat+','+lon+');'
+      + 'node["aeroway"="aerodrome"]["iata"](around:'+RADIUS_FLUG+','+lat+','+lon+');'
+      + 'way["aeroway"="aerodrome"]["iata"](around:'+RADIUS_FLUG+','+lat+','+lon+');'
       + ');out center;';
 
     var resp = await fetch('https://overpass-api.de/api/interpreter', {
@@ -1077,13 +1078,13 @@ async function lookupStartStation(geo){
     }
 
   } catch(e){
-    console.warn('Overpass lookup failed:', e);
+    console.error('Overpass lookup failed:', e);
     // Fallback: show city name
     var city = geo.short.split(',')[0].trim();
     var stEl = document.getElementById('tt-bahn-station');
-    if(stEl) stEl.textContent = city + ' Hbf';
+    if(stEl) stEl.innerHTML = '<option value="">'+city+' Hbf (Fallback)</option>';
     var apEl = document.getElementById('tt-flug-station');
-    if(apEl) apEl.textContent = city + ' Flughafen';
+    if(apEl) apEl.innerHTML = '<option value="">'+city+' Flughafen (Fallback)</option>';
   }
 }
 
