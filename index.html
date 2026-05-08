@@ -422,6 +422,98 @@ input[type=date],input[type=time]{color-scheme:dark}
 .transport-hint strong{color:var(--text)}
 
 @media(max-width:760px){.transport-grid{grid-template-columns:1fr}.transport-station-note{min-height:auto}}
+
+.acwrap{position:relative;}
+.ac-inp-wrap{position:relative;}
+.ac-icon{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  opacity:.42;
+  pointer-events:none;
+}
+.drop{
+  position:absolute;
+  top:calc(100% + 5px);
+  left:0;
+  right:0;
+  z-index:999;
+  background:#1a1a2e;
+  border:1px solid rgba(251,191,36,0.25);
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,0.55);
+  display:none;
+}
+.drop.open{display:block;}
+.ditem{
+  padding:10px 13px;
+  cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.ditem:last-child{border-bottom:none;}
+.ditem:hover{background:rgba(251,191,36,0.09);}
+.dmain{font-size:13px;font-weight:800;color:#f0f0f0;}
+.dsub{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:2px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#ziel{
+  min-height:48px;
+  color:#f8fafc;
+  background:#24243a;
+  border-color:rgba(251,191,36,.34);
+  font-weight:700;
+}
+#ziel option{
+  color:#111827;
+  background:#ffffff;
+  font-size:14px;
+  padding:10px;
+}
+.transport-select{
+  min-height:38px;
+  color:#f8fafc;
+  background:#202036;
+  border-color:rgba(255,255,255,.18);
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+.transport-select option{
+  color:#111827;
+  background:#ffffff;
+}
+.loading-note{
+  color:var(--gold)!important;
+}
+
+
+.mini-action{
+  width:100%;
+  margin:0 0 8px;
+  padding:6px 8px;
+  border-radius:7px;
+  border:1px dashed rgba(52,211,153,.35);
+  background:rgba(52,211,153,.07);
+  color:var(--green);
+  font-size:10px;
+  font-weight:800;
+  font-family:inherit;
+  cursor:pointer;
+}
+.mini-action:hover{
+  background:rgba(52,211,153,.13);
+}
+.transport-select option.station-local{
+  font-weight:700;
+}
+
 @media(max-width:560px){
   .grid2,.time-grid{grid-template-columns:1fr}
   .card{padding:20px}
@@ -442,14 +534,20 @@ input[type=date],input[type=time]{color-scheme:dark}
     <div class="grid2">
       <div class="field">
         <label>Startstadt</label>
-        <input id="start" type="text" list="cities" placeholder="z. B. Bremen">
+        <div class="acwrap">
+          <div class="ac-inp-wrap">
+            <input id="start" type="text" placeholder="z. B. Bremen" autocomplete="off">
+            <span class="ac-icon">📍</span>
+          </div>
+          <div class="drop" id="drop-start"></div>
+        </div>
       </div>
       <div class="field">
         <label>Ziel aus interner Datenbank</label>
         <select id="ziel">
           <option value="">— Ziel wählen —</option>
-          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Hbf|Stuttgart Hbf">MHP Arena Stuttgart</option>
-          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf">Deutsche Bank Park Frankfurt</option>
+          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Hbf|Stuttgart Hbf">MHP Arena Stuttgart · Mercedesstraße 87, 70372 Stuttgart</option>
+          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf">Deutsche Bank Park Frankfurt · Mörfelder Landstraße 362, 60528 Frankfurt am Main</option>
         </select>
       </div>
       <div class="field">
@@ -469,20 +567,6 @@ input[type=date],input[type=time]{color-scheme:dark}
         <input id="rueck-departure-target" type="time" value="17:00">
       </div>
     </div>
-
-    <datalist id="cities">
-      <option>Bremen</option>
-      <option>Hamburg</option>
-      <option>Berlin</option>
-      <option>Hannover</option>
-      <option>Düsseldorf</option>
-      <option>Köln</option>
-      <option>Frankfurt am Main</option>
-      <option>Stuttgart</option>
-      <option>München</option>
-      <option>Dresden</option>
-      <option>Leipzig</option>
-    </datalist>
 
     
   </section>
@@ -518,6 +602,7 @@ input[type=date],input[type=time]{color-scheme:dark}
         <div class="transport-label">Bahn</div>
         <select class="transport-select" id="bahn-station" onclick="event.stopPropagation()" onchange="onTransportPointChange('bahn')"></select>
         <div class="transport-station-note" id="bahn-note">Startbahnhof auswählen</div>
+        <button class="mini-action" type="button" onclick="refreshNearbyStations(event)">↻ Bahnhöfe im Umkreis neu laden</button>
         <div class="transport-min-row">
           <input class="transport-min" id="bahn-min" type="number" min="0" max="999" placeholder="—" onclick="event.stopPropagation()" onchange="setTransferMinutes('bahn', this.value)">
           <span class="transport-min-label">min</span>
@@ -550,7 +635,7 @@ input[type=date],input[type=time]{color-scheme:dark}
     </div>
 
     <div class="transport-hint" id="transport-hint">
-      <strong>Hinweis:</strong> Bahn und Flugzeug können später für Hin- und Rückreise kombiniert werden. Auto gilt immer für Hin- und Rückreise und wird nur berücksichtigt, wenn eine gültige Fahrerlaubnis bestätigt ist.
+      <strong>Hinweis:</strong> Die nächstgelegenen Startpunkte werden automatisch vorausgewählt. Bahn und Flugzeug können später für Hin- und Rückreise kombiniert werden. Auto gilt immer für Hin- und Rückreise und wird nur berücksichtigt, wenn eine gültige Fahrerlaubnis bestätigt ist.
     </div>
   </section>
 
@@ -637,86 +722,398 @@ const transportState = {
   auto: { active: false, point: "", minutes: "" }
 };
 
-const TRANSPORT_POINTS = {
-  bahn: [
-    ["Bremen Hbf", 12],
-    ["Hamburg Hbf", 18],
-    ["Berlin Hbf", 22],
-    ["Hannover Hbf", 15],
-    ["Düsseldorf Hbf", 18],
-    ["Köln Hbf", 20],
-    ["Frankfurt(Main)Hbf", 16],
-    ["Stuttgart Hbf", 18],
-    ["München Hbf", 25],
-    ["Dresden Hbf", 18],
-    ["Leipzig Hbf", 16],
-    ["Nürnberg Hbf", 20],
-    ["Mannheim Hbf", 14],
-    ["Karlsruhe Hbf", 15],
-    ["Essen Hbf", 16],
-    ["Dortmund Hbf", 17],
-    ["Münster(Westf)Hbf", 14],
-    ["Bonn Hbf", 17],
-    ["Mainz Hbf", 15],
-    ["Wiesbaden Hbf", 16],
-    ["Kiel Hbf", 15],
-    ["Erfurt Hbf", 13]
-  ],
-  flug: [
-    ["Bremen Airport (BRE)", 18],
-    ["Hamburg Airport (HAM)", 30],
-    ["Berlin Brandenburg (BER)", 40],
-    ["Hannover Airport (HAJ)", 25],
-    ["Düsseldorf Airport (DUS)", 28],
-    ["Köln/Bonn Airport (CGN)", 30],
-    ["Frankfurt Airport (FRA)", 25],
-    ["Stuttgart Airport (STR)", 28],
-    ["München Airport (MUC)", 45],
-    ["Dresden Airport (DRS)", 25],
-    ["Leipzig/Halle Airport (LEJ)", 35],
-    ["Nürnberg Airport (NUE)", 25],
-    ["Dortmund Airport (DTM)", 30],
-    ["Münster/Osnabrück Airport (FMO)", 40],
-    ["Karlsruhe/Baden-Baden Airport (FKB)", 45],
-    ["Memmingen Airport (FMM)", 55],
-    ["Paderborn/Lippstadt Airport (PAD)", 45],
-    ["Saarbrücken Airport (SCN)", 25],
-    ["Weeze Airport (NRN)", 60],
-    ["Friedrichshafen Airport (FDH)", 35]
-  ],
-  auto: [
-    ["Fuhrpark Bremen", 10],
-    ["Fuhrpark Hamburg", 20],
-    ["Fuhrpark Berlin", 25],
-    ["Fuhrpark Hannover", 18],
-    ["Fuhrpark Düsseldorf", 22],
-    ["Fuhrpark Frankfurt", 18],
-    ["Fuhrpark Stuttgart", 20],
-    ["Fuhrpark München", 28],
-    ["Fuhrpark Dresden", 20],
-    ["Fuhrpark Leipzig", 18],
-    ["Fuhrpark Nürnberg", 24],
-    ["Fuhrpark Köln", 21],
-    ["Fuhrpark Mainz", 17],
-    ["Fuhrpark Wiesbaden", 18],
-    ["Fuhrpark Dortmund", 20],
-    ["Fuhrpark Essen", 19],
-    ["Fuhrpark Kiel", 20],
-    ["Fuhrpark Erfurt", 16],
-    ["Fuhrpark Potsdam", 22],
-    ["Fuhrpark Magdeburg", 18]
-  ]
-};
+const CITY_FALLBACKS = [
+  {short:"Bremen",lat:53.0758,lon:8.8072},
+  {short:"Hamburg",lat:53.5511,lon:9.9937},
+  {short:"Berlin",lat:52.5200,lon:13.4050},
+  {short:"Hannover",lat:52.3759,lon:9.7320},
+  {short:"Düsseldorf",lat:51.2277,lon:6.7735},
+  {short:"Köln",lat:50.9375,lon:6.9603},
+  {short:"Frankfurt am Main",lat:50.1109,lon:8.6821},
+  {short:"Stuttgart",lat:48.7758,lon:9.1829},
+  {short:"München",lat:48.1351,lon:11.5820},
+  {short:"Dresden",lat:51.0504,lon:13.7373},
+  {short:"Leipzig",lat:51.3397,lon:12.3731}
+];
 
-function populateTransportSelects(){
-  Object.keys(TRANSPORT_POINTS).forEach(type => {
-    const sel = document.getElementById(`${type}-station`);
-    if(!sel) return;
-    sel.innerHTML = `<option value="">— auswählen —</option>` + TRANSPORT_POINTS[type]
-      .map(([name, min]) => `<option value="${name}" data-min="${min}">${name} · ca. ${min} min</option>`)
-      .join("");
+const DOMESTIC_AIRPORTS = [
+  {name:"Bremen Airport (BRE)", code:"BRE", lat:53.0475, lon:8.7867},
+  {name:"Hamburg Airport (HAM)", code:"HAM", lat:53.6304, lon:9.9882},
+  {name:"Berlin Brandenburg (BER)", code:"BER", lat:52.3667, lon:13.5033},
+  {name:"Hannover Airport (HAJ)", code:"HAJ", lat:52.4611, lon:9.6851},
+  {name:"Düsseldorf Airport (DUS)", code:"DUS", lat:51.2895, lon:6.7668},
+  {name:"Köln/Bonn Airport (CGN)", code:"CGN", lat:50.8659, lon:7.1427},
+  {name:"Frankfurt Airport (FRA)", code:"FRA", lat:50.0379, lon:8.5622},
+  {name:"Stuttgart Airport (STR)", code:"STR", lat:48.6899, lon:9.2219},
+  {name:"München Airport (MUC)", code:"MUC", lat:48.3538, lon:11.7861},
+  {name:"Dresden Airport (DRS)", code:"DRS", lat:51.1328, lon:13.7672},
+  {name:"Leipzig/Halle Airport (LEJ)", code:"LEJ", lat:51.4239, lon:12.2364},
+  {name:"Nürnberg Airport (NUE)", code:"NUE", lat:49.4987, lon:11.0780},
+  {name:"Dortmund Airport (DTM)", code:"DTM", lat:51.5183, lon:7.6122},
+  {name:"Münster/Osnabrück Airport (FMO)", code:"FMO", lat:52.1346, lon:7.6848},
+  {name:"Saarbrücken Airport (SCN)", code:"SCN", lat:49.2146, lon:7.1095},
+  {name:"Friedrichshafen Airport (FDH)", code:"FDH", lat:47.6713, lon:9.5115}
+];
+
+const DEFAULT_STATIONS = [
+  {name:"Syke", lat:52.9137, lon:8.8170},
+  {name:"Bassum", lat:52.8484, lon:8.7320},
+  {name:"Bremen-Mahndorf", lat:53.0347, lon:8.9592},
+  {name:"Bremen-Sebaldsbrück", lat:53.0676, lon:8.8893},
+  {name:"Bremen-Hemelingen", lat:53.0604, lon:8.8860},
+  {name:"Kirchweyhe", lat:52.9802, lon:8.8573},
+  {name:"Barrien", lat:52.9398, lon:8.8347},
+  {name:"Twistringen", lat:52.7930, lon:8.6415},
+  {name:"Eystrup", lat:52.7804, lon:9.2203},
+  {name:"Dörverden", lat:52.8468, lon:9.2347},
+  {name:"Verden(Aller)", lat:52.9231, lon:9.2356},
+  {name:"Nienburg(Weser)", lat:52.6461, lon:9.2209},
+
+  {name:"Bremen Hbf", lat:53.0831, lon:8.8136},
+  {name:"Hamburg Hbf", lat:53.5527, lon:10.0069},
+  {name:"Berlin Hbf", lat:52.5251, lon:13.3694},
+  {name:"Hannover Hbf", lat:52.3774, lon:9.7418},
+  {name:"Düsseldorf Hbf", lat:51.2203, lon:6.7928},
+  {name:"Köln Hbf", lat:50.9430, lon:6.9588},
+  {name:"Frankfurt(Main)Hbf", lat:50.1071, lon:8.6638},
+  {name:"Stuttgart Hbf", lat:48.7838, lon:9.1816},
+  {name:"München Hbf", lat:48.1402, lon:11.5583},
+  {name:"Dresden Hbf", lat:51.0406, lon:13.7320},
+  {name:"Leipzig Hbf", lat:51.3454, lon:12.3820},
+  {name:"Nürnberg Hbf", lat:49.4455, lon:11.0820},
+  {name:"Mannheim Hbf", lat:49.4790, lon:8.4690},
+  {name:"Karlsruhe Hbf", lat:48.9936, lon:8.4005},
+  {name:"Essen Hbf", lat:51.4514, lon:7.0148},
+  {name:"Dortmund Hbf", lat:51.5179, lon:7.4593},
+  {name:"Münster(Westf)Hbf", lat:51.9569, lon:7.6353},
+  {name:"Bonn Hbf", lat:50.7320, lon:7.0960},
+  {name:"Mainz Hbf", lat:50.0010, lon:8.2590},
+  {name:"Wiesbaden Hbf", lat:50.0710, lon:8.2430},
+  {name:"Kiel Hbf", lat:54.3150, lon:10.1310},
+  {name:"Erfurt Hbf", lat:50.9726, lon:11.0380}
+];
+
+const FLEET_LOCATIONS = [
+  {name:"Fuhrpark Bremen", lat:53.0758, lon:8.8072},
+  {name:"Fuhrpark Hamburg", lat:53.5511, lon:9.9937},
+  {name:"Fuhrpark Berlin", lat:52.5200, lon:13.4050},
+  {name:"Fuhrpark Hannover", lat:52.3759, lon:9.7320},
+  {name:"Fuhrpark Düsseldorf", lat:51.2277, lon:6.7735},
+  {name:"Fuhrpark Frankfurt", lat:50.1109, lon:8.6821},
+  {name:"Fuhrpark Stuttgart", lat:48.7758, lon:9.1829},
+  {name:"Fuhrpark München", lat:48.1351, lon:11.5820},
+  {name:"Fuhrpark Dresden", lat:51.0504, lon:13.7373},
+  {name:"Fuhrpark Leipzig", lat:51.3397, lon:12.3731},
+  {name:"Fuhrpark Nürnberg", lat:49.4521, lon:11.0767},
+  {name:"Fuhrpark Köln", lat:50.9375, lon:6.9603}
+];
+
+let selectedStartGeo = null;
+const nomCache = {};
+let nomTimer = null;
+
+function havKm(a,b,c,d){
+  const R=6371, rad=x=>x*Math.PI/180;
+  const dLat=rad(c-a), dLon=rad(d-b);
+  const q=Math.sin(dLat/2)**2 + Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(q),Math.sqrt(1-q));
+}
+
+function minutesFromKm(km, speed){
+  return Math.max(5, Math.round((km / speed) * 60));
+}
+
+function sortedByDistance(items, geo, speed, limit=20){
+  return items
+    .map(x => ({...x, km:havKm(geo.lat,geo.lon,x.lat,x.lon)}))
+    .sort((a,b)=>a.km-b.km)
+    .slice(0,limit)
+    .map(x => ({...x, minutes:minutesFromKm(x.km, speed)}));
+}
+
+function fillSelect(type, items, placeholder, autoSelectNearest=false){
+  const sel = document.getElementById(`${type}-station`);
+  const note = document.getElementById(`${type}-note`);
+  const minInput = document.getElementById(`${type}-min`);
+  if(!sel) return;
+
+  sel.innerHTML = `<option value="">${placeholder}</option>` + items
+    .map((x, idx) => `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name} · ca. ${x.minutes} min · ${Math.round(x.km)} km</option>`)
+    .join("");
+
+  if(autoSelectNearest && items.length){
+    sel.selectedIndex = 1;
+    transportState[type].point = items[0].name;
+    transportState[type].minutes = String(items[0].minutes);
+    if(minInput) minInput.value = items[0].minutes;
+  }
+
+  if(note){
+    note.classList.remove("loading-note");
+    note.textContent = items.length
+      ? `${items.length} Vorschläge nach Entfernung sortiert${autoSelectNearest && items.length ? " · nächste Option vorausgewählt" : ""}`
+      : "Keine Vorschläge gefunden";
+  }
+}
+
+async function fetchNearbyRailStations(geo, radius=45000){
+  /*
+    Mehrstufige Bahnhofssuche:
+    1) echte Zughalte mit train=yes
+    2) railway=station/halt, aber touristische/Museumsbahnen werden entfernt
+    3) falls Overpass zu wenig liefert: regionale feste Fallback-Liste + große DB-Knoten
+  */
+  const query = `
+    [out:json][timeout:20];
+    (
+      node(around:${radius},${geo.lat},${geo.lon})["train"="yes"]["name"];
+      way(around:${radius},${geo.lat},${geo.lon})["train"="yes"]["name"];
+      relation(around:${radius},${geo.lat},${geo.lon})["train"="yes"]["name"];
+
+      node(around:${radius},${geo.lat},${geo.lon})["railway"~"^(station|halt)$"]["name"];
+      way(around:${radius},${geo.lat},${geo.lon})["railway"~"^(station|halt)$"]["name"];
+      relation(around:${radius},${geo.lat},${geo.lon})["railway"~"^(station|halt)$"]["name"];
+
+      node(around:${radius},${geo.lat},${geo.lon})["public_transport"="station"]["name"]["train"="yes"];
+      way(around:${radius},${geo.lat},${geo.lon})["public_transport"="station"]["name"]["train"="yes"];
+      relation(around:${radius},${geo.lat},${geo.lon})["public_transport"="station"]["name"]["train"="yes"];
+    );
+    out center tags 160;
+  `;
+
+  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query);
+  const r = await fetch(url);
+  if(!r.ok) throw new Error("Overpass nicht erreichbar");
+  const data = await r.json();
+
+  const seen = new Map();
+
+  for(const el of data.elements || []){
+    const tags = el.tags || {};
+    const rawName = tags.name;
+    if(!rawName) continue;
+
+    const lat = el.lat ?? (el.center && el.center.lat);
+    const lon = el.lon ?? (el.center && el.center.lon);
+    if(typeof lat !== "number" || typeof lon !== "number") continue;
+
+    const tagText = Object.entries(tags)
+      .map(([k,v]) => `${k}=${v}`)
+      .join(" ")
+      .toLowerCase();
+
+    // Ausschluss von Museums-/Touristikbahnen und typischen reinen Stadtverkehrshalten.
+    if(
+      tagText.includes("usage=tourism") ||
+      tagText.includes("railway:traffic_mode=tourist") ||
+      tagText.includes("tourist") ||
+      tagText.includes("museum") ||
+      tagText.includes("station=subway") ||
+      tagText.includes("railway=tram_stop") ||
+      tagText.includes("tram=yes") ||
+      tagText.includes("subway=yes")
+    ){
+      continue;
+    }
+
+    const name = rawName.replace(/\s+/g, " ").trim();
+    const key = name.toLowerCase();
+
+    const km = havKm(geo.lat, geo.lon, lat, lon);
+    const platforms = parseInt(tags.platforms || tags["platforms:rail"] || "0", 10) || 0;
+    const network = String(tags.network || tags.operator || "").toLowerCase();
+
+    let score = 0;
+    if(tags.train === "yes") score += 55;
+    if(tags.railway === "station") score += 30;
+    if(tags.railway === "halt") score += 20;
+    if(tags.public_transport === "station") score += 15;
+    if(platforms >= 1) score += Math.min(platforms * 4, 24);
+    if(network.includes("db") || network.includes("deutsche bahn")) score += 30;
+    if(network.includes("s-bahn") || network.includes("s bahn")) score += 18;
+    if(network.includes("regional") || network.includes("nahverkehr")) score += 12;
+
+    // Nähe zählt stark, damit in Orten wie Bruchhausen-Vilsen z. B. Syke/Bassum auftauchen.
+    score += Math.max(0, 45 - km);
+
+    const station = {
+      name,
+      lat,
+      lon,
+      km,
+      minutes: minutesFromKm(km, 35),
+      score,
+      tags
+    };
+
+    if(!seen.has(key) || seen.get(key).score < station.score){
+      seen.set(key, station);
+    }
+  }
+
+  let stations = Array.from(seen.values());
+
+  // Lokaler Fallback wird IMMER ergänzt, damit Orte wie Bruchhausen-Vilsen auch bei Overpass-Lücken funktionieren.
+  for(const st of DEFAULT_STATIONS){
+    const key = st.name.toLowerCase();
+    const km = havKm(geo.lat, geo.lon, st.lat, st.lon);
+    if(km <= radius / 1000 && !seen.has(key)){
+      stations.push({
+        ...st,
+        km,
+        minutes: minutesFromKm(km, 35),
+        score: Math.max(0, 50 - km)
+      });
+    }
+  }
+
+  return stations
+    .sort((a,b) => {
+      // Primär tatsächliche Nähe, sekundär Qualität. So wird der nächstgelegene Bahnhof direkt vorausgewählt.
+      if(Math.abs(a.km - b.km) > 1.5) return a.km - b.km;
+      return b.score - a.score;
+    })
+    .slice(0, 50);
+}
+
+function setBahnLoading(isLoading, text){
+  const note = document.getElementById("bahn-note");
+  if(!note) return;
+  note.classList.toggle("loading-note", isLoading);
+  note.textContent = text;
+}
+
+async function updateNearbyStations(){
+  const geo = selectedStartGeo || CITY_FALLBACKS[0];
+  setBahnLoading(true, "Bahnhöfe mit Zugverkehr im Umkreis werden geladen …");
+
+  try{
+    let nearby = await fetchNearbyRailStations(geo, 45000);
+    if(!nearby.length){
+      nearby = await fetchNearbyRailStations(geo, 70000);
+    }
+
+    if(nearby.length){
+      fillSelect("bahn", nearby, "— Bahnhof/Haltestelle auswählen —", true);
+      const note = document.getElementById("bahn-note");
+      if(note){
+        note.textContent = `${nearby.length} Bahnhöfe/Haltepunkte gefunden · nächster Bahnhof vorausgewählt`;
+      }
+      return;
+    }
+    throw new Error("Keine Stationen gefunden");
+  }catch(e){
+    const fallback = sortedByDistance(DEFAULT_STATIONS, geo, 35, 30);
+    fillSelect("bahn", fallback, "— Bahnhof/Haltestelle auswählen —", true);
+    const note = document.getElementById("bahn-note");
+    if(note){
+      note.textContent = "Umkreissuche nicht verfügbar – nächster Fallback-Bahnhof vorausgewählt";
+    }
+  }
+}
+
+async function populateTransportSelects(){
+  const geo = selectedStartGeo || CITY_FALLBACKS[0];
+
+  updateNearbyStations();
+
+  const nearbyAirports = sortedByDistance(DOMESTIC_AIRPORTS, geo, 55, 12);
+  fillSelect("flug", nearbyAirports, "— Flughafen auswählen —", true);
+  const flugNote = document.getElementById("flug-note");
+  if(flugNote && nearbyAirports.length){
+    flugNote.textContent = `${nearbyAirports.length} Flughäfen gefunden · nächster Flughafen vorausgewählt`;
+  }
+
+  const nearbyFleet = sortedByDistance(FLEET_LOCATIONS, geo, 35, 12);
+  fillSelect("auto", nearbyFleet, "— Fuhrpark auswählen —", true);
+  const autoNote = document.getElementById("auto-note");
+  if(autoNote && nearbyFleet.length){
+    autoNote.textContent = `${nearbyFleet.length} Fuhrpark-Standorte gefunden · nächster Standort vorausgewählt`;
+  }
+}
+
+function refreshNearbyStations(event){
+  if(event) event.stopPropagation();
+  updateNearbyStations();
+}
+
+async function fetchNominatimCities(q){
+  const key = q.toLowerCase().trim();
+  if(nomCache[key]) return nomCache[key];
+
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=7&countrycodes=de,at,ch&addressdetails=1`;
+  const r = await fetch(url, {headers:{"Accept-Language":"de"}});
+  const data = await r.json();
+
+  const mapped = data.map(x => {
+    const a = x.address || {};
+    const city = a.city || a.town || a.village || a.municipality || a.county || x.display_name.split(",")[0];
+    const state = a.state || a.country || "";
+    return {
+      short: [city, state].filter(Boolean).join(", "),
+      display: x.display_name,
+      lat: +x.lat,
+      lon: +x.lon
+    };
+  });
+
+  nomCache[key] = mapped;
+  return mapped;
+}
+
+function setupStartAutocomplete(){
+  const inp = document.getElementById("start");
+  const drop = document.getElementById("drop-start");
+  if(!inp || !drop) return;
+
+  function render(items){
+    drop.innerHTML = items.map((x,i) =>
+      `<div class="ditem" data-idx="${i}"><div class="dmain">${x.short}</div><div class="dsub">${x.display || ""}</div></div>`
+    ).join("");
+    drop.classList.add("open");
+
+    drop.querySelectorAll(".ditem").forEach(el => {
+      el.addEventListener("mousedown", e => {
+        e.preventDefault();
+        const item = items[+el.dataset.idx];
+        selectedStartGeo = {lat:item.lat, lon:item.lon};
+        inp.value = item.short;
+        drop.classList.remove("open");
+        drop.innerHTML = "";
+        populateTransportSelects();
+      });
+    });
+  }
+
+  inp.addEventListener("input", () => {
+    selectedStartGeo = null;
+    clearTimeout(nomTimer);
+    const q = inp.value.trim();
+    if(q.length < 2){
+      drop.classList.remove("open");
+      return;
+    }
+
+    nomTimer = setTimeout(async () => {
+      try{
+        const items = await fetchNominatimCities(q);
+        render(items.length ? items : CITY_FALLBACKS.filter(c => c.short.toLowerCase().includes(q.toLowerCase())));
+      }catch(e){
+        render(CITY_FALLBACKS.filter(c => c.short.toLowerCase().includes(q.toLowerCase())));
+      }
+    }, 280);
+  });
+
+  inp.addEventListener("blur", () => {
+    setTimeout(() => drop.classList.remove("open"), 180);
   });
 }
+
+document.addEventListener("click", e => {
+  document.querySelectorAll(".drop").forEach(d => {
+    if(!d.contains(e.target)) d.classList.remove("open");
+  });
+});
 
 function onTransportPointChange(type){
   const sel = document.getElementById(`${type}-station`);
@@ -727,14 +1124,20 @@ function onTransportPointChange(type){
   const selected = sel.options[sel.selectedIndex];
   transportState[type].point = sel.value;
 
-  if(selected && selected.dataset.min && minInput && !minInput.value){
+  // Bei jeder neuen Auswahl die geschätzte Minutenanzahl aktualisieren.
+  // Manuelle Korrekturen sind danach weiterhin über das Minutenfeld möglich.
+  if(selected && selected.dataset.min && minInput){
     minInput.value = selected.dataset.min;
     transportState[type].minutes = selected.dataset.min;
+  }else if(minInput){
+    minInput.value = "";
+    transportState[type].minutes = "";
   }
 
   if(note){
+    const minutesText = selected && selected.dataset.min ? ` · ca. ${selected.dataset.min} min` : "";
     note.textContent = sel.value
-      ? `Gewählt: ${sel.value}`
+      ? `Gewählt: ${sel.value}${minutesText}`
       : (type === "auto" ? "Fuhrpark auswählen" : type === "flug" ? "Startflughafen auswählen" : "Startbahnhof auswählen");
   }
 }
@@ -818,6 +1221,7 @@ function initTravelers(){
   }
 
   updatePersonsUi();
+  setupStartAutocomplete();
   populateTransportSelects();
   updateTransportUi();
 }
@@ -841,7 +1245,22 @@ function buildDbUrl(from, to, date, time, mode){
   return "https://www.bahn.de/buchung/fahrplan/suche#?" + params.toString();
 }
 
-function showBahnSearch(){
+async function ensureStartGeoFromText(){
+  const inp = document.getElementById("start");
+  if(selectedStartGeo || !inp || !inp.value.trim()) return;
+
+  try{
+    const items = await fetchNominatimCities(inp.value.trim());
+    if(items && items.length){
+      selectedStartGeo = {lat:items[0].lat, lon:items[0].lon};
+      inp.value = items[0].short;
+      await populateTransportSelects();
+    }
+  }catch(e){}
+}
+
+async function showBahnSearch(){
+  await ensureStartGeoFromText();
   const start = document.getElementById("start").value.trim();
   const zielRaw = document.getElementById("ziel").value;
   const hinDate = document.getElementById("hin-date").value;
