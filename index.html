@@ -424,7 +424,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub">In weniger als 10 Minuten zum Ergebnis.</p>
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
-<div class="version-badge">v 08.05.2026 13:56</div>
+<div class="version-badge">v 08.05.2026 18:18</div>
 <div class="screen active" id="s-form">
 
   <div class="version-badge">v 07.05.2026 20:13</div>
@@ -650,26 +650,40 @@ select.invalid ~ .field-warn{display:block;}
   <div class="db-card" id="db-bahn-card">
     <div class="ctitle"><span class="cdot" style="background:#ef4444"></span>&#x1F686; Deutsche Bahn</div>
     <div class="db-section">
-      <div class="db-lbl" style="color:rgba(52,211,153,0.85);margin-bottom:10px">&#8599; Hinreise</div>
-      <div class="db-route-row"><span class="db-station" id="db-hin-from">-</span><span style="color:var(--muted);font-size:18px">&#8594;</span><span class="db-station" id="db-hin-to">-</span></div>
-      <div class="db-date-grid">
-        <div><div class="db-lbl">Datum</div><input class="inpsm req-field" type="date" id="db-hin-date" style="width:100%" onchange="updateDbLink('hin')"></div>
-        <div><div class="db-lbl">Ankunftszeit</div><input class="inpsm req-field" type="time" id="db-hin-time" style="width:100%" onchange="updateDbLink('hin')"></div>
+      <div class="db-lbl" style="color:rgba(52,211,153,0.85);margin-bottom:8px">&#8599; Hinreise</div>
+      <div class="db-route-row">
+        <span class="db-station" id="db-hin-from">-</span>
+        <span style="color:var(--muted);font-size:18px">&#8594;</span>
+        <span class="db-station" id="db-hin-to">-</span>
+      </div>
+      <div id="db-hin-meta" style="font-size:12px;color:rgba(52,211,153,0.75);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <span style="width:6px;height:6px;border-radius:50%;background:#34d399;display:inline-block;flex-shrink:0"></span>
+        <span id="db-hin-meta-text">-</span>
       </div>
       <a class="db-btn" id="db-hin-link" href="#" target="_blank" rel="noopener">&#128279; Hinreise bei Deutsche Bahn suchen &#8599;</a>
-      <div class="db-price-row"><label class="db-price-lbl">Preis Hinreise (&#8364;/Person):</label><input class="inpsm" type="number" id="bahn-hin-price" min="0" step="0.01" placeholder="z. B. 49" style="max-width:110px"></div>
+      <div class="db-price-row">
+        <label class="db-price-lbl">Preis Hinreise (&#8364;/Person):</label>
+        <input class="inpsm" type="number" id="bahn-hin-price" min="0" step="0.01" placeholder="z. B. 49" style="max-width:110px">
+      </div>
       <div class="db-hint">Preis nach der Suche eintragen</div>
     </div>
     <hr class="db-divider">
     <div class="db-section">
-      <div class="db-lbl" style="color:rgba(52,211,153,0.85);margin-bottom:10px">&#8600; R&#252;ckreise</div>
-      <div class="db-route-row"><span class="db-station" id="db-rueck-from">-</span><span style="color:var(--muted);font-size:18px">&#8594;</span><span class="db-station" id="db-rueck-to">-</span></div>
-      <div class="db-date-grid">
-        <div><div class="db-lbl">Datum</div><input class="inpsm req-field" type="date" id="db-rueck-date" style="width:100%" onchange="updateDbLink('rueck')"></div>
-        <div><div class="db-lbl">Abfahrtszeit</div><input class="inpsm req-field" type="time" id="db-rueck-time" style="width:100%" onchange="updateDbLink('rueck')"></div>
+      <div class="db-lbl" style="color:rgba(52,211,153,0.85);margin-bottom:8px">&#8600; R&#252;ckreise</div>
+      <div class="db-route-row">
+        <span class="db-station" id="db-rueck-from">-</span>
+        <span style="color:var(--muted);font-size:18px">&#8594;</span>
+        <span class="db-station" id="db-rueck-to">-</span>
+      </div>
+      <div id="db-rueck-meta" style="font-size:12px;color:rgba(52,211,153,0.75);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <span style="width:6px;height:6px;border-radius:50%;background:#34d399;display:inline-block;flex-shrink:0"></span>
+        <span id="db-rueck-meta-text">-</span>
       </div>
       <a class="db-btn" id="db-rueck-link" href="#" target="_blank" rel="noopener">&#128279; R&#252;ckreise bei Deutsche Bahn suchen &#8599;</a>
-      <div class="db-price-row"><label class="db-price-lbl">Preis R&#252;ckreise (&#8364;/Person):</label><input class="inpsm" type="number" id="bahn-rueck-price" min="0" step="0.01" placeholder="z. B. 39" style="max-width:110px"></div>
+      <div class="db-price-row">
+        <label class="db-price-lbl">Preis R&#252;ckreise (&#8364;/Person):</label>
+        <input class="inpsm" type="number" id="bahn-rueck-price" min="0" step="0.01" placeholder="z. B. 39" style="max-width:110px">
+      </div>
       <div class="db-hint">Preis nach der Suche eintragen</div>
     </div>
   </div>
@@ -1193,35 +1207,95 @@ async function calcAndSetMinutes(type, toLat, toLon){
 
 
 function toDbDate(d){if(!d)return'';var p=d.split('-');return p.length===3?p[2]+'.'+p[1]+'.'+p[0]:d;}
-function updateDbLink(dir){
-  var fromSt=(startTransfer&&startTransfer.bahn&&startTransfer.bahn.station)||state.startText||'';
-  var dest=state.zielDest; var toSt=dest?(dest.bahnStation||dest.name):(state.zielText||'');
-  var enc=encodeURIComponent;
-  if(dir==='hin'){
-    var dv=(document.getElementById('db-hin-date')||{}).value||state.hD;
-    var tv=(document.getElementById('db-hin-time')||{}).value||state.hT;
-    var lnk=document.getElementById('db-hin-link');
-    if(lnk&&dv&&fromSt&&toSt)lnk.href='https://www.bahn.de/buchung/fahrplan/suche#ld=&so='+enc(fromSt)+'&zo='+enc(toSt)+'&hd='+toDbDate(dv)+'&hza=A&ar='+tv+'&s=true';
-  }else{
-    var dv2=(document.getElementById('db-rueck-date')||{}).value||state.rD;
-    var tv2=(document.getElementById('db-rueck-time')||{}).value||state.rT;
-    var lnk2=document.getElementById('db-rueck-link');
-    if(lnk2&&dv2&&fromSt&&toSt)lnk2.href='https://www.bahn.de/buchung/fahrplan/suche#ld=&so='+enc(toSt)+'&zo='+enc(fromSt)+'&hd='+toDbDate(dv2)+'&hza=D&ab='+tv2+'&s=true';
-  }
-}
+function updateDbLink(dir){ /* not used */ }
 function updateBahnBadge(){}
-function buildAndShowDb(){
+async function lookupDbStation(name){
+  // transport.rest API: sucht DB-Stations-ID anhand des Namens
+  try {
+    var url = 'https://v6.db.transport.rest/stations?query='
+      + encodeURIComponent(name) + '&results=1&fuzzy=true';
+    var r = await fetch(url, {headers:{'Accept':'application/json'}});
+    var data = await r.json();
+    // Antwort ist ein Objekt {id: {name, id, ...}}
+    var keys = Object.keys(data);
+    if(keys.length > 0) {
+      var station = data[keys[0]];
+      return station.id; // z.B. "8000050"
+    }
+  } catch(e) {
+    console.warn('transport.rest lookup failed:', e);
+  }
+  return null;
+}
+
+function buildDbUrl(fromName, fromId, toName, toId, dateVal, timeVal, isArrival){
+  var enc = encodeURIComponent;
+  var dt = dateVal + 'T' + (timeVal||'00:00') + ':00';
+  var url = 'https://www.bahn.de/buchung/fahrplan/suche'
+    + '#sts=true'
+    + '&so=' + enc(fromName)
+    + '&zo=' + enc(toName)
+    + '&kl=2';
+  if(fromId) url += '&soei=' + fromId;
+  if(toId)   url += '&zoei=' + toId;
+  url += '&hd=' + dt
+    + '&hza=' + (isArrival ? 'A' : 'D')
+    + '&hz=%5B%5D&ar=false&s=true&d=false'
+    + '&vm=00,01,02,03,04,05,06,07,08,09'
+    + '&fm=false&bp=false';
+  return url;
+}
+
+async function buildAndShowDb(){
   var fromSt=(startTransfer&&startTransfer.bahn&&startTransfer.bahn.station)||state.startText||'-';
-  var dest=state.zielDest; var toSt=dest?(dest.bahnStation||dest.name):(state.zielText||'-');
+  var dest=state.zielDest;
+  var toSt=dest?(dest.bahnStation||dest.name):(state.zielText||'-');
+
   function set(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
-  set('db-hin-from',fromSt);set('db-hin-to',toSt);set('db-rueck-from',toSt);set('db-rueck-to',fromSt);
-  var hd=document.getElementById('db-hin-date');if(hd&&!hd.value)hd.value=state.hD||'';
-  var ht=document.getElementById('db-hin-time');if(ht&&!ht.value)ht.value=state.hT||'';
-  var rd=document.getElementById('db-rueck-date');if(rd&&!rd.value)rd.value=state.rD||'';
-  var rt=document.getElementById('db-rueck-time');if(rt&&!rt.value)rt.value=state.rT||'';
-  updateDbLink('hin');updateDbLink('rueck');
+  set('db-hin-from', fromSt); set('db-hin-to', toSt);
+  set('db-rueck-from', toSt); set('db-rueck-to', fromSt);
+
+  // Meta-Zeilen mit Datum/Zeit aus Seite 1
+  function fmtDate(d){ if(!d) return '-'; var p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
+  set('db-hin-meta-text',  fmtDate(state.hD) + ' · Ankunft ' + (state.hT||'-') + ' Uhr');
+  set('db-rueck-meta-text', fmtDate(state.rD) + ' · Abfahrt ' + (state.rT||'-') + ' Uhr');
+
   var card=document.getElementById('db-bahn-card');
-  if(card){card.classList.add('open');setTimeout(function(){window.scrollTo({top:card.offsetTop-16,behavior:'smooth'});},50);}
+  if(card){
+    card.classList.add('open');
+    setTimeout(function(){window.scrollTo({top:card.offsetTop-16,behavior:'smooth'});},50);
+  }
+
+  // Links sofort mit Seite-1-Daten bauen
+  await updateDbLinks();
+}
+
+async function updateDbLinks(){
+  var fromSt=(startTransfer&&startTransfer.bahn&&startTransfer.bahn.station)||state.startText||'';
+  var dest=state.zielDest;
+  var toSt=dest?(dest.bahnStation||dest.name):(state.zielText||'');
+  if(!fromSt||!toSt) return;
+
+  var hinBtn=document.getElementById('db-hin-link');
+  var rueckBtn=document.getElementById('db-rueck-link');
+  if(hinBtn) hinBtn.textContent='ኂ79 Suche Verbindung…';
+  if(rueckBtn) rueckBtn.textContent='ኂ79 Suche Verbindung…';
+
+  // Stations-IDs parallel laden
+  var ids = await Promise.all([
+    lookupDbStation(fromSt),
+    lookupDbStation(toSt)
+  ]);
+  var fromId=ids[0], toId=ids[1];
+
+  if(hinBtn && state.hD){
+    hinBtn.href = buildDbUrl(fromSt,fromId,toSt,toId,state.hD,state.hT,true);
+    hinBtn.innerHTML = '&#128279; Hinreise bei Deutsche Bahn suchen &#8599;';
+  }
+  if(rueckBtn && state.rD){
+    rueckBtn.href = buildDbUrl(toSt,toId,fromSt,fromId,state.rD,state.rT,false);
+    rueckBtn.innerHTML = '&#128279; Rückreise bei Deutsche Bahn suchen &#8599;';
+  }
 }
 // ── Setup autocomplete ────────────────────────────────────────────────────────
 const inpStart=document.getElementById("inp-start");
