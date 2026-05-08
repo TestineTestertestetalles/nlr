@@ -401,6 +401,23 @@ select.invalid ~ .field-warn{display:block;}
 /* ── Version badge ── */
 .version-badge{font-size:10px;color:rgba(148,163,184,0.5);text-align:right;
   margin-bottom:6px;font-family:'DM Mono',monospace;letter-spacing:0.04em;}
+
+/* ── Screen 2: Bahn ── */
+.s2-route-box{background:var(--s2);border-radius:10px;padding:16px;margin-bottom:14px;}
+.s2-route-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.s2-station{font-size:15px;font-weight:700;color:var(--text);}
+.s2-arrow{font-size:18px;color:var(--muted);}
+.s2-date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.s2-field-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.s2-db-btn{display:block;width:100%;padding:13px;background:rgba(220,38,38,0.13);
+  border:1.5px solid rgba(220,38,38,0.45);border-radius:8px;color:#fca5a5;
+  font-size:14px;font-weight:700;text-align:center;text-decoration:none;
+  cursor:pointer;transition:background .15s;margin-bottom:12px;box-sizing:border-box;}
+.s2-db-btn:hover{background:rgba(220,38,38,0.25);}
+.s2-price-row{display:flex;align-items:center;gap:12px;}
+.s2-price-lbl{font-size:13px;color:var(--muted);white-space:nowrap;}
+.s2-divider{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:16px 0;}
+.s2-hint{font-size:11px;color:rgba(148,163,184,0.65);margin-top:6px;}
 </style>
 <body>
 <div class="app">
@@ -412,7 +429,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
 
-<div class="version-badge">v 08.05.2026 12:16</div>
+<div class="version-badge">v 08.05.2026 12:25</div>
 
 <div class="screen active" id="s-form">
 
@@ -680,6 +697,90 @@ select.invalid ~ .field-warn{display:block;}
   </div>
 </div>
 
+
+<!-- ════════════════════════════════════════════
+     SCREEN 2 – BAHN
+════════════════════════════════════════════ -->
+<div class="screen" id="s-prices">
+  <button class="backbtn" data-back="s-form">← Zurück</button>
+  <div class="rpill" id="rpill-prices"></div>
+  <div style="height:8px"></div>
+
+  <div class="card">
+    <div class="ctitle">
+      <span class="cdot" style="background:#34d399"></span>
+      🚆 Deutsche Bahn
+    </div>
+
+    <!-- Hinreise -->
+    <div class="s2-route-box">
+      <div style="font-size:11px;font-weight:700;color:rgba(52,211,153,0.8);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">↗ Hinreise</div>
+      <div class="s2-route-row">
+        <span class="s2-station" id="s2-hin-from">—</span>
+        <span class="s2-arrow">→</span>
+        <span class="s2-station" id="s2-hin-to">—</span>
+      </div>
+      <div class="s2-date-row">
+        <div>
+          <div class="s2-field-lbl">Datum</div>
+          <input class="inpsm req-field" type="date" id="s2-hin-date" style="width:100%"
+            onchange="updateDbLink('hin')">
+        </div>
+        <div>
+          <div class="s2-field-lbl">Ankunftszeit</div>
+          <input class="inpsm req-field" type="time" id="s2-hin-time" style="width:100%"
+            onchange="updateDbLink('hin')">
+        </div>
+      </div>
+      <a class="s2-db-btn" id="s2-hin-link" href="#" target="_blank" rel="noopener">
+        🔗 Hinreise bei Deutsche Bahn suchen ↗
+      </a>
+      <div class="s2-price-row">
+        <label class="s2-price-lbl">Preis Hinreise (€ / Person):</label>
+        <input class="inpsm" type="number" id="bahn-hin-price" min="0" step="0.01"
+          placeholder="z. B. 49" style="max-width:110px" oninput="updateBahnBadge()">
+      </div>
+      <div class="s2-hint">Nach der DB-Suche: Preis hier eintragen</div>
+    </div>
+
+    <hr class="s2-divider">
+
+    <!-- Rückreise -->
+    <div class="s2-route-box">
+      <div style="font-size:11px;font-weight:700;color:rgba(52,211,153,0.8);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">↙ Rückreise</div>
+      <div class="s2-route-row">
+        <span class="s2-station" id="s2-rueck-from">—</span>
+        <span class="s2-arrow">→</span>
+        <span class="s2-station" id="s2-rueck-to">—</span>
+      </div>
+      <div class="s2-date-row">
+        <div>
+          <div class="s2-field-lbl">Datum</div>
+          <input class="inpsm req-field" type="date" id="s2-rueck-date" style="width:100%"
+            onchange="updateDbLink('rueck')">
+        </div>
+        <div>
+          <div class="s2-field-lbl">Abfahrtszeit</div>
+          <input class="inpsm req-field" type="time" id="s2-rueck-time" style="width:100%"
+            onchange="updateDbLink('rueck')">
+        </div>
+      </div>
+      <a class="s2-db-btn" id="s2-rueck-link" href="#" target="_blank" rel="noopener">
+        🔗 Rückreise bei Deutsche Bahn suchen ↗
+      </a>
+      <div class="s2-price-row">
+        <label class="s2-price-lbl">Preis Rückreise (€ / Person):</label>
+        <input class="inpsm" type="number" id="bahn-rueck-price" min="0" step="0.01"
+          placeholder="z. B. 39" style="max-width:110px" oninput="updateBahnBadge()">
+      </div>
+      <div class="s2-hint">Nach der DB-Suche: Preis hier eintragen</div>
+    </div>
+
+  </div>
+
+  <div class="err" id="err-s2"></div>
+  <button class="btnp" id="btn-s2">Weiter →</button>
+</div>
 <div class="ee-toast" id="ee-toast"></div>
 </div>
 
@@ -1245,6 +1346,90 @@ function buildAndShowDb(){
     setTimeout(function(){ window.scrollTo({top: card.offsetTop - 20, behavior: 'smooth'}); }, 50);
   }
 }
+
+// ── Screen 2: Bahn ───────────────────────────────────────────────────────────
+function toDbDate(d){
+  if(!d) return '';
+  var p=d.split('-');
+  return p.length===3 ? p[2]+'.'+p[1]+'.'+p[0] : d;
+}
+
+function fillScreen2(){
+  var fromSt = (startTransfer.bahn && startTransfer.bahn.station) || state.startText || '—';
+  var dest    = state.zielDest;
+  var toSt    = dest ? (dest.bahnStation || dest.name) : (state.zielText || '—');
+
+  // Route labels
+  var set = function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+  set('s2-hin-from',  fromSt);
+  set('s2-hin-to',    toSt);
+  set('s2-rueck-from',toSt);
+  set('s2-rueck-to',  fromSt);
+
+  // Pre-fill dates + times from page 1
+  var hinDate  = document.getElementById('s2-hin-date');
+  var hinTime  = document.getElementById('s2-hin-time');
+  var rueckDate= document.getElementById('s2-rueck-date');
+  var rueckTime= document.getElementById('s2-rueck-time');
+  if(hinDate  && !hinDate.value)  hinDate.value   = state.hD || '';
+  if(hinTime  && !hinTime.value)  hinTime.value   = state.hT || '';
+  if(rueckDate&& !rueckDate.value)rueckDate.value = state.rD || '';
+  if(rueckTime&& !rueckTime.value)rueckTime.value = state.rT || '';
+
+  // Build initial DB links
+  updateDbLink('hin');
+  updateDbLink('rueck');
+}
+
+function updateDbLink(dir){
+  var fromSt = (startTransfer.bahn && startTransfer.bahn.station) || state.startText || '';
+  var dest   = state.zielDest;
+  var toSt   = dest ? (dest.bahnStation || dest.name) : (state.zielText || '');
+  var enc    = encodeURIComponent;
+
+  if(dir === 'hin'){
+    var dateEl = document.getElementById('s2-hin-date');
+    var timeEl = document.getElementById('s2-hin-time');
+    var d = dateEl ? dateEl.value : state.hD;
+    var t = timeEl ? timeEl.value : state.hT;
+    var link = document.getElementById('s2-hin-link');
+    if(link && d && fromSt && toSt){
+      link.href = 'https://www.bahn.de/buchung/fahrplan/suche'
+        + '#ld=&so=' + enc(fromSt)
+        + '&zo='     + enc(toSt)
+        + '&hd='     + toDbDate(d)
+        + '&hza=A&ar='+ t + '&s=true';
+    }
+  } else {
+    var dateEl2 = document.getElementById('s2-rueck-date');
+    var timeEl2 = document.getElementById('s2-rueck-time');
+    var d2 = dateEl2 ? dateEl2.value : state.rD;
+    var t2 = timeEl2 ? timeEl2.value : state.rT;
+    var link2 = document.getElementById('s2-rueck-link');
+    if(link2 && d2 && fromSt && toSt){
+      link2.href = 'https://www.bahn.de/buchung/fahrplan/suche'
+        + '#ld=&so=' + enc(toSt)
+        + '&zo='     + enc(fromSt)
+        + '&hd='     + toDbDate(d2)
+        + '&hza=D&ab='+ t2 + '&s=true';
+    }
+  }
+}
+
+function updateBahnBadge(){
+  var hp = parseFloat((document.getElementById('bahn-hin-price')||{}).value) || 0;
+  var rp = parseFloat((document.getElementById('bahn-rueck-price')||{}).value) || 0;
+  var badge = document.getElementById('bahn-cost-badge');
+  if(badge) badge.textContent = (hp+rp) > 0
+    ? new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(hp+rp)
+    : '—';
+}
+
+
+(document.getElementById('btn-s2')||document.createElement('div')).addEventListener('click', function(){
+  // Weiter zu Seite 3 (noch nicht gebaut)
+  alert('Seite 3 folgt im nächsten Schritt.');
+});
 // ── Setup autocomplete ────────────────────────────────────────────────────────
 const inpStart=document.getElementById("inp-start");
 const inpZiel=document.getElementById("inp-ziel");
@@ -1521,7 +1706,8 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   var phf=document.getElementById("flug-persons-hint");
   if(phf) phf.textContent=state.persons>1?" (Preis pro Person)":"";
   updateHotelUI();
-  buildAndShowDb();
+  fillScreen2();
+  showScreen("s-prices");
 });
 
 // ── Screen 2 → 3 ─────────────────────────────────────────────────────────────
