@@ -762,6 +762,7 @@ input[type=date],input[type=time]{color-scheme:dark}
   height:100%;
   align-items:center;
 }
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -999,8 +1000,7 @@ input[type=date],input[type=time]{color-scheme:dark}
         <span id="flug-hin-from">Startflughafen</span>
         <span class="arrow">→</span>
         <span id="flug-hin-to">Zielflughafen</span>
-      </div>
-      <a id="flug-hin-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Hinflug bei Google Flights suchen ↗</a>
+      </div>      <a id="flug-hin-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Hinflug bei Google Flights suchen ↗</a>
 
       <div class="time-grid">
         <div class="field">
@@ -1035,8 +1035,7 @@ input[type=date],input[type=time]{color-scheme:dark}
         <span id="flug-rueck-from">Zielflughafen</span>
         <span class="arrow">→</span>
         <span id="flug-rueck-to">Startflughafen</span>
-      </div>
-      <a id="flug-rueck-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Rückflug bei Google Flights suchen ↗</a>
+      </div>      <a id="flug-rueck-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Rückflug bei Google Flights suchen ↗</a>
 
       <div class="time-grid">
         <div class="field">
@@ -1786,11 +1785,68 @@ function updatePersonsUi(){
 
 
 
+function base64UrlFromBytes(bytes){
+  let binary = "";
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function asciiBytes(str){
+  return Array.from(str).map(ch => ch.charCodeAt(0));
+}
+
+function flightSegmentBytes(date, fromIata, toIata){
+  const dateBytes = asciiBytes(date);
+  const fromBytes = asciiBytes(fromIata);
+  const toBytes = asciiBytes(toIata);
+
+  const segment = [
+    0x12, dateBytes.length, ...dateBytes,
+    0x6a, 0x07, 0x08, 0x01, 0x12, fromBytes.length, ...fromBytes,
+    0x72, 0x07, 0x08, 0x01, 0x12, toBytes.length, ...toBytes
+  ];
+
+  return [0x1a, segment.length, ...segment];
+}
+
+function buildGoogleFlightsTfs(fromIata, toIata, departDate, returnDate){
+  const bytes = [
+    0x08, 0x1c,
+    0x10, 0x02,
+    ...flightSegmentBytes(departDate, fromIata, toIata)
+  ];
+
+  if(returnDate){
+    bytes.push(...flightSegmentBytes(returnDate, toIata, fromIata));
+  }
+
+  // Standardwerte analog zum von Google Flights generierten Link:
+  // Economy, 1 Reisende/r, keine weiteren Sonderfilter.
+  bytes.push(
+    0x40, 0x01,
+    0x48, 0x01,
+    0x70, 0x01,
+    0x82, 0x01, 0x0b, 0x08,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x01,
+    0x98, 0x01, 0x01
+  );
+
+  return base64UrlFromBytes(bytes);
+}
+
 function buildGoogleFlightsUrl(fromIata, toIata, departDate, returnDate){
-  if(!fromIata || !toIata || !departDate) return "https://www.google.com/travel/flights?hl=de";
-  const routeOut = `${fromIata}.${toIata}.${departDate}`;
-  const routeBack = returnDate ? `*${toIata}.${fromIata}.${returnDate}` : "";
-  return `https://www.google.com/travel/flights?hl=de#flt=${routeOut}${routeBack}`;
+  // Zuverlässige Google-Flights-Suche über tfs-Parameter.
+  // Dieses Format wurde gegen einen manuell in Google Flights erzeugten Link geprüft.
+  if(!fromIata || !toIata || !departDate){
+    return "https://www.google.com/travel/flights/search?hl=de";
+  }
+
+  const tfs = buildGoogleFlightsTfs(fromIata, toIata, departDate, returnDate);
+  return `https://www.google.com/travel/flights/search?tfs=${tfs}&hl=de`;
 }
 
 function initBaggage(){
@@ -1851,6 +1907,7 @@ function setupFlightSearch(zielRaw, hinDate, rueckDate){
   document.getElementById("flug-hin-link").title = hinUrl;
   document.getElementById("flug-rueck-link").href = rueckUrl;
   document.getElementById("flug-rueck-link").title = rueckUrl;
+
 }
 
 
