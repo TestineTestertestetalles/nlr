@@ -424,7 +424,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub">In weniger als 10 Minuten zum Ergebnis.</p>
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
-<div class="version-badge">v 08.05.2026 18:38</div>
+<div class="version-badge">v 08.05.2026 18:50</div>
 <div class="screen active" id="s-form">
 
   <div class="version-badge">v 07.05.2026 20:13</div>
@@ -1210,62 +1210,78 @@ function toDbDate(d){if(!d)return'';var p=d.split('-');return p.length===3?p[2]+
 function updateDbLink(dir){ /* not used */ }
 function updateBahnBadge(){}
 var DB_STATIONS = {
-  "Berlin Hbf":           {soei:"8011160", soid:"A=1@O=Berlin Hbf@X=13369549@Y=52525589@U=80@L=8011160@"},
-  "Dortmund Hbf":         {soei:"8000080", soid:"A=1@O=Dortmund Hbf@X=7459297@Y=51517899@U=80@L=8000080@"},
-  "Duesseldorf Hbf":      {soei:"8000085", soid:"A=1@O=Duesseldorf Hbf@X=6794397@Y=51219576@U=80@L=8000085@"},
-  "Dusseldorf Hbf":       {soei:"8000085", soid:"A=1@O=Dusseldorf Hbf@X=6794397@Y=51219576@U=80@L=8000085@"},
-  "Frankfurt (Main) Hbf": {soei:"8000105", soid:"A=1@O=Frankfurt (Main) Hbf@X=8663785@Y=50106817@U=80@L=8000105@"},
-  "Hamburg Hbf":          {soei:"8002549", soid:"A=1@O=Hamburg Hbf@X=10006908@Y=53552736@U=80@L=8002549@"},
-  "Koeln Hbf":            {soei:"8000207", soid:"A=1@O=Koeln Hbf@X=6958730@Y=50943029@U=80@L=8000207@"},
-  "Köln Hbf":             {soei:"8000207", soid:"A=1@O=Köln Hbf@X=6958730@Y=50943029@U=80@L=8000207@"},
-  "Leipzig Hbf":          {soei:"8010205", soid:"A=1@O=Leipzig Hbf@X=12375812@Y=51345378@U=80@L=8010205@"},
-  "Muenchen Hbf":         {soei:"8000261", soid:"A=1@O=Muenchen Hbf@X=11558339@Y=48140229@U=80@L=8000261@"},
-  "München Hbf":          {soei:"8000261", soid:"A=1@O=München Hbf@X=11558339@Y=48140229@U=80@L=8000261@"},
-  "Stuttgart Hbf":        {soei:"8000096", soid:"A=1@O=Stuttgart Hbf@X=9182760@Y=48784782@U=80@L=8000096@"},
-  "Bremen Hbf":           {soei:"8000050", soid:"A=1@O=Bremen Hbf@X=8813833@Y=53083478@U=80@L=8000050@"},
-  "Hannover Hbf":         {soei:"8000152", soid:"A=1@O=Hannover Hbf@X=9741017@Y=52376764@U=80@L=8000152@"},
-  "Essen Hbf":            {soei:"8000098", soid:"A=1@O=Essen Hbf@X=7014761@Y=51451355@U=80@L=8000098@"},
-  "Nuremberg Hbf":        {soei:"8000284", soid:"A=1@O=Nuremberg Hbf@X=11082989@Y=49445615@U=80@L=8000284@"},
-  "Nürnberg Hbf":         {soei:"8000284", soid:"A=1@O=Nürnberg Hbf@X=11082989@Y=49445615@U=80@L=8000284@"},
+  // EVA-IDs verifiziert gegen DB HAFAS
+  // Koordinaten im Mikro-Grad-Format (DB-intern)
+  "Berlin Hbf":           {eva:"8011160", x:"13369549", y:"52525589"},
+  "Bremen Hbf":           {eva:"8000050", x:"8813833",  y:"53083478"},
+  "Dortmund Hbf":         {eva:"8000080", x:"7459297",  y:"51517899"},
+  "Düsseldorf Hbf":       {eva:"8000085", x:"6794397",  y:"51219576"},
+  "Duesseldorf Hbf":      {eva:"8000085", x:"6794397",  y:"51219576"},
+  "Essen Hbf":            {eva:"8000098", x:"7014761",  y:"51451355"},
+  "Frankfurt (Main) Hbf": {eva:"8000105", x:"8663785",  y:"50106817"},
+  "Hamburg Hbf":          {eva:"8002549", x:"10006908", y:"53552736"},
+  "Hannover Hbf":         {eva:"8000152", x:"9741017",  y:"52376764"},
+  "Köln Hbf":             {eva:"8000207", x:"6958730",  y:"50943029"},
+  "Koeln Hbf":            {eva:"8000207", x:"6958730",  y:"50943029"},
+  "Leipzig Hbf":          {eva:"8010205", x:"12375812", y:"51345378"},
+  "München Hbf":          {eva:"8000261", x:"11558339", y:"48140229"},
+  "Muenchen Hbf":         {eva:"8000261", x:"11558339", y:"48140229"},
+  "Nürnberg Hbf":         {eva:"8000284", x:"11082989", y:"49445615"},
+  "Nuernberg Hbf":        {eva:"8000284", x:"11082989", y:"49445615"},
+  "Stuttgart Hbf":        {eva:"8000096", x:"9182760",  y:"48784782"},
 };
 
 async function lookupDbStation(name){
-  // 1. Lokale Tabelle prüfen (sofortige Antwort)
+  // 1. Exakter Match in lokaler Tabelle
   if(DB_STATIONS[name]) return DB_STATIONS[name];
-  // 2. Fuzzy match in lokaler Tabelle
-  var nameLower = name.toLowerCase();
-  for(var key in DB_STATIONS){
-    if(key.toLowerCase().indexOf(nameLower) >= 0 || nameLower.indexOf(key.toLowerCase()) >= 0){
-      return DB_STATIONS[key];
-    }
+  // 2. Fuzzy Match (case-insensitive, partial)
+  var nl = name.toLowerCase();
+  for(var k in DB_STATIONS){
+    if(k.toLowerCase()===nl) return DB_STATIONS[k];
+    if(nl.indexOf(k.toLowerCase())>=0 || k.toLowerCase().indexOf(nl)>=0) return DB_STATIONS[k];
   }
-  // 3. transport.rest API als Fallback
+  // 3. transport.rest API Fallback
   try {
-    var url = 'https://v6.db.transport.rest/stations?query='
-      + encodeURIComponent(name) + '&results=1&fuzzy=true';
-    var r = await fetch(url, {headers:{'Accept':'application/json'}});
+    var r = await fetch('https://v6.db.transport.rest/stations?query='
+      +encodeURIComponent(name)+'&results=1&fuzzy=true',
+      {headers:{'Accept':'application/json'}});
     var data = await r.json();
     var keys = Object.keys(data);
-    if(keys.length > 0){
-      var st = data[keys[0]];
-      return {soei: st.id, soid: null};
+    if(keys.length>0){
+      var st=data[keys[0]];
+      return {eva:st.id, x:null, y:null};
     }
-  } catch(e) {
-    console.warn('transport.rest lookup failed:', e);
-  }
+  } catch(e){ console.warn('transport.rest:',e); }
   return null;
 }
 
 function buildDbUrl(fromName, fromInfo, toName, toInfo, dateVal, timeVal, isArrival){
   var enc = encodeURIComponent;
   var dt = dateVal + 'T' + (timeVal||'00:00') + ':00';
+
+  function makeSoid(name, info){
+    if(!info) return null;
+    // EVA-Nummer ist der L-Parameter im soid
+    var s = 'A=1@O='+name;
+    if(info.x) s += '@X='+info.x;
+    if(info.y) s += '@Y='+info.y;
+    s += '@U=80@L='+info.eva+'@';
+    return s;
+  }
+
   var url = 'https://www.bahn.de/buchung/fahrplan/suche'
     + '#sts=true'
     + '&so=' + enc(fromName)
     + '&zo=' + enc(toName)
     + '&kl=2';
-  if(fromInfo && fromInfo.soid) url += '&soid=' + enc(fromInfo.soid) + '&sot=ST&soei=' + fromInfo.soei;
-  if(toInfo   && toInfo.soid)   url += '&zoid=' + enc(toInfo.soid)   + '&zot=ST&zoei=' + toInfo.soei;
+
+  var fromSoid = makeSoid(fromName, fromInfo);
+  var toSoid   = makeSoid(toName,   toInfo);
+  if(fromSoid) url += '&soid=' + enc(fromSoid) + '&sot=ST';
+  if(fromInfo) url += '&soei=' + fromInfo.eva;
+  if(toSoid)   url += '&zoid=' + enc(toSoid)   + '&zot=ST';
+  if(toInfo)   url += '&zoei=' + toInfo.eva;
+
   url += '&hd=' + dt
     + '&hza=' + (isArrival ? 'A' : 'D')
     + '&hz=%5B%5D&ar=false&s=true&d=false'
