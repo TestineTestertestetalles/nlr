@@ -424,7 +424,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub">In weniger als 10 Minuten zum Ergebnis.</p>
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
-<div class="version-badge">v 08.05.2026 18:18</div>
+<div class="version-badge">v 08.05.2026 18:30</div>
 <div class="screen active" id="s-form">
 
   <div class="version-badge">v 07.05.2026 20:13</div>
@@ -1563,7 +1563,7 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   // Update rpills
   const meta=`Hin: ${fDT(state.hD,state.hT)} · Rück: ${fDT(state.rD,state.rT)}`;
   const rpill=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">${meta}</span>`;
-  document.getElementById("rpill-prices").innerHTML=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">↗ ${fD(state.hD)} ${state.hT} Uhr &nbsp;·&nbsp; ↙ ${fD(state.rD)} ${state.rT} Uhr</span>`;
+  (document.getElementById("rpill-prices")||document.createElement("div")).innerHTML=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">↗ ${fD(state.hD)} ${state.hT} Uhr &nbsp;·&nbsp; ↙ ${fD(state.rD)} ${state.rT} Uhr</span>`;
   const nights=calcNights(state.hD,state.rD);
   (document.getElementById("rpill-results")||document.createElement("div")).innerHTML=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">Hin: ${fD(state.hD)} · Rück: ${fD(state.rD)}${nights>0?" · "+nights+" Übernachtung"+(nights>1?"en":"")+" 🏨":""} · ${state.persons} Person${state.persons>1?"en":""}</span>`;
   // Page 2: persons info — bahn/flug show "pro Person" hint only
