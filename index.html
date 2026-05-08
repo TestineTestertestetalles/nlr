@@ -245,6 +245,183 @@ input[type=date],input[type=time]{color-scheme:dark}
   color:var(--muted);
   margin-top:6px;
 }
+
+.persons-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.counter-btn{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:1.5px solid var(--border);
+  background:var(--card2);
+  color:var(--text);
+  font-size:20px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  flex-shrink:0;
+}
+.counter-btn:hover{
+  background:rgba(255,255,255,0.14);
+}
+.counter-num{
+  font-size:24px;
+  font-weight:800;
+  min-width:34px;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.persons-label{
+  font-size:13px;
+  color:var(--muted);
+}
+.cb-row{
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  padding:13px 14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.09);
+  border-radius:10px;
+  cursor:pointer;
+  transition:background .15s,border-color .15s;
+  user-select:none;
+}
+.cb-row:hover{
+  background:rgba(255,255,255,0.075);
+}
+.cb-row.checked{
+  background:rgba(251,191,36,0.075);
+  border-color:rgba(251,191,36,0.28);
+}
+.cb-row input[type=checkbox]{
+  width:17px;
+  height:17px;
+  margin-top:2px;
+  accent-color:var(--gold);
+  cursor:pointer;
+  flex-shrink:0;
+}
+.cb-label{
+  font-size:13px;
+  font-weight:800;
+  color:var(--text);
+  margin-bottom:3px;
+}
+.cb-note{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.45;
+}
+
+
+.transport-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+}
+.transport-tile{
+  position:relative;
+  padding:14px 10px 12px;
+  border-radius:12px;
+  border:1.5px solid var(--border);
+  background:rgba(255,255,255,0.055);
+  cursor:pointer;
+  transition:all .15s ease;
+  min-width:0;
+}
+.transport-tile.active{
+  background:rgba(52,211,153,0.075);
+  border-color:rgba(52,211,153,0.45);
+}
+.transport-tile.active.flug{
+  background:rgba(96,165,250,0.075);
+  border-color:rgba(96,165,250,0.45);
+}
+.transport-tile.active.auto{
+  background:rgba(251,191,36,0.09);
+  border-color:rgba(251,191,36,0.45);
+}
+.transport-tile.disabled{
+  opacity:.48;
+  cursor:not-allowed;
+}
+.transport-icon{
+  font-size:24px;
+  text-align:center;
+  margin-bottom:5px;
+}
+.transport-label{
+  font-size:13px;
+  font-weight:800;
+  text-align:center;
+  margin-bottom:8px;
+}
+.transport-tile.active .transport-label{color:var(--green)}
+.transport-tile.active.flug .transport-label{color:var(--blue)}
+.transport-tile.active.auto .transport-label{color:var(--gold)}
+.transport-check{
+  position:absolute;
+  top:7px;
+  right:8px;
+  font-size:12px;
+  opacity:0;
+}
+.transport-tile.active .transport-check{opacity:1}
+.transport-select{
+  width:100%;
+  border-radius:7px;
+  padding:7px 8px;
+  font-size:11px;
+  background:rgba(0,0,0,0.18);
+  margin-bottom:7px;
+}
+.transport-min-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+}
+.transport-min{
+  width:74px;
+  text-align:center;
+  padding:7px 8px;
+  border-radius:7px;
+  font-size:13px;
+  font-weight:800;
+}
+.transport-min-label{
+  font-size:10px;
+  color:var(--muted);
+}
+.transport-station-note{
+  font-size:10px;
+  color:var(--muted);
+  line-height:1.35;
+  min-height:28px;
+  text-align:center;
+  margin-bottom:7px;
+}
+.transport-hint{
+  margin-top:12px;
+  padding:11px 13px;
+  border-radius:10px;
+  border:1px solid rgba(96,165,250,.22);
+  background:rgba(96,165,250,.08);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.55;
+}
+.transport-hint strong{color:var(--text)}
+
+@media(max-width:760px){.transport-grid{grid-template-columns:1fr}.transport-station-note{min-height:auto}}
 @media(max-width:560px){
   .grid2,.time-grid{grid-template-columns:1fr}
   .card{padding:20px}
@@ -307,8 +484,79 @@ input[type=date],input[type=time]{color-scheme:dark}
       <option>Leipzig</option>
     </datalist>
 
-    <button class="btn-primary" onclick="showBahnSearch()">🚆 Bahnverbindung suchen</button>
+    
   </section>
+
+  <section class="card">
+    <div class="ctitle"><span class="cdot" style="background:var(--blue)"></span> Reisende & Fahrerlaubnis</div>
+
+    <div class="persons-row">
+      <label style="margin-right:4px">Anzahl Personen</label>
+      <button class="counter-btn" id="persons-minus" type="button" aria-label="Person entfernen">−</button>
+      <span class="counter-num" id="persons-num">1</span>
+      <button class="counter-btn" id="persons-plus" type="button" aria-label="Person hinzufügen">+</button>
+      <span class="persons-label" id="persons-label">1 Person reist allein</span>
+    </div>
+
+    <label class="cb-row" id="licence-cb">
+      <input type="checkbox" id="licence-check">
+      <div>
+        <div class="cb-label">Mindestens eine reisende Person besitzt eine gültige Fahrerlaubnis</div>
+        <div class="cb-note" id="licence-note">Ohne gültige Fahrerlaubnis wird die Auto-/Fuhrpark-Option später ausgeschlossen.</div>
+      </div>
+    </label>
+  </section>
+
+
+  <section class="card">
+    <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Verfügbare Verkehrsmittel</div>
+
+    <div class="transport-grid">
+      <div class="transport-tile active bahn" id="tt-bahn" onclick="toggleTransport('bahn')">
+        <div class="transport-check">✓</div>
+        <div class="transport-icon">🚆</div>
+        <div class="transport-label">Bahn</div>
+        <select class="transport-select" id="bahn-station" onclick="event.stopPropagation()" onchange="onTransportPointChange('bahn')"></select>
+        <div class="transport-station-note" id="bahn-note">Startbahnhof auswählen</div>
+        <div class="transport-min-row">
+          <input class="transport-min" id="bahn-min" type="number" min="0" max="999" placeholder="—" onclick="event.stopPropagation()" onchange="setTransferMinutes('bahn', this.value)">
+          <span class="transport-min-label">min</span>
+        </div>
+      </div>
+
+      <div class="transport-tile active flug" id="tt-flug" onclick="toggleTransport('flug')">
+        <div class="transport-check">✓</div>
+        <div class="transport-icon">✈️</div>
+        <div class="transport-label">Flugzeug</div>
+        <select class="transport-select" id="flug-station" onclick="event.stopPropagation()" onchange="onTransportPointChange('flug')"></select>
+        <div class="transport-station-note" id="flug-note">Startflughafen auswählen</div>
+        <div class="transport-min-row">
+          <input class="transport-min" id="flug-min" type="number" min="0" max="999" placeholder="—" onclick="event.stopPropagation()" onchange="setTransferMinutes('flug', this.value)">
+          <span class="transport-min-label">min</span>
+        </div>
+      </div>
+
+      <div class="transport-tile auto" id="tt-auto" onclick="toggleTransport('auto')">
+        <div class="transport-check">✓</div>
+        <div class="transport-icon">🚗</div>
+        <div class="transport-label">Auto</div>
+        <select class="transport-select" id="auto-station" onclick="event.stopPropagation()" onchange="onTransportPointChange('auto')"></select>
+        <div class="transport-station-note" id="auto-note">Fuhrpark auswählen</div>
+        <div class="transport-min-row">
+          <input class="transport-min" id="auto-min" type="number" min="0" max="999" placeholder="—" onclick="event.stopPropagation()" onchange="setTransferMinutes('auto', this.value)">
+          <span class="transport-min-label">min</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="transport-hint" id="transport-hint">
+      <strong>Hinweis:</strong> Bahn und Flugzeug können später für Hin- und Rückreise kombiniert werden. Auto gilt immer für Hin- und Rückreise und wird nur berücksichtigt, wenn eine gültige Fahrerlaubnis bestätigt ist.
+    </div>
+  </section>
+
+  <button class="btn-primary" onclick="showBahnSearch()">
+    🔎 Reiseverbindungen suchen
+  </button>
 
   <div id="route-summary" class="route-summary"></div>
 
@@ -381,6 +629,201 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 
 <script>
+
+
+const transportState = {
+  bahn: { active: true, point: "", minutes: "" },
+  flug: { active: true, point: "", minutes: "" },
+  auto: { active: false, point: "", minutes: "" }
+};
+
+const TRANSPORT_POINTS = {
+  bahn: [
+    ["Bremen Hbf", 12],
+    ["Hamburg Hbf", 18],
+    ["Berlin Hbf", 22],
+    ["Hannover Hbf", 15],
+    ["Düsseldorf Hbf", 18],
+    ["Köln Hbf", 20],
+    ["Frankfurt(Main)Hbf", 16],
+    ["Stuttgart Hbf", 18],
+    ["München Hbf", 25],
+    ["Dresden Hbf", 18],
+    ["Leipzig Hbf", 16],
+    ["Nürnberg Hbf", 20],
+    ["Mannheim Hbf", 14],
+    ["Karlsruhe Hbf", 15],
+    ["Essen Hbf", 16],
+    ["Dortmund Hbf", 17],
+    ["Münster(Westf)Hbf", 14],
+    ["Bonn Hbf", 17],
+    ["Mainz Hbf", 15],
+    ["Wiesbaden Hbf", 16],
+    ["Kiel Hbf", 15],
+    ["Erfurt Hbf", 13]
+  ],
+  flug: [
+    ["Bremen Airport (BRE)", 18],
+    ["Hamburg Airport (HAM)", 30],
+    ["Berlin Brandenburg (BER)", 40],
+    ["Hannover Airport (HAJ)", 25],
+    ["Düsseldorf Airport (DUS)", 28],
+    ["Köln/Bonn Airport (CGN)", 30],
+    ["Frankfurt Airport (FRA)", 25],
+    ["Stuttgart Airport (STR)", 28],
+    ["München Airport (MUC)", 45],
+    ["Dresden Airport (DRS)", 25],
+    ["Leipzig/Halle Airport (LEJ)", 35],
+    ["Nürnberg Airport (NUE)", 25],
+    ["Dortmund Airport (DTM)", 30],
+    ["Münster/Osnabrück Airport (FMO)", 40],
+    ["Karlsruhe/Baden-Baden Airport (FKB)", 45],
+    ["Memmingen Airport (FMM)", 55],
+    ["Paderborn/Lippstadt Airport (PAD)", 45],
+    ["Saarbrücken Airport (SCN)", 25],
+    ["Weeze Airport (NRN)", 60],
+    ["Friedrichshafen Airport (FDH)", 35]
+  ],
+  auto: [
+    ["Fuhrpark Bremen", 10],
+    ["Fuhrpark Hamburg", 20],
+    ["Fuhrpark Berlin", 25],
+    ["Fuhrpark Hannover", 18],
+    ["Fuhrpark Düsseldorf", 22],
+    ["Fuhrpark Frankfurt", 18],
+    ["Fuhrpark Stuttgart", 20],
+    ["Fuhrpark München", 28],
+    ["Fuhrpark Dresden", 20],
+    ["Fuhrpark Leipzig", 18],
+    ["Fuhrpark Nürnberg", 24],
+    ["Fuhrpark Köln", 21],
+    ["Fuhrpark Mainz", 17],
+    ["Fuhrpark Wiesbaden", 18],
+    ["Fuhrpark Dortmund", 20],
+    ["Fuhrpark Essen", 19],
+    ["Fuhrpark Kiel", 20],
+    ["Fuhrpark Erfurt", 16],
+    ["Fuhrpark Potsdam", 22],
+    ["Fuhrpark Magdeburg", 18]
+  ]
+};
+
+function populateTransportSelects(){
+  Object.keys(TRANSPORT_POINTS).forEach(type => {
+    const sel = document.getElementById(`${type}-station`);
+    if(!sel) return;
+    sel.innerHTML = `<option value="">— auswählen —</option>` + TRANSPORT_POINTS[type]
+      .map(([name, min]) => `<option value="${name}" data-min="${min}">${name} · ca. ${min} min</option>`)
+      .join("");
+  });
+}
+
+function onTransportPointChange(type){
+  const sel = document.getElementById(`${type}-station`);
+  const minInput = document.getElementById(`${type}-min`);
+  const note = document.getElementById(`${type}-note`);
+  if(!sel) return;
+
+  const selected = sel.options[sel.selectedIndex];
+  transportState[type].point = sel.value;
+
+  if(selected && selected.dataset.min && minInput && !minInput.value){
+    minInput.value = selected.dataset.min;
+    transportState[type].minutes = selected.dataset.min;
+  }
+
+  if(note){
+    note.textContent = sel.value
+      ? `Gewählt: ${sel.value}`
+      : (type === "auto" ? "Fuhrpark auswählen" : type === "flug" ? "Startflughafen auswählen" : "Startbahnhof auswählen");
+  }
+}
+
+function setTransferMinutes(type, value){
+  transportState[type].minutes = value;
+}
+
+function toggleTransport(type){
+  if(type === "auto" && !tripState.hasLicence){
+    alert("Die Auto-/Fuhrpark-Option kann erst aktiviert werden, wenn mindestens eine gültige Fahrerlaubnis bestätigt wurde.");
+    return;
+  }
+
+  transportState[type].active = !transportState[type].active;
+  updateTransportUi();
+}
+
+function updateTransportUi(){
+  Object.keys(transportState).forEach(type => {
+    const tile = document.getElementById(`tt-${type}`);
+    if(!tile) return;
+
+    const disabled = type === "auto" && !tripState.hasLicence;
+    tile.classList.toggle("active", transportState[type].active && !disabled);
+    tile.classList.toggle("disabled", disabled);
+
+    if(disabled){
+      transportState.auto.active = false;
+    }
+  });
+}
+
+
+const tripState = {
+  persons: 1,
+  hasLicence: false
+};
+
+function updatePersonsUi(){
+  const num = document.getElementById("persons-num");
+  const label = document.getElementById("persons-label");
+  if(!num || !label) return;
+
+  num.textContent = tripState.persons;
+  label.textContent = tripState.persons === 1
+    ? "1 Person reist allein"
+    : `${tripState.persons} Personen reisen gemeinsam`;
+}
+
+function initTravelers(){
+  const minus = document.getElementById("persons-minus");
+  const plus = document.getElementById("persons-plus");
+  const licence = document.getElementById("licence-check");
+  const row = document.getElementById("licence-cb");
+  const note = document.getElementById("licence-note");
+
+  if(minus){
+    minus.addEventListener("click", () => {
+      tripState.persons = Math.max(1, tripState.persons - 1);
+      updatePersonsUi();
+    });
+  }
+
+  if(plus){
+    plus.addEventListener("click", () => {
+      tripState.persons = Math.min(20, tripState.persons + 1);
+      updatePersonsUi();
+    });
+  }
+
+  if(licence){
+    licence.addEventListener("change", () => {
+      tripState.hasLicence = licence.checked;
+      row.classList.toggle("checked", tripState.hasLicence);
+      note.textContent = tripState.hasLicence
+        ? "Auto-/Fuhrpark-Option kann später berücksichtigt werden."
+        : "Ohne gültige Fahrerlaubnis wird die Auto-/Fuhrpark-Option später ausgeschlossen.";
+      updateTransportUi();
+    });
+  }
+
+  updatePersonsUi();
+  populateTransportSelects();
+  updateTransportUi();
+}
+
+document.addEventListener("DOMContentLoaded", initTravelers);
+
 function formatDateForDb(date){
   if(!date) return "";
   const [y,m,d] = date.split("-");
@@ -414,9 +857,24 @@ function showBahnSearch(){
   const [zielName, zielAdresse, zielStation] = zielRaw.split("|");
 
   document.getElementById("route-summary").style.display = "block";
+  const licenceText = tripState.hasLicence
+    ? "gültige Fahrerlaubnis vorhanden"
+    : "keine Fahrerlaubnis bestätigt";
+
+  const activeTransports = Object.entries(transportState)
+    .filter(([type, data]) => data.active)
+    .map(([type, data]) => {
+      const label = type === "bahn" ? "Bahn" : type === "flug" ? "Flugzeug" : "Auto";
+      const point = data.point ? ` (${data.point}${data.minutes ? ", ca. " + data.minutes + " min" : ""})` : "";
+      return label + point;
+    })
+    .join(", ") || "keine Verkehrsmittel ausgewählt";
+
   document.getElementById("route-summary").innerHTML =
     `<strong>Route vorbereitet:</strong> ${start} → ${zielName}<br>` +
-    `<span>${zielAdresse}</span>`;
+    `<span>${zielAdresse}</span><br>` +
+    `<span>${tripState.persons} ${tripState.persons === 1 ? "reisende Person" : "reisende Personen"} · ${licenceText}</span><br>` +
+    `<span>Verkehrsmittel: ${activeTransports}</span>`;
 
   document.getElementById("bahn-card").style.display = "block";
 
