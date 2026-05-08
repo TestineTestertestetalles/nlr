@@ -429,7 +429,7 @@ select.invalid ~ .field-warn{display:block;}
   <p class="hero-sub2">Dienstreise clever planen.</p>
 </div>
 
-<div class="version-badge">v 08.05.2026 12:25</div>
+<div class="version-badge">v 08.05.2026 12:29</div>
 
 <div class="screen active" id="s-form">
 
@@ -1699,7 +1699,7 @@ document.getElementById("btn-s1").addEventListener("click",()=>{
   const rpill=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">${meta}</span>`;
   document.getElementById("rpill-prices").innerHTML=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">↗ ${fD(state.hD)} ${state.hT} Uhr &nbsp;·&nbsp; ↙ ${fD(state.rD)} ${state.rT} Uhr</span>`;
   const nights=calcNights(state.hD,state.rD);
-  document.getElementById("rpill-results").innerHTML=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">Hin: ${fD(state.hD)} · Rück: ${fD(state.rD)}${nights>0?" · "+nights+" Übernachtung"+(nights>1?"en":"")+" 🏨":""} · ${state.persons} Person${state.persons>1?"en":""}</span>`;
+  (document.getElementById("rpill-results")||document.createElement("div")).innerHTML=`<strong>${state.startText}</strong> <span class="rarrow">⇄</span> <strong>${state.zielText}</strong> <span class="rmeta">Hin: ${fD(state.hD)} · Rück: ${fD(state.rD)}${nights>0?" · "+nights+" Übernachtung"+(nights>1?"en":"")+" 🏨":""} · ${state.persons} Person${state.persons>1?"en":""}</span>`;
   // Page 2: persons info — bahn/flug show "pro Person" hint only
   var ph=document.getElementById("bahn-persons-hint");
   if(ph) ph.textContent=state.persons>1?" (Preis pro Person)":"";
