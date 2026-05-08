@@ -552,6 +552,28 @@ input[type=date],input[type=time]{color-scheme:dark}
   white-space:nowrap;
 }
 
+
+.price-reservation-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+  align-items:stretch;
+}
+.price-reservation-row .cb-row{
+  margin:0;
+  height:100%;
+  align-items:center;
+}
+.price-reservation-row .cb-label{
+  font-size:12px;
+}
+.price-reservation-row .cb-note{
+  font-size:10px;
+}
+@media(max-width:560px){
+  .price-reservation-row{grid-template-columns:1fr}
+}
+
 @media(max-width:560px){
   .grid2,.time-grid{grid-template-columns:1fr}
   .card{padding:20px}
@@ -711,13 +733,21 @@ input[type=date],input[type=time]{color-scheme:dark}
         </div>
       </div>
 
-      <div class="price-row">
+      <div class="price-reservation-row">
         <div class="field">
           <label>Ticketpreis Hinreise (€ / Person)</label>
           <input id="bahn-hin-price" type="number" min="0" step="0.01" placeholder="z. B. 49,90">
         </div>
+
+        <label class="cb-row" id="seat-hin-row">
+          <input type="checkbox" id="seat-hin">
+          <div>
+            <div class="cb-label">Sitzplatzreservierung</div>
+            <div class="cb-note">+ 5,50 € pro Person</div>
+          </div>
+        </label>
       </div>
-      <div class="small-note">Anordnung: Zeiten oben, Ticketpreis darunter.</div>
+      <div class="small-note">Zeiten oben, Ticketpreis und Sitzplatzreservierung darunter.</div>
     </div>
 
     <div class="trip-block">
@@ -740,11 +770,19 @@ input[type=date],input[type=time]{color-scheme:dark}
         </div>
       </div>
 
-      <div class="price-row">
+      <div class="price-reservation-row">
         <div class="field">
           <label>Ticketpreis Rückreise (€ / Person)</label>
           <input id="bahn-rueck-price" type="number" min="0" step="0.01" placeholder="z. B. 39,90">
         </div>
+
+        <label class="cb-row" id="seat-rueck-row">
+          <input type="checkbox" id="seat-rueck">
+          <div>
+            <div class="cb-label">Sitzplatzreservierung</div>
+            <div class="cb-note">+ 5,50 € pro Person</div>
+          </div>
+        </label>
       </div>
       <div class="small-note">Die Rückreise bleibt getrennt erfassbar, damit später Kombinationen sauber berechnet werden können.</div>
     </div>
