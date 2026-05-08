@@ -514,6 +514,32 @@ input[type=date],input[type=time]{color-scheme:dark}
   font-weight:700;
 }
 
+
+.source-note{
+  margin-top:14px;
+  padding:11px 13px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.55;
+}
+.source-note strong{color:var(--text)}
+.eva-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:2px 7px;
+  margin-left:4px;
+  border-radius:999px;
+  background:rgba(251,191,36,.1);
+  border:1px solid rgba(251,191,36,.22);
+  color:var(--gold);
+  font-size:10px;
+  font-weight:800;
+}
+
 @media(max-width:560px){
   .grid2,.time-grid{grid-template-columns:1fr}
   .card{padding:20px}
@@ -546,8 +572,8 @@ input[type=date],input[type=time]{color-scheme:dark}
         <label>Ziel aus interner Datenbank</label>
         <select id="ziel">
           <option value="">— Ziel wählen —</option>
-          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Hbf|Stuttgart Hbf">MHP Arena Stuttgart · Mercedesstraße 87, 70372 Stuttgart</option>
-          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf">Deutsche Bank Park Frankfurt · Mörfelder Landstraße 362, 60528 Frankfurt am Main</option>
+          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Neckarpark|Stuttgart Neckarpark|8006743">MHP Arena Stuttgart · Mercedesstraße 87, 70372 Stuttgart</option>
+          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf|8000105">Deutsche Bank Park Frankfurt · Mörfelder Landstraße 362, 60528 Frankfurt am Main</option>
         </select>
       </div>
       <div class="field">
@@ -637,6 +663,9 @@ input[type=date],input[type=time]{color-scheme:dark}
     <div class="transport-hint" id="transport-hint">
       <strong>Hinweis:</strong> Die nächstgelegenen Startpunkte werden automatisch vorausgewählt. Bahn und Flugzeug können später für Hin- und Rückreise kombiniert werden. Auto gilt immer für Hin- und Rückreise und wird nur berücksichtigt, wenn eine gültige Fahrerlaubnis bestätigt ist.
     </div>
+    <div class="source-note">
+      <strong>Datenquellen:</strong> Startstadt- und Umkreissuche über OpenStreetMap/Nominatim/Overpass. EVA-/IBNR-Zuordnung zunächst als lokale Lookup-Tabelle aus frei nutzbaren Open-Data-Quellen; später erweiterbar. Keine kostenpflichtige oder inoffizielle DB-API.
+    </div>
   </section>
 
   <button class="btn-primary" onclick="showBahnSearch()">
@@ -721,6 +750,80 @@ const transportState = {
   flug: { active: true, point: "", minutes: "" },
   auto: { active: false, point: "", minutes: "" }
 };
+
+
+const STATION_EVA_LOOKUP = {
+  "bremen hbf": "8000050",
+  "hamburg hbf": "8002549",
+  "berlin hbf": "8011160",
+  "hannover hbf": "8000152",
+  "düsseldorf hbf": "8000085",
+  "duesseldorf hbf": "8000085",
+  "köln hbf": "8000207",
+  "koeln hbf": "8000207",
+  "frankfurt(main)hbf": "8000105",
+  "frankfurt hbf": "8000105",
+  "frankfurt(main) hbf": "8000105",
+  "stuttgart hbf": "8000096",
+  "münchen hbf": "8000261",
+  "muenchen hbf": "8000261",
+  "dresden hbf": "8010085",
+  "leipzig hbf": "8010205",
+  "nürnberg hbf": "8000284",
+  "nuernberg hbf": "8000284",
+  "mannheim hbf": "8000244",
+  "karlsruhe hbf": "8000191",
+  "essen hbf": "8000098",
+  "dortmund hbf": "8000080",
+  "münster(westf)hbf": "8000263",
+  "muenster(westf)hbf": "8000263",
+  "bonn hbf": "8000044",
+  "mainz hbf": "8000240",
+  "wiesbaden hbf": "8000250",
+  "kiel hbf": "8000199",
+  "erfurt hbf": "8010101",
+
+  "syke": "8000347",
+  "bassum": "8000037",
+  "bremen-mahndorf": "8007755",
+  "bremen-sebaldsbrück": "8001125",
+  "bremen-sebaldsbrueck": "8001125",
+  "bremen-hemelingen": "8001118",
+  "kirchweyhe": "8003328",
+  "barrien": "8000735",
+  "twistringen": "8005890",
+  "eystrup": "8001910",
+  "dörverden": "8001532",
+  "doerverden": "8001532",
+  "verden(aller)": "8000254",
+  "nienburg(weser)": "8000276",
+
+  "stuttgart neckarpark": "8006743"
+};
+
+function normalizeStationName(name){
+  return String(name || "")
+    .toLowerCase()
+    .replace(/ä/g,"ae")
+    .replace(/ö/g,"oe")
+    .replace(/ü/g,"ue")
+    .replace(/ß/g,"ss")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function stationEvaByName(name){
+  const raw = String(name || "").toLowerCase().replace(/\s+/g," ").trim();
+  const norm = normalizeStationName(name);
+  return STATION_EVA_LOOKUP[raw] || STATION_EVA_LOOKUP[norm] || "";
+}
+
+function stationLocationRef(name, eva){
+  if(!eva) return "";
+  // HAFAS-kompatible Stationsreferenz: Name bleibt lesbar, EVA/IBNR macht die Station eindeutig.
+  return `A=1@O=${name}@L=${eva}@`;
+}
+
 
 const CITY_FALLBACKS = [
   {short:"Bremen",lat:53.0758,lon:8.8072},
@@ -838,12 +941,17 @@ function fillSelect(type, items, placeholder, autoSelectNearest=false){
   if(!sel) return;
 
   sel.innerHTML = `<option value="">${placeholder}</option>` + items
-    .map((x, idx) => `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name} · ca. ${x.minutes} min · ${Math.round(x.km)} km</option>`)
+    .map((x, idx) => {
+      const eva = x.eva || stationEvaByName(x.name);
+      const evaText = eva ? ` · EVA ${eva}` : "";
+      return `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name} · ca. ${x.minutes} min · ${Math.round(x.km)} km${type === "bahn" ? evaText : ""}</option>`;
+    })
     .join("");
 
   if(autoSelectNearest && items.length){
     sel.selectedIndex = 1;
     transportState[type].point = items[0].name;
+    transportState[type].eva = items[0].eva || stationEvaByName(items[0].name);
     transportState[type].minutes = String(items[0].minutes);
     if(minInput) minInput.value = items[0].minutes;
   }
@@ -936,8 +1044,11 @@ async function fetchNearbyRailStations(geo, radius=45000){
     // Nähe zählt stark, damit in Orten wie Bruchhausen-Vilsen z. B. Syke/Bassum auftauchen.
     score += Math.max(0, 45 - km);
 
+    const eva = tags.uic_ref || tags["ref:ibnr"] || tags["ibnr"] || stationEvaByName(name);
+
     const station = {
       name,
+      eva,
       lat,
       lon,
       km,
@@ -960,6 +1071,7 @@ async function fetchNearbyRailStations(geo, radius=45000){
     if(km <= radius / 1000 && !seen.has(key)){
       stations.push({
         ...st,
+        eva: st.eva || stationEvaByName(st.name),
         km,
         minutes: minutesFromKm(km, 35),
         score: Math.max(0, 50 - km)
@@ -1123,6 +1235,7 @@ function onTransportPointChange(type){
 
   const selected = sel.options[sel.selectedIndex];
   transportState[type].point = sel.value;
+  transportState[type].eva = selected ? (selected.dataset.eva || stationEvaByName(sel.value)) : "";
 
   // Bei jeder neuen Auswahl die geschätzte Minutenanzahl aktualisieren.
   // Manuelle Korrekturen sind danach weiterhin über das Minutenfeld möglich.
@@ -1136,8 +1249,9 @@ function onTransportPointChange(type){
 
   if(note){
     const minutesText = selected && selected.dataset.min ? ` · ca. ${selected.dataset.min} min` : "";
+    const evaText = type === "bahn" && selected && selected.dataset.eva ? ` · EVA ${selected.dataset.eva}` : "";
     note.textContent = sel.value
-      ? `Gewählt: ${sel.value}${minutesText}`
+      ? `Gewählt: ${sel.value}${minutesText}${evaText}`
       : (type === "auto" ? "Fuhrpark auswählen" : type === "flug" ? "Startflughafen auswählen" : "Startbahnhof auswählen");
   }
 }
@@ -1234,11 +1348,17 @@ function formatDateForDb(date){
   return `${d}.${m}.${y}`;
 }
 
-function buildDbUrl(from, to, date, time, mode){
+function buildDbUrl(from, to, date, time, mode, fromEva="", toEva=""){
   const params = new URLSearchParams({
     S: from,
     Z: to
   });
+
+  const sid = stationLocationRef(from, fromEva);
+  const zid = stationLocationRef(to, toEva);
+  if(sid) params.set("SID", sid);
+  if(zid) params.set("ZID", zid);
+
   if(date) params.set("date", formatDateForDb(date));
   if(time) params.set("time", time);
   if(mode) params.set("timesel", mode);
@@ -1261,21 +1381,36 @@ async function ensureStartGeoFromText(){
 
 async function showBahnSearch(){
   await ensureStartGeoFromText();
-  const start = document.getElementById("start").value.trim();
+
+  const startCity = document.getElementById("start").value.trim();
   const zielRaw = document.getElementById("ziel").value;
   const hinDate = document.getElementById("hin-date").value;
   const hinArrivalTarget = document.getElementById("hin-arrival-target").value;
   const rueckDate = document.getElementById("rueck-date").value;
   const rueckDepartureTarget = document.getElementById("rueck-departure-target").value;
 
-  if(!start || !zielRaw){
+  const bahnStartSelect = document.getElementById("bahn-station");
+  const bahnStartStation = bahnStartSelect ? bahnStartSelect.value : "";
+  const bahnStartEva = bahnStartSelect && bahnStartSelect.selectedOptions[0]
+    ? (bahnStartSelect.selectedOptions[0].dataset.eva || stationEvaByName(bahnStartStation))
+    : stationEvaByName(bahnStartStation);
+
+  if(!startCity || !zielRaw){
     alert("Bitte Startstadt und Ziel auswählen.");
     return;
   }
 
-  const [zielName, zielAdresse, zielStation] = zielRaw.split("|");
+  if(!bahnStartStation){
+    alert("Bitte unter „Verfügbare Verkehrsmittel“ einen Startbahnhof auswählen.");
+    return;
+  }
+
+  const [zielName, zielAdresse, zielStation, _zielStationLabel, zielEvaRaw] = zielRaw.split("|");
+  const bahnZielStation = zielStation || zielName;
+  const bahnZielEva = zielEvaRaw || stationEvaByName(bahnZielStation);
 
   document.getElementById("route-summary").style.display = "block";
+
   const licenceText = tripState.hasLicence
     ? "gültige Fahrerlaubnis vorhanden"
     : "keine Fahrerlaubnis bestätigt";
@@ -1290,23 +1425,24 @@ async function showBahnSearch(){
     .join(", ") || "keine Verkehrsmittel ausgewählt";
 
   document.getElementById("route-summary").innerHTML =
-    `<strong>Route vorbereitet:</strong> ${start} → ${zielName}<br>` +
+    `<strong>Route vorbereitet:</strong> ${startCity} → ${zielName}<br>` +
     `<span>${zielAdresse}</span><br>` +
     `<span>${tripState.persons} ${tripState.persons === 1 ? "reisende Person" : "reisende Personen"} · ${licenceText}</span><br>` +
-    `<span>Verkehrsmittel: ${activeTransports}</span>`;
+    `<span>Verkehrsmittel: ${activeTransports}</span><br>` +
+    `<span>Bahnlink: ${bahnStartStation}${bahnStartEva ? " (EVA " + bahnStartEva + ")" : ""} → ${bahnZielStation}${bahnZielEva ? " (EVA " + bahnZielEva + ")" : ""}</span>`;
 
   document.getElementById("bahn-card").style.display = "block";
 
-  document.getElementById("hin-from").textContent = start;
-  document.getElementById("hin-to").textContent = zielStation || zielName;
-  document.getElementById("rueck-from").textContent = zielStation || zielName;
-  document.getElementById("rueck-to").textContent = start;
+  document.getElementById("hin-from").textContent = bahnStartStation;
+  document.getElementById("hin-to").textContent = bahnZielStation;
+  document.getElementById("rueck-from").textContent = bahnZielStation;
+  document.getElementById("rueck-to").textContent = bahnStartStation;
 
   document.getElementById("hin-db-link").href =
-    buildDbUrl(start, zielStation || zielName, hinDate, hinArrivalTarget, "arrive");
+    buildDbUrl(bahnStartStation, bahnZielStation, hinDate, hinArrivalTarget, "arrive", bahnStartEva, bahnZielEva);
 
   document.getElementById("rueck-db-link").href =
-    buildDbUrl(zielStation || zielName, start, rueckDate, rueckDepartureTarget, "depart");
+    buildDbUrl(bahnZielStation, bahnStartStation, rueckDate, rueckDepartureTarget, "depart", bahnZielEva, bahnStartEva);
 
   document.getElementById("bahn-card").scrollIntoView({behavior:"smooth", block:"start"});
 }
