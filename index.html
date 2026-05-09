@@ -2595,7 +2595,14 @@ function initSummaryButtonWatchers(){
     "seat-hin",
     "seat-rueck",
     "baggage-hin",
-    "baggage-rueck"
+    "baggage-rueck",
+    "custom-target-name",
+    "custom-target-address",
+    "custom-target-station",
+    "custom-target-eva",
+    "custom-target-station-min",
+    "custom-target-airport",
+    "custom-target-airport-min"
   ];
 
   ids.forEach(id => {
@@ -2637,8 +2644,51 @@ function getCustomTargetData(){
 }
 
 
+
+function getCustomTargetRaw(){
+  const d = getCustomTargetData();
+  return [
+    d.name,
+    d.address,
+    d.stationName || "",
+    d.stationName || "",
+    d.stationEva || "",
+    d.airportCode || "",
+    d.airportName || d.airportCode || "",
+    d.stationTransferMin || 0,
+    d.airportTransferMin || 0,
+    d.lat || 0,
+    d.lon || 0
+  ].join("|");
+}
+
+function validateCustomTarget(){
+  const d = getCustomTargetData();
+  if(!d.name || !d.address || !d.stationName || !d.stationEva || !d.stationTransferMin){
+    alert("Bitte beim freien Ziel mindestens Name, Anschrift, Haltestelle, EVA-ID und Entfernung zur Haltestelle eintragen.");
+    return false;
+  }
+  return true;
+}
+
 function getSelectedDestinationData(){
   const raw = document.getElementById("ziel")?.value || "";
+  if(raw === "custom"){
+    const d = getCustomTargetData();
+    return {
+      name: d.name,
+      address: d.address,
+      trainStation: d.stationName,
+      trainLabel: d.stationName,
+      trainEva: d.stationEva,
+      airportIata: d.airportCode,
+      airportName: d.airportName || d.airportCode,
+      trainTransferMin: d.stationTransferMin,
+      airportTransferMin: d.airportTransferMin,
+      lat: d.lat,
+      lon: d.lon
+    };
+  }
   if(!raw) return null;
 
   const parts = raw.split("|");
@@ -2854,6 +2904,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  const zielSelect = document.getElementById("ziel");
+  if(zielSelect){
+    zielSelect.addEventListener("change", toggleCustomTarget);
+    toggleCustomTarget();
+  }
+
   updateHotelBox();
 });
 
@@ -2915,7 +2971,12 @@ async function showBahnSearch(){
   await ensureStartGeoFromText();
 
   const startCity = document.getElementById("start").value.trim();
-  const zielRaw = document.getElementById("ziel").value;
+  let zielRaw = document.getElementById("ziel").value;
+
+  if(zielRaw === "custom"){
+    if(!validateCustomTarget()) return;
+    zielRaw = getCustomTargetRaw();
+  }
   const hinDate = document.getElementById("hin-date").value;
   const hinArrivalTarget = document.getElementById("hin-arrival-target").value;
   const rueckDate = document.getElementById("rueck-date").value;
@@ -3100,6 +3161,28 @@ function getHotelData(){
     total:nights * price
   };
 }
+
+
+function getSelectedOptionLatLon(selectId){
+  const opt = document.getElementById(selectId)?.selectedOptions?.[0];
+  if(!opt) return null;
+  const lat = Number(opt.dataset.lat || 0);
+  const lon = Number(opt.dataset.lon || 0);
+  return lat && lon ? {lat, lon} : null;
+}
+
+function getAutoDriveMinutes(){
+  const dest = getSelectedDestinationData();
+  const start = getSelectedOptionLatLon("auto-station");
+
+  if(!dest || !dest.lat || !dest.lon || !start){
+    return 0;
+  }
+
+  const km = havKm(start.lat, start.lon, dest.lat, dest.lon);
+  return minutesFromKm(km, 70);
+}
+
 
 function getAutoVehicleCount(persons){
   return Math.max(1, Math.ceil((persons || 1) / 5));
@@ -3726,11 +3809,16 @@ function showComparePage(){
 }
 
 function showSummaryPage(){
-  renderPage2Summary();
-  document.getElementById("input-page").classList.add("hidden");
-  document.getElementById("summary-page").classList.add("active");
-  document.getElementById("compare-page").classList.remove("active");
-  window.scrollTo({top:0, behavior:"smooth"});
+  try{
+    renderPage2Summary();
+    document.getElementById("input-page").classList.add("hidden");
+    document.getElementById("summary-page").classList.add("active");
+    document.getElementById("compare-page").classList.remove("active");
+    window.scrollTo({top:0, behavior:"smooth"});
+  }catch(e){
+    console.error(e);
+    alert("Die Zusammenfassung konnte nicht geöffnet werden. Bitte prüfen Sie die Eingaben auf Seite 1.");
+  }
 }
 
 function updateSummaryPage(){
