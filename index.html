@@ -810,19 +810,19 @@ input[type=date],input[type=time]{color-scheme:dark}
       </div>
       <div class="field">
         <label>Hinreise Datum</label>
-        <input id="hin-date" type="date">
+        <input id="hin-date" type="date" value="2026-07-21">
       </div>
       <div class="field">
         <label>Gewünschte Ankunft</label>
-        <input id="hin-arrival-target" type="time" value="10:00">
+        <input id="hin-arrival-target" type="time" value="13:00">
       </div>
       <div class="field">
         <label>Rückreise Datum</label>
-        <input id="rueck-date" type="date">
+        <input id="rueck-date" type="date" value="2026-07-22">
       </div>
       <div class="field">
         <label>Geplante Abfahrt</label>
-        <input id="rueck-departure-target" type="time" value="17:00">
+        <input id="rueck-departure-target" type="time" value="15:00">
       </div>
     </div>
 
@@ -992,6 +992,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 
     <div class="hint">
       Öffne zuerst die Google-Flights-Suche, wähle eine passende Verbindung aus und trage anschließend Abflugzeit, Ankunftszeit und Flugpreis ein.
+      Für den Test sind Hinreise 21.07.2026 Ankunft 13:00 Uhr und Rückreise 22.07.2026 ab 15:00 Uhr vorbelegt.
     </div>
 
     <div class="trip-block">
@@ -1900,13 +1901,14 @@ function setupFlightSearch(zielRaw, hinDate, rueckDate){
   document.getElementById("flug-rueck-from").textContent = targetName;
   document.getElementById("flug-rueck-to").textContent = `${fromName} (${fromIata})`;
 
-  const hinUrl = buildGoogleFlightsUrl(fromIata, targetIata, hinDate, rueckDate);
-  const rueckUrl = buildGoogleFlightsUrl(targetIata, fromIata, rueckDate, hinDate);
+  // Google Flights verarbeitet Hin- und Rückflug als eine gemeinsame Roundtrip-Suche.
+  // Deshalb zeigen beide Buttons auf dieselbe zuverlässige Such-URL.
+  const googleFlightsUrl = buildGoogleFlightsUrl(fromIata, targetIata, hinDate, rueckDate);
 
-  document.getElementById("flug-hin-link").href = hinUrl;
-  document.getElementById("flug-hin-link").title = hinUrl;
-  document.getElementById("flug-rueck-link").href = rueckUrl;
-  document.getElementById("flug-rueck-link").title = rueckUrl;
+  document.getElementById("flug-hin-link").href = googleFlightsUrl;
+  document.getElementById("flug-hin-link").title = googleFlightsUrl;
+  document.getElementById("flug-rueck-link").href = googleFlightsUrl;
+  document.getElementById("flug-rueck-link").title = googleFlightsUrl;
 
 }
 
