@@ -1763,6 +1763,11 @@ function stationLocationRef(name, info){
   - Deduplizierung und Entfernungssortierung bleiben bestehen.
   - EVA-IDs sind für DB-Links hinterlegt, wenn bekannt.
 */
+/*
+  Lokale Bahnhofsdatenbank wird ausschließlich zur EVA-ID-Anreicherung
+  und stabileren DB-Link-Erzeugung genutzt.
+  Die eigentliche Bahnhofssuche erfolgt weiterhin dynamisch über Overpass.
+*/
 const LOCAL_RAIL_STATIONS = [
   {name:"Berlin Hbf", eva:"8011160", lat:52.5256, lon:13.3695},
   {name:"Berlin Südkreuz", eva:"8011113", lat:52.4758, lon:13.3650},
@@ -2119,11 +2124,11 @@ async function fetchNearbyRailStations(geo, radius=45000){
     }
   }
 
-  return mergeLocalStations(stations, geo, 70)
+  return stations
     .sort((a,b) => {
       // Primär tatsächliche Nähe, sekundär Qualität. So wird der nächstgelegene Bahnhof direkt vorausgewählt.
       if(Math.abs(a.km - b.km) > 1.5) return a.km - b.km;
-      return (b.score || 0) - (a.score || 0);
+      return b.score - a.score;
     })
     .slice(0, 50);
 }
@@ -2155,7 +2160,7 @@ async function updateNearbyStations(){
     }
     throw new Error("Keine Stationen gefunden");
   }catch(e){
-    const fallback = mergeLocalStations(sortedByDistance(DEFAULT_STATIONS, geo, 35, 30), geo, 90);
+    const fallback = sortedByDistance(DEFAULT_STATIONS, geo, 35, 30);
     fillSelect("bahn", fallback, "— Bahnhof/Haltestelle auswählen —", true);
     const note = document.getElementById("bahn-note");
     if(note){
