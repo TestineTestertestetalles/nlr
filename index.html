@@ -1477,7 +1477,7 @@ input::placeholder{
 
     <div>
       <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">€/Nacht</div>
-      <input id="hotel-price" type="number" min="0" step="0.01" value="100" onchange="updateHotelBox()">
+      <input id="hotel-price" type="number" min="0" step="0.01" value="100" oninput="updateHotelBox()" onchange="updateHotelBox()">
     </div>
 
     <div>
@@ -1487,7 +1487,7 @@ input::placeholder{
   </div>
 
   <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;">
-    <input type="checkbox" id="hotel-disable">
+    <input type="checkbox" id="hotel-disable" onchange="updateHotelBox()">
     <span>Keine Hotelübernachtung erforderlich</span>
   </label>
 </div>
@@ -2984,6 +2984,8 @@ function getWorkability(mode, dir){
 
 
 function renderPage2Summary(){
+  updateHotelBox();
+
   const {persons, dest, bahn, flug, auto} = getModeData();
   const hotel = getHotelData();
 
