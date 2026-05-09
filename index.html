@@ -992,7 +992,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 
     <div class="hint">
       Öffne zuerst die Google-Flights-Suche, wähle eine passende Verbindung aus und trage anschließend Abflugzeit, Ankunftszeit und Flugpreis ein.
-      Für den Test sind Hinreise 21.07.2026 Ankunft 13:00 Uhr und Rückreise 22.07.2026 ab 15:00 Uhr vorbelegt.
+      Für den Test sind Hinreise 21.07.2026 Ankunft 13:00 Uhr und Rückreise 22.07.2026 ab 15:00 Uhr vorbelegt. Hin- und Rückflug werden jeweils separat als einfache Strecke gesucht.
     </div>
 
     <div class="trip-block">
@@ -1901,14 +1901,15 @@ function setupFlightSearch(zielRaw, hinDate, rueckDate){
   document.getElementById("flug-rueck-from").textContent = targetName;
   document.getElementById("flug-rueck-to").textContent = `${fromName} (${fromIata})`;
 
-  // Google Flights verarbeitet Hin- und Rückflug als eine gemeinsame Roundtrip-Suche.
-  // Deshalb zeigen beide Buttons auf dieselbe zuverlässige Such-URL.
-  const googleFlightsUrl = buildGoogleFlightsUrl(fromIata, targetIata, hinDate, rueckDate);
+  // Analog zur Bahn: jede Strecke wird separat gesucht.
+  // Hinflug = einfache Strecke Start → Ziel, Rückflug = einfache Strecke Ziel → Start.
+  const hinUrl = buildGoogleFlightsUrl(fromIata, targetIata, hinDate, "");
+  const rueckUrl = buildGoogleFlightsUrl(targetIata, fromIata, rueckDate, "");
 
-  document.getElementById("flug-hin-link").href = googleFlightsUrl;
-  document.getElementById("flug-hin-link").title = googleFlightsUrl;
-  document.getElementById("flug-rueck-link").href = googleFlightsUrl;
-  document.getElementById("flug-rueck-link").title = googleFlightsUrl;
+  document.getElementById("flug-hin-link").href = hinUrl;
+  document.getElementById("flug-hin-link").title = hinUrl;
+  document.getElementById("flug-rueck-link").href = rueckUrl;
+  document.getElementById("flug-rueck-link").title = rueckUrl;
 
 }
 
