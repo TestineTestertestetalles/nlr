@@ -908,6 +908,91 @@ input[type=date],input[type=time]{color-scheme:dark}
   .stepline{width:35px;}
 }
 
+
+.compare-controls{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin:18px 0;
+}
+.compare-control{
+  border:1.5px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.045);
+  color:var(--text);
+  border-radius:12px;
+  padding:12px 14px;
+  font-family:inherit;
+  font-weight:900;
+  cursor:pointer;
+}
+.compare-control.active{
+  border-color:rgba(251,191,36,.65);
+  background:rgba(251,191,36,.10);
+  color:var(--gold);
+}
+.option-card.best{
+  box-shadow:0 0 0 2px rgba(251,191,36,.55), 0 16px 45px rgba(0,0,0,.18);
+}
+.rank-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  font-weight:900;
+  margin-right:8px;
+}
+.best-label{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-top:10px;
+  padding:5px 10px;
+  border-radius:999px;
+  background:rgba(251,191,36,.12);
+  border:1px solid rgba(251,191,36,.30);
+  color:var(--gold);
+  font-size:11px;
+  font-weight:900;
+}
+.option-kpis{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+}
+.option-kpi{
+  padding:8px;
+  border-radius:10px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.07);
+}
+.option-kpi-label{
+  font-size:10px;
+  color:var(--muted);
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin-bottom:4px;
+}
+.option-kpi-value{
+  font-size:14px;
+  font-weight:900;
+}
+.score-note{
+  margin:8px 0 18px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.5;
+}
+@media(max-width:760px){
+  .compare-controls{grid-template-columns:1fr;}
+  .option-kpis{grid-template-columns:1fr;}
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -1345,6 +1430,13 @@ input[type=date],input[type=time]{color-scheme:dark}
       <div class="page-title">Optionenvergleich</div>
       <div class="page-sub">Vergleichen Sie die möglichen Reiseoptionen inklusive Transferzeiten und Gesamtkosten.</div>
     </div>
+
+    <div class="compare-controls" id="compare-controls">
+      <button class="compare-control active" type="button" data-mode="balanced" onclick="setCompareMode('balanced')">⚖️ Ausgeglichen</button>
+      <button class="compare-control" type="button" data-mode="cheap" onclick="setCompareMode('cheap')">💶 Möglichst günstig</button>
+      <button class="compare-control" type="button" data-mode="fast" onclick="setCompareMode('fast')">⚡ Möglichst schnell</button>
+    </div>
+    <div class="score-note" id="score-note">Sortierung: Ausgeglichen bewertet Kosten und Zeit gleich stark.</div>
 
     <div id="option-list" class="option-list"></div>
 
@@ -1954,6 +2046,8 @@ function updateTransportUi(){
   });
 }
 
+
+let compareMode = "balanced";
 
 const tripState = {
   persons: 1,
@@ -2778,132 +2872,255 @@ function renderPage2Summary(){
   document.getElementById("s2-entries").innerHTML = entries.join("") || `<div class="info-strip">Noch keine ausgefüllten Verkehrsmittel vorhanden.</div>`;
 }
 
+
 function optionCostRows(rows, total){
   return `
     ${rows.map(r => `<div class="cost-row"><span>${r[0]}</span><strong>${r[1]}</strong></div>`).join("")}
-    <div class="cost-total"><div class="cost-total-label">Gesamtkosten</div><div class="cost-total-value">${formatEuro(total)}</div></div>
+    <div class="cost-total"><div class="cost-total-label">Gesamtkosten inkl. Hotel</div><div class="cost-total-value">${formatEuro(total)}</div></div>
   `;
 }
 
-function renderOptionCard(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, total){
+function optionScore(options, option){
+  const minCost = Math.min(...options.map(o => o.totalCost));
+  const maxCost = Math.max(...options.map(o => o.totalCost));
+  const minTime = Math.min(...options.map(o => o.totalTime));
+  const maxTime = Math.max(...options.map(o => o.totalTime));
+
+  const costNorm = maxCost === minCost ? 0 : (option.totalCost - minCost) / (maxCost - minCost);
+  const timeNorm = maxTime === minTime ? 0 : (option.totalTime - minTime) / (maxTime - minTime);
+
+  if(compareMode === "cheap") return costNorm;
+  if(compareMode === "fast") return timeNorm;
+  return (costNorm * 0.5) + (timeNorm * 0.5);
+}
+
+function sortOptions(options){
+  const scored = options.map(o => ({...o, score: optionScore(options, o)}));
+
+  if(compareMode === "cheap"){
+    return scored.sort((a,b) => a.totalCost - b.totalCost || a.totalTime - b.totalTime);
+  }
+
+  if(compareMode === "fast"){
+    return scored.sort((a,b) => a.totalTime - b.totalTime || a.totalCost - b.totalCost);
+  }
+
+  return scored.sort((a,b) => a.score - b.score || a.totalCost - b.totalCost || a.totalTime - b.totalTime);
+}
+
+function setCompareMode(mode){
+  compareMode = mode;
+
+  document.querySelectorAll(".compare-control").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+
+  const note = document.getElementById("score-note");
+  if(note){
+    note.textContent = mode === "cheap"
+      ? "Sortierung: niedrigste Gesamtkosten zuerst."
+      : mode === "fast"
+        ? "Sortierung: geringste Gesamtzeit zuerst."
+        : "Sortierung: Ausgeglichen bewertet Kosten und Zeit gleich stark.";
+  }
+
+  renderComparePage();
+}
+
+function renderOptionCard(option, rank){
+  const best = rank === 1;
   return `
-    <section class="option-card ${kind}">
+    <section class="option-card ${option.kind} ${best ? "best" : ""}">
       <div class="option-grid">
         <div class="option-side">
-          <div class="option-title"><span class="accent">${title}</span></div>
-          <div class="option-route">${route}</div>
-          <span class="option-badge">Hin & Rück</span>
+          <div class="option-title">
+            <span class="rank-badge">${rank}</span>
+            <span class="accent">${option.title}</span>
+          </div>
+          <div class="option-route">${option.route}</div>
+          <span class="option-badge">${option.badge || "Hin & Rück"}</span>
+          ${best ? `<div class="best-label">⭐ Beste Option nach aktueller Auswahl</div>` : ""}
+          <div class="option-kpis">
+            <div class="option-kpi">
+              <div class="option-kpi-label">Gesamtzeit</div>
+              <div class="option-kpi-value">${dur(option.totalTime)}</div>
+            </div>
+            <div class="option-kpi">
+              <div class="option-kpi-label">Gesamtkosten</div>
+              <div class="option-kpi-value">${formatEuro(option.totalCost)}</div>
+            </div>
+          </div>
         </div>
         <div class="option-middle">
           <div class="option-leg">
-            <div class="option-leg-title accent">${hinTitle}</div>
-            <div class="option-times">${hinTimes}</div>
-            <div class="option-transfer">${hinTransfer}</div>
+            <div class="option-leg-title accent">${option.hinTitle}</div>
+            <div class="option-times">${option.hinTimes}</div>
+            <div class="option-transfer">${option.hinTransfer}</div>
           </div>
           <div class="option-leg">
-            <div class="option-leg-title accent">${rueckTitle}</div>
-            <div class="option-times">${rueckTimes}</div>
-            <div class="option-transfer">${rueckTransfer}</div>
+            <div class="option-leg-title accent">${option.rueckTitle}</div>
+            <div class="option-times">${option.rueckTimes}</div>
+            <div class="option-transfer">${option.rueckTransfer}</div>
           </div>
         </div>
-        <div class="option-cost">${optionCostRows(costRows,total)}</div>
+        <div class="option-cost">${optionCostRows(option.costRows, option.totalCost)}</div>
       </div>
     </section>
   `;
 }
 
+function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, travelCost, hotelCost, totalTime, badge){
+  return {
+    kind,
+    title,
+    route,
+    hinTitle,
+    hinTimes,
+    hinTransfer,
+    rueckTitle,
+    rueckTimes,
+    rueckTransfer,
+    costRows: [...costRows, ["Hotel", formatEuro(hotelCost)]],
+    travelCost,
+    hotelCost,
+    totalCost: travelCost + hotelCost,
+    totalTime,
+    badge
+  };
+}
+
 function renderComparePage(){
   const {persons, bahn, flug, auto} = getModeData();
   const hotel = getHotelData();
+  const hotelCost = hotel.active ? hotel.total : 0;
   const options = [];
 
   if(bahn.active){
-    options.push(renderOptionCard(
+    const hinRide = timeDiffMin(bahn.hinDep,bahn.hinArr);
+    const rueckRide = timeDiffMin(bahn.rueckDep,bahn.rueckArr);
+    const hinTransferTotal = bahn.transferHin + bahn.buffer;
+    const rueckTransferTotal = bahn.transferRueck + bahn.buffer;
+    const travelCost = (bahn.hinPrice + bahn.rueckPrice + bahn.seatHin + bahn.seatRueck) * persons;
+    const totalTime = hinRide + rueckRide + hinTransferTotal + rueckTransferTotal;
+
+    options.push(createOption(
       "train",
       "🚆 Bahn",
       `${bahn.hinFrom} ↔<br>${bahn.hinTo}`,
       "Hinfahrt",
-      `${bahn.hinDep || "—"} → ${bahn.hinArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(timeDiffMin(bahn.hinDep,bahn.hinArr))}</span>`,
-      `Transfer + Puffer<br>${bahn.hinFrom} → Bahnhof<br>${bahn.transferHin} Min + ${bahn.buffer} Min`,
+      `${bahn.hinDep || "—"} → ${bahn.hinArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(hinRide)}</span>`,
+      `Transfer + Puffer<br>${bahn.hinFrom} → Bahnhof<br>${bahn.transferHin} Min + ${bahn.buffer} Min = <strong>${hinTransferTotal} Min</strong>`,
       "Rückfahrt",
-      `${bahn.rueckDep || "—"} → ${bahn.rueckArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(timeDiffMin(bahn.rueckDep,bahn.rueckArr))}</span>`,
-      `Transfer + Puffer<br>Ziel → ${bahn.rueckFrom}<br>${bahn.transferRueck} Min + ${bahn.buffer} Min`,
+      `${bahn.rueckDep || "—"} → ${bahn.rueckArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(rueckRide)}</span>`,
+      `Transfer + Puffer<br>Ziel → ${bahn.rueckFrom}<br>${bahn.transferRueck} Min + ${bahn.buffer} Min = <strong>${rueckTransferTotal} Min</strong>`,
       [["Tickets", formatEuro((bahn.hinPrice+bahn.rueckPrice)*persons)],["Sitzplatz", formatEuro((bahn.seatHin+bahn.seatRueck)*persons)]],
-      bahn.total
+      travelCost,
+      hotelCost,
+      totalTime
     ));
   }
 
   if(flug.active){
-    options.push(renderOptionCard(
+    const hinFlight = timeDiffMin(flug.hinDep,flug.hinArr);
+    const rueckFlight = timeDiffMin(flug.rueckDep,flug.rueckArr);
+    const hinTransferTotal = flug.transferHin + flug.buffer;
+    const rueckTransferTotal = flug.transferRueck + flug.buffer;
+    const travelCost = (flug.hinPrice + flug.rueckPrice + flug.bagHin + flug.bagRueck) * persons;
+    const totalTime = hinFlight + rueckFlight + hinTransferTotal + rueckTransferTotal;
+
+    options.push(createOption(
       "flight",
       "✈️ Flug",
       `${flug.hinFrom} ↔<br>${flug.hinTo}`,
       "Hinflug",
-      `${flug.hinDep || "—"} → ${flug.hinArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(timeDiffMin(flug.hinDep,flug.hinArr))}</span>`,
-      `Transfer + Puffer<br>Start → Flughafen<br>${flug.transferHin} Min + ${flug.buffer} Min`,
+      `${flug.hinDep || "—"} → ${flug.hinArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(hinFlight)}</span>`,
+      `Transfer + Puffer<br>Start → Flughafen<br>${flug.transferHin} Min + ${flug.buffer} Min = <strong>${hinTransferTotal} Min</strong>`,
       "Rückflug",
-      `${flug.rueckDep || "—"} → ${flug.rueckArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(timeDiffMin(flug.rueckDep,flug.rueckArr))}</span>`,
-      `Transfer + Puffer<br>Ziel → Flughafen<br>${flug.transferRueck} Min + ${flug.buffer} Min`,
+      `${flug.rueckDep || "—"} → ${flug.rueckArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(rueckFlight)}</span>`,
+      `Transfer + Puffer<br>Ziel → Flughafen<br>${flug.transferRueck} Min + ${flug.buffer} Min = <strong>${rueckTransferTotal} Min</strong>`,
       [["Flugtickets", formatEuro((flug.hinPrice+flug.rueckPrice)*persons)],["Gepäck", formatEuro((flug.bagHin+flug.bagRueck)*persons)]],
-      flug.total
+      travelCost,
+      hotelCost,
+      totalTime
     ));
   }
 
   if(auto.active){
-    options.push(renderOptionCard(
+    const transferStart = auto.transfer + auto.startBuffer;
+    const transferReturn = auto.transfer + auto.endBuffer;
+    const travelCost = auto.price;
+    const totalTime = transferStart + transferReturn;
+
+    options.push(createOption(
       "auto",
       "🚗 Auto / Fuhrpark",
       `${auto.from} ↔<br>${auto.to}`,
       "Start",
       `Fahrzeug übernehmen`,
-      `Transfer + Übergabe<br>Start → Fuhrpark<br>${auto.transfer} Min + ${auto.startBuffer} Min`,
+      `Transfer + Übergabe<br>Start → Fuhrpark<br>${auto.transfer} Min + ${auto.startBuffer} Min = <strong>${transferStart} Min</strong>`,
       "Rückkehr",
       `Fahrzeug zurückgeben`,
-      `Rückgabe + Reinigung<br>Fuhrpark → Start<br>${auto.transfer} Min + ${auto.endBuffer} Min`,
+      `Rückgabe + Reinigung<br>Fuhrpark → Start<br>${auto.transfer} Min + ${auto.endBuffer} Min = <strong>${transferReturn} Min</strong>`,
       [["Fahrzeugkosten", formatEuro(auto.price)]],
-      auto.total
+      travelCost,
+      hotelCost,
+      totalTime
     ));
   }
 
   if(bahn.active && flug.active){
-    const combo1 = (bahn.hinPrice + bahn.seatHin + flug.rueckPrice + flug.bagRueck) * persons;
-    options.push(renderOptionCard(
+    const bahnHinRide = timeDiffMin(bahn.hinDep,bahn.hinArr);
+    const flugRueckRide = timeDiffMin(flug.rueckDep,flug.rueckArr);
+    const combo1Cost = (bahn.hinPrice + bahn.seatHin + flug.rueckPrice + flug.bagRueck) * persons;
+    const combo1Time = bahnHinRide + flugRueckRide + (bahn.transferHin + bahn.buffer) + (flug.transferRueck + flug.buffer);
+
+    options.push(createOption(
       "combo1",
       "🚆 → ✈️ Kombi 1",
       `${bahn.hinFrom} → ${bahn.hinTo}<br>${flug.rueckFrom} → ${flug.rueckTo}`,
       "Hinfahrt Bahn",
-      `${bahn.hinDep || "—"} → ${bahn.hinArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(timeDiffMin(bahn.hinDep,bahn.hinArr))}</span>`,
-      `Transfer + Puffer<br>${bahn.transferHin} Min + ${bahn.buffer} Min`,
+      `${bahn.hinDep || "—"} → ${bahn.hinArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(bahnHinRide)}</span>`,
+      `Transfer + Puffer<br>${bahn.transferHin} Min + ${bahn.buffer} Min = <strong>${bahn.transferHin + bahn.buffer} Min</strong>`,
       "Rückflug",
-      `${flug.rueckDep || "—"} → ${flug.rueckArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(timeDiffMin(flug.rueckDep,flug.rueckArr))}</span>`,
-      `Transfer + Puffer<br>${flug.transferRueck} Min + ${flug.buffer} Min`,
+      `${flug.rueckDep || "—"} → ${flug.rueckArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(flugRueckRide)}</span>`,
+      `Transfer + Puffer<br>${flug.transferRueck} Min + ${flug.buffer} Min = <strong>${flug.transferRueck + flug.buffer} Min</strong>`,
       [["Bahn", formatEuro((bahn.hinPrice+bahn.seatHin)*persons)],["Flug", formatEuro((flug.rueckPrice+flug.bagRueck)*persons)]],
-      combo1
+      combo1Cost,
+      hotelCost,
+      combo1Time,
+      "Bahn hin · Flug zurück"
     ));
 
-    const combo2 = (flug.hinPrice + flug.bagHin + bahn.rueckPrice + bahn.seatRueck) * persons;
-    options.push(renderOptionCard(
+    const flugHinRide = timeDiffMin(flug.hinDep,flug.hinArr);
+    const bahnRueckRide = timeDiffMin(bahn.rueckDep,bahn.rueckArr);
+    const combo2Cost = (flug.hinPrice + flug.bagHin + bahn.rueckPrice + bahn.seatRueck) * persons;
+    const combo2Time = flugHinRide + bahnRueckRide + (flug.transferHin + flug.buffer) + (bahn.transferRueck + bahn.buffer);
+
+    options.push(createOption(
       "combo2",
       "✈️ → 🚆 Kombi 2",
       `${flug.hinFrom} → ${flug.hinTo}<br>${bahn.rueckFrom} → ${bahn.rueckTo}`,
       "Hinflug",
-      `${flug.hinDep || "—"} → ${flug.hinArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(timeDiffMin(flug.hinDep,flug.hinArr))}</span>`,
-      `Transfer + Puffer<br>${flug.transferHin} Min + ${flug.buffer} Min`,
+      `${flug.hinDep || "—"} → ${flug.hinArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(flugHinRide)}</span>`,
+      `Transfer + Puffer<br>${flug.transferHin} Min + ${flug.buffer} Min = <strong>${flug.transferHin + flug.buffer} Min</strong>`,
       "Rückfahrt Bahn",
-      `${bahn.rueckDep || "—"} → ${bahn.rueckArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(timeDiffMin(bahn.rueckDep,bahn.rueckArr))}</span>`,
-      `Transfer + Puffer<br>${bahn.transferRueck} Min + ${bahn.buffer} Min`,
+      `${bahn.rueckDep || "—"} → ${bahn.rueckArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(bahnRueckRide)}</span>`,
+      `Transfer + Puffer<br>${bahn.transferRueck} Min + ${bahn.buffer} Min = <strong>${bahn.transferRueck + bahn.buffer} Min</strong>`,
       [["Flug", formatEuro((flug.hinPrice+flug.bagHin)*persons)],["Bahn", formatEuro((bahn.rueckPrice+bahn.seatRueck)*persons)]],
-      combo2
+      combo2Cost,
+      hotelCost,
+      combo2Time,
+      "Flug hin · Bahn zurück"
     ));
   }
 
-  const hotelInfo = hotel.active
-    ? `<div class="info-strip"><span>🏨</span><span>Zusätzliche Hotelkosten: <strong>${formatEuro(hotel.total)}</strong> (${hotel.nights} Nacht/Nächte à ${formatEuro(hotel.price)}).</span></div>`
-    : "";
-
+  const sorted = sortOptions(options);
   document.getElementById("option-list").innerHTML =
-    hotelInfo + (options.join("") || `<div class="info-strip">Noch keine Optionen verfügbar.</div>`);
+    sorted.length
+      ? sorted.map((option, idx) => renderOptionCard(option, idx + 1)).join("")
+      : `<div class="info-strip">Noch keine Optionen verfügbar.</div>`;
 }
+
 
 function showSummaryOnly(){
   document.getElementById("input-page").classList.add("hidden");
