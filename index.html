@@ -763,6 +763,26 @@ input[type=date],input[type=time]{color-scheme:dark}
   align-items:center;
 }
 
+
+.auto-card{
+  display:none;
+  border-color:rgba(251,191,36,.32);
+}
+.auto-card .trip-block{
+  background:rgba(251,191,36,0.045);
+  border-color:rgba(251,191,36,0.22);
+}
+.auto-card .trip-head{
+  color:var(--gold);
+}
+.summary-button-wrap{
+  display:none;
+  margin-top:14px;
+}
+.summary-button-wrap.show{
+  display:block;
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -1066,7 +1086,33 @@ input[type=date],input[type=time]{color-scheme:dark}
     </div>
   </section>
 
-  <button class="btn-primary" type="button" onclick="showSummaryPage()">Zusammenfassung anzeigen →</button>
+
+  <section id="auto-card" class="card auto-card">
+    <div class="ctitle"><span class="cdot" style="background:var(--gold)"></span> Auto / Fuhrpark eintragen</div>
+
+    <div class="hint">
+      Für die Auto-Option wird zunächst nur der Gesamtpreis für das Fahrzeug erfasst. Auto gilt immer für Hin- und Rückreise zusammen.
+    </div>
+
+    <div class="trip-block">
+      <div class="trip-head">🚗 Auto / Fuhrpark</div>
+      <div class="route-line">
+        <span id="auto-from">Start/Fuhrpark</span>
+        <span class="arrow">↔</span>
+        <span id="auto-to">Ziel</span>
+      </div>
+
+      <div class="field">
+        <label>Fahrzeugkosten gesamt (€)</label>
+        <input id="auto-price" type="number" min="0" step="0.01" placeholder="z. B. 180,00">
+      </div>
+      <div class="small-note">Ein Betrag für das Fahrzeug insgesamt; unabhängig von der Anzahl Reisender.</div>
+    </div>
+  </section>
+
+  <div id="summary-button-wrap" class="summary-button-wrap">
+    <button class="btn-primary" type="button" onclick="showSummaryPage()">Zusammenfassung anzeigen →</button>
+  </div>
   </main>
 
   <main id="summary-page" class="summary-page">
@@ -1147,6 +1193,10 @@ input[type=date],input[type=time]{color-scheme:dark}
           <tr>
             <td>Gepäck Rückflug</td>
             <td id="detail-baggage-rueck">0,00 €</td>
+          </tr>
+          <tr>
+            <td>Auto / Fuhrpark</td>
+            <td id="detail-auto-price">0,00 €</td>
           </tr>
           <tr>
             <td>Anzahl Reisende</td>
@@ -1878,6 +1928,74 @@ function initBaggage(){
   }
 }
 
+
+function hasFilledTravelMode(){
+  const values = [
+    parseEuroInput("bahn-hin-price"),
+    parseEuroInput("bahn-rueck-price"),
+    parseEuroInput("flug-hin-price"),
+    parseEuroInput("flug-rueck-price"),
+    parseEuroInput("auto-price")
+  ];
+
+  const extrasSelected =
+    !!document.getElementById("seat-hin")?.checked ||
+    !!document.getElementById("seat-rueck")?.checked ||
+    !!document.getElementById("baggage-hin")?.checked ||
+    !!document.getElementById("baggage-rueck")?.checked;
+
+  return values.some(v => v > 0) || extrasSelected;
+}
+
+function updateSummaryButtonVisibility(){
+  const wrap = document.getElementById("summary-button-wrap");
+  if(!wrap) return;
+  wrap.classList.toggle("show", hasFilledTravelMode());
+}
+
+function setupAutoOption(zielRaw){
+  const autoCard = document.getElementById("auto-card");
+  if(!autoCard) return;
+
+  if(!transportState.auto.active){
+    autoCard.style.display = "none";
+    return;
+  }
+
+  const autoSelect = document.getElementById("auto-station");
+  const from = autoSelect && autoSelect.value ? autoSelect.value : "Fuhrpark";
+  const zielName = zielRaw ? zielRaw.split("|")[0] : "Ziel";
+
+  document.getElementById("auto-from").textContent = from;
+  document.getElementById("auto-to").textContent = zielName;
+  autoCard.style.display = "block";
+}
+
+function initSummaryButtonWatchers(){
+  const ids = [
+    "bahn-hin-price",
+    "bahn-rueck-price",
+    "flug-hin-price",
+    "flug-rueck-price",
+    "auto-price",
+    "seat-hin",
+    "seat-rueck",
+    "baggage-hin",
+    "baggage-rueck"
+  ];
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if(el){
+      el.addEventListener("input", updateSummaryButtonVisibility);
+      el.addEventListener("change", updateSummaryButtonVisibility);
+    }
+  });
+
+  updateSummaryButtonVisibility();
+}
+
+
 function setupFlightSearch(zielRaw, hinDate, rueckDate){
   const flightCard = document.getElementById("flight-card");
   if(!flightCard) return;
@@ -1999,6 +2117,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initTravelers();
   initSeatReservations();
   initBaggage();
+  initSummaryButtonWatchers();
 });
 
 function formatDateForDb(date){
@@ -2125,6 +2244,9 @@ async function showBahnSearch(){
   document.getElementById("rueck-db-link").title = rueckUrl;
 
   setupFlightSearch(zielRaw, hinDate, rueckDate);
+  setupAutoOption(zielRaw);
+  initSummaryButtonWatchers();
+  updateSummaryButtonVisibility();
 
   document.getElementById("bahn-card").scrollIntoView({behavior:"smooth", block:"start"});
 }
@@ -2171,7 +2293,10 @@ function updateSummaryPage(){
   const baggageHin = flugActive && document.getElementById("baggage-hin")?.checked ? tripState.baggagePrice : 0;
   const baggageRueck = flugActive && document.getElementById("baggage-rueck")?.checked ? tripState.baggagePrice : 0;
 
-  const ticketTotal = (hinPrice + rueckPrice + flugHinPrice + flugRueckPrice) * persons;
+  const autoActive = !!transportState.auto.active && document.getElementById("auto-card")?.style.display !== "none";
+  const autoPrice = autoActive ? parseEuroInput("auto-price") : 0;
+
+  const ticketTotal = (hinPrice + rueckPrice + flugHinPrice + flugRueckPrice) * persons + autoPrice;
   const extrasTotal = (hinSeat + rueckSeat + baggageHin + baggageRueck) * persons;
   const total = ticketTotal + extrasTotal;
 
@@ -2183,9 +2308,18 @@ function updateSummaryPage(){
   const routeParts = [];
   if(bahnActive) routeParts.push(`🚆 <strong>${hinFrom} → ${hinTo}</strong>`);
   if(flugActive) routeParts.push(`✈️ <strong>${flugFrom} → ${flugTo}</strong>`);
+  if(autoActive){
+    const autoFrom = document.getElementById("auto-from")?.textContent || "Fuhrpark";
+    const autoTo = document.getElementById("auto-to")?.textContent || "Ziel";
+    routeParts.push(`🚗 <strong>${autoFrom} ↔ ${autoTo}</strong>`);
+  }
 
   document.getElementById("summary-route").innerHTML = routeParts.join("<br>") || "—";
-  document.getElementById("summary-title").textContent = flugActive && bahnActive ? "Bahn & Flug" : flugActive ? "Flugreise" : "Bahnreise";
+  const activeNames = [];
+  if(bahnActive) activeNames.push("Bahn");
+  if(flugActive) activeNames.push("Flug");
+  if(autoActive) activeNames.push("Auto");
+  document.getElementById("summary-title").textContent = activeNames.length ? activeNames.join(" & ") : "Reisezusammenfassung";
 
   document.getElementById("sum-ticket").textContent = formatEuro(ticketTotal);
   document.getElementById("sum-seat").textContent = formatEuro(extrasTotal);
@@ -2200,6 +2334,7 @@ function updateSummaryPage(){
   document.getElementById("detail-flug-rueck-price").textContent = flugActive ? `${formatEuro(flugRueckPrice * persons)} (${formatEuro(flugRueckPrice)} × ${persons})` : "nicht ausgewählt";
   document.getElementById("detail-baggage-hin").textContent = baggageHin ? `${formatEuro(baggageHin * persons)} (${formatEuro(baggageHin)} × ${persons})` : "nicht ausgewählt";
   document.getElementById("detail-baggage-rueck").textContent = baggageRueck ? `${formatEuro(baggageRueck * persons)} (${formatEuro(baggageRueck)} × ${persons})` : "nicht ausgewählt";
+  document.getElementById("detail-auto-price").textContent = autoActive ? formatEuro(autoPrice) : "nicht ausgewählt";
   document.getElementById("detail-persons").textContent = String(persons);
 }
 
