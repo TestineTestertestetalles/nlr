@@ -783,6 +783,44 @@ input[type=date],input[type=time]{color-scheme:dark}
   display:block;
 }
 
+
+.transfer-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:16px;
+  font-size:13px;
+}
+.transfer-table th,
+.transfer-table td{
+  padding:9px 10px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  text-align:left;
+  vertical-align:top;
+}
+.transfer-table th{
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.transfer-table td:last-child,
+.transfer-table th:last-child{
+  text-align:right;
+  font-weight:800;
+}
+.transfer-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:3px 8px;
+  border-radius:999px;
+  background:rgba(96,165,250,.10);
+  border:1px solid rgba(96,165,250,.22);
+  color:#bfdbfe;
+  font-size:11px;
+  font-weight:800;
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -824,8 +862,8 @@ input[type=date],input[type=time]{color-scheme:dark}
         <label>Ziel aus interner Datenbank</label>
         <select id="ziel">
           <option value="">— Ziel wählen —</option>
-          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Neckarpark|Stuttgart Neckarpark|8006743|STR">MHP Arena Stuttgart · Mercedesstraße 87, 70372 Stuttgart</option>
-          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf|8000105|FRA">Deutsche Bank Park Frankfurt · Mörfelder Landstraße 362, 60528 Frankfurt am Main</option>
+          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Neckarpark|Stuttgart Neckarpark|8006743|STR|Stuttgart Airport|10|35">MHP Arena Stuttgart · Mercedesstraße 87, 70372 Stuttgart</option>
+          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf|8000105|FRA|Frankfurt Airport|12|20">Deutsche Bank Park Frankfurt · Mörfelder Landstraße 362, 60528 Frankfurt am Main</option>
         </select>
       </div>
       <div class="field">
@@ -1204,6 +1242,31 @@ input[type=date],input[type=time]{color-scheme:dark}
           </tr>
         </tbody>
       </table>
+
+
+      <div class="summary-note" style="margin-top:16px;">
+        <span>⏱️</span>
+        <span>Transfer- und Pufferzeiten werden je aktivem Verkehrsmittel berücksichtigt: Bahn +15 Min, Flug +90 Min, Fuhrpark Start +10 Min und Rückgabe +20 Min.</span>
+      </div>
+
+      <table class="transfer-table">
+        <thead>
+          <tr>
+            <th>Verkehrsmittel</th>
+            <th>Strecke</th>
+            <th>Transfer</th>
+            <th>Puffer</th>
+            <th>Gesamt</th>
+          </tr>
+        </thead>
+        <tbody id="transfer-summary-body">
+        </tbody>
+      </table>
+
+      <div class="summary-note" style="margin-top:16px;">
+        <span>📍</span>
+        <span id="destination-meta-summary">Zieldaten werden nach Auswahl angezeigt.</span>
+      </div>
 
       <div class="summary-actions">
         <button class="btn-secondary" type="button" onclick="showInputPage()">← Angaben bearbeiten</button>
@@ -1930,21 +1993,23 @@ function initBaggage(){
 
 
 function hasFilledTravelMode(){
-  const values = [
-    parseEuroInput("bahn-hin-price"),
-    parseEuroInput("bahn-rueck-price"),
-    parseEuroInput("flug-hin-price"),
-    parseEuroInput("flug-rueck-price"),
-    parseEuroInput("auto-price")
-  ];
-
-  const extrasSelected =
+  const bahnFilled = transportState.bahn.active && (
+    parseEuroInput("bahn-hin-price") > 0 ||
+    parseEuroInput("bahn-rueck-price") > 0 ||
     !!document.getElementById("seat-hin")?.checked ||
-    !!document.getElementById("seat-rueck")?.checked ||
-    !!document.getElementById("baggage-hin")?.checked ||
-    !!document.getElementById("baggage-rueck")?.checked;
+    !!document.getElementById("seat-rueck")?.checked
+  );
 
-  return values.some(v => v > 0) || extrasSelected;
+  const flugFilled = transportState.flug.active && (
+    parseEuroInput("flug-hin-price") > 0 ||
+    parseEuroInput("flug-rueck-price") > 0 ||
+    !!document.getElementById("baggage-hin")?.checked ||
+    !!document.getElementById("baggage-rueck")?.checked
+  );
+
+  const autoFilled = transportState.auto.active && parseEuroInput("auto-price") > 0;
+
+  return bahnFilled || flugFilled || autoFilled;
 }
 
 function updateSummaryButtonVisibility(){
@@ -1996,6 +2061,88 @@ function initSummaryButtonWatchers(){
 }
 
 
+
+function getSelectedDestinationData(){
+  const raw = document.getElementById("ziel")?.value || "";
+  if(!raw) return null;
+
+  const parts = raw.split("|");
+  return {
+    name: parts[0] || "",
+    address: parts[1] || "",
+    trainStation: parts[2] || parts[0] || "",
+    trainLabel: parts[3] || parts[2] || "",
+    trainEva: parts[4] || "",
+    airportIata: parts[5] || "",
+    airportName: parts[6] || "",
+    trainTransferMin: Number(parts[7] || 0),
+    airportTransferMin: Number(parts[8] || 0)
+  };
+}
+
+function getTransferMinutes(type){
+  const val = Number(document.getElementById(`${type}-min`)?.value || 0);
+  return Number.isFinite(val) ? val : 0;
+}
+
+function addTransferRow(rows, mode, leg, transfer, buffer){
+  rows.push({
+    mode,
+    leg,
+    transfer,
+    buffer,
+    total: transfer + buffer
+  });
+}
+
+function renderTransferSummary(){
+  const tbody = document.getElementById("transfer-summary-body");
+  if(!tbody) return;
+
+  const dest = getSelectedDestinationData();
+  const rows = [];
+
+  const bahnActive = !!transportState.bahn.active && document.getElementById("bahn-card")?.style.display !== "none";
+  const flugActive = !!transportState.flug.active && document.getElementById("flight-card")?.style.display !== "none";
+  const autoActive = !!transportState.auto.active && document.getElementById("auto-card")?.style.display !== "none";
+
+  if(bahnActive){
+    addTransferRow(rows, "🚆 Bahn", "Hinreise: Start → Startbahnhof", getTransferMinutes("bahn"), 15);
+    addTransferRow(rows, "🚆 Bahn", `Rückreise: Ziel → ${dest?.trainStation || "Zielbahnhof"}`, dest?.trainTransferMin || 0, 15);
+  }
+
+  if(flugActive){
+    addTransferRow(rows, "✈️ Flug", "Hinflug: Start → Startflughafen", getTransferMinutes("flug"), 90);
+    addTransferRow(rows, "✈️ Flug", `Rückflug: Ziel → ${dest?.airportName || dest?.airportIata || "Zielflughafen"}`, dest?.airportTransferMin || 0, 90);
+  }
+
+  if(autoActive){
+    addTransferRow(rows, "🚗 Auto", "Start: Wohnung → Fuhrpark", getTransferMinutes("auto"), 10);
+    addTransferRow(rows, "🚗 Auto", "Rückkehr: Fuhrpark → Wohnung", getTransferMinutes("auto"), 20);
+  }
+
+  tbody.innerHTML = rows.length
+    ? rows.map(r => `
+        <tr>
+          <td>${r.mode}</td>
+          <td>${r.leg}</td>
+          <td>${r.transfer} Min</td>
+          <td>${r.buffer} Min</td>
+          <td><span class="transfer-pill">${r.total} Min</span></td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="5">Keine Transferzeiten, da noch kein Verkehrsmittel befüllt wurde.</td></tr>`;
+
+  const meta = document.getElementById("destination-meta-summary");
+  if(meta && dest){
+    meta.innerHTML =
+      `<strong>${dest.name}</strong><br>` +
+      `Nächstgelegene Haltestelle: ${dest.trainStation} · ${dest.trainTransferMin} Min<br>` +
+      `Nächstgelegener Flughafen: ${dest.airportName || dest.airportIata} (${dest.airportIata}) · ${dest.airportTransferMin} Min`;
+  }
+}
+
+
 function setupFlightSearch(zielRaw, hinDate, rueckDate){
   const flightCard = document.getElementById("flight-card");
   if(!flightCard) return;
@@ -2012,7 +2159,8 @@ function setupFlightSearch(zielRaw, hinDate, rueckDate){
 
   const parts = zielRaw.split("|");
   const targetIata = parts[5] || "";
-  const targetName = targetIata === "STR" ? "Stuttgart Airport (STR)" : targetIata === "FRA" ? "Frankfurt Airport (FRA)" : `Zielflughafen (${targetIata})`;
+  const targetAirportName = parts[6] || "";
+  const targetName = targetAirportName && targetIata ? `${targetAirportName} (${targetIata})` : `Zielflughafen (${targetIata})`;
 
   if(!fromIata || !targetIata){
     flightCard.style.display = "none";
@@ -2195,7 +2343,7 @@ async function showBahnSearch(){
     return;
   }
 
-  if(!bahnStartStation){
+  if(transportState.bahn.active && !bahnStartStation){
     alert("Bitte unter „Verfügbare Verkehrsmittel“ einen Startbahnhof auswählen.");
     return;
   }
@@ -2227,7 +2375,12 @@ async function showBahnSearch(){
     `<span>${seatReservationSummary()}</span><br>` +
     `<span>Bahnlink: ${bahnStartStation}${bahnStartInfo && bahnStartInfo.eva ? " (EVA " + bahnStartInfo.eva + ")" : ""} → ${bahnZielStation}${bahnZielInfo && bahnZielInfo.eva ? " (EVA " + bahnZielInfo.eva + ")" : ""}</span>`;
 
-  document.getElementById("bahn-card").style.display = "block";
+  const bahnCard = document.getElementById("bahn-card");
+  if(transportState.bahn.active){
+    bahnCard.style.display = "block";
+  }else{
+    bahnCard.style.display = "none";
+  }
 
   document.getElementById("hin-from").textContent = bahnStartStation;
   document.getElementById("hin-to").textContent = bahnZielStation;
@@ -2248,7 +2401,12 @@ async function showBahnSearch(){
   initSummaryButtonWatchers();
   updateSummaryButtonVisibility();
 
-  document.getElementById("bahn-card").scrollIntoView({behavior:"smooth", block:"start"});
+  const firstVisible = ["bahn-card","flight-card","auto-card"]
+    .map(id => document.getElementById(id))
+    .find(el => el && el.style.display !== "none");
+  if(firstVisible){
+    firstVisible.scrollIntoView({behavior:"smooth", block:"start"});
+  }
 }
 function parseEuroInput(id){
   const el = document.getElementById(id);
@@ -2336,6 +2494,8 @@ function updateSummaryPage(){
   document.getElementById("detail-baggage-rueck").textContent = baggageRueck ? `${formatEuro(baggageRueck * persons)} (${formatEuro(baggageRueck)} × ${persons})` : "nicht ausgewählt";
   document.getElementById("detail-auto-price").textContent = autoActive ? formatEuro(autoPrice) : "nicht ausgewählt";
   document.getElementById("detail-persons").textContent = String(persons);
+
+  renderTransferSummary();
 }
 
 
