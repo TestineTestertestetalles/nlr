@@ -1194,7 +1194,7 @@ input::placeholder{
           <option value="Mercedes-Benz BKK Wörth|Daimlerstraße 1, 76744 Wörth am Rhein|Karlsruhe Hbf|Karlsruhe Hbf|8000191|FKB|Karlsruhe/Baden-Baden Airport|25|45|49.049|8.255">Mercedes-Benz BKK Wörth · Daimlerstraße 1, 76744 Wörth am Rhein</option>
           <option value="Mercedes-Benz BKK Leinfelden|Fasanenweg 10, 70771 Leinfelden-Echterdingen|Stuttgart Hbf|Stuttgart Hbf|8000096|STR|Stuttgart Airport|25|10|48.699|9.137">Mercedes-Benz BKK Leinfelden · Fasanenweg 10, 70771 Leinfelden-Echterdingen</option>
           <option value="Mercedes-Benz BKK Germersheim|Mercedes-Benz Straße 1, 76726 Germersheim|Karlsruhe Hbf|Karlsruhe Hbf|8000191|FKB|Karlsruhe/Baden-Baden Airport|40|55|49.22|8.381">Mercedes-Benz BKK Germersheim · Mercedes-Benz Straße 1, 76726 Germersheim</option>
-                  <option value="custom">➕ Ziel hinzufügen</option>
+          <option value="custom">➕ Ziel hinzufügen</option>
         </select>
       </div>
       <div class="field">
@@ -1214,9 +1214,49 @@ input::placeholder{
         <input id="rueck-departure-target" type="time" value="15:00">
       </div>
     </div>
+    <div id="custom-target-box" class="custom-target-box" style="display:none;margin-top:16px;">
+      <div class="grid2">
+        <div class="field">
+          <label>Name des Ziels</label>
+          <input id="custom-target-name" type="text" placeholder="z. B. Niederlassung Hamburg">
+        </div>
 
-    
-  </section>
+        <div class="field">
+          <label>Vollständige Anschrift</label>
+          <input id="custom-target-address" type="text" placeholder="Straße Hausnummer, PLZ Ort">
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:14px;">
+        <div class="field">
+          <label>Nächstgelegene Haltestelle</label>
+          <input id="custom-target-station" type="text" placeholder="z. B. Hamburg Hbf">
+        </div>
+
+        <div class="field">
+          <label>Entfernung zur Haltestelle (Min)</label>
+          <input id="custom-target-station-min" type="number" min="0" step="1" placeholder="10">
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:14px;">
+        <div class="field">
+          <label>Nächstgelegener Flughafen</label>
+          <input id="custom-target-airport" type="text" placeholder="z. B. HAM">
+        </div>
+
+        <div class="field">
+          <label>Entfernung zum Flughafen (Min)</label>
+          <input id="custom-target-airport-min" type="number" min="0" step="1" placeholder="35">
+        </div>
+      </div>
+
+      <div class="info-strip" style="margin-top:14px;">
+        <span>ⓘ</span>
+        <span>Für freie Ziele genügt der Name der nächstgelegenen Haltestelle. Wenn die Haltestelle bekannt ist, wird die passende EVA-ID automatisch ergänzt.</span>
+      </div>
+    </div>
+</section>
 <section class="card">
     <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Verfügbare Verkehrsmittel</div>
 
@@ -2599,7 +2639,6 @@ function initSummaryButtonWatchers(){
     "custom-target-name",
     "custom-target-address",
     "custom-target-station",
-    "custom-target-eva",
     "custom-target-station-min",
     "custom-target-airport",
     "custom-target-airport-min"
@@ -2629,11 +2668,13 @@ function toggleCustomTarget(){
 }
 
 function getCustomTargetData(){
+  const stationName = document.getElementById("custom-target-station")?.value || "";
+
   return {
     name: document.getElementById("custom-target-name")?.value || "Freies Ziel",
     address: document.getElementById("custom-target-address")?.value || "",
-    stationName: document.getElementById("custom-target-station")?.value || "",
-    stationEva: document.getElementById("custom-target-eva")?.value || "",
+    stationName,
+    stationEva: stationEvaByName(stationName) || regionalStationByName(stationName)?.eva || "",
     airportCode: document.getElementById("custom-target-airport")?.value || "",
     airportName: document.getElementById("custom-target-airport")?.value || "",
     stationTransferMin: Number(document.getElementById("custom-target-station-min")?.value || 0),
@@ -2664,10 +2705,17 @@ function getCustomTargetRaw(){
 
 function validateCustomTarget(){
   const d = getCustomTargetData();
-  if(!d.name || !d.address || !d.stationName || !d.stationEva || !d.stationTransferMin){
-    alert("Bitte beim freien Ziel mindestens Name, Anschrift, Haltestelle, EVA-ID und Entfernung zur Haltestelle eintragen.");
+
+  if(!d.name || !d.address || !d.stationName || !d.stationTransferMin){
+    alert("Bitte beim freien Ziel mindestens Name, Anschrift, nächstgelegene Haltestelle und Entfernung zur Haltestelle eintragen.");
     return false;
   }
+
+  if(transportState.flug.active && (!d.airportCode || !d.airportTransferMin)){
+    alert("Bitte für die Flugoption auch den nächstgelegenen Flughafen und die Entfernung zum Flughafen eintragen.");
+    return false;
+  }
+
   return true;
 }
 
@@ -3007,8 +3055,10 @@ async function showBahnSearch(){
   const bahnZielStation = zielStation || zielName;
   const bahnZielInfo = stationDbInfoByName(bahnZielStation) || {eva: zielEvaRaw || stationEvaByName(bahnZielStation), x:null, y:null};
 
-  if(transportState.bahn.active && (!bahnZielInfo || !bahnZielInfo.eva)){
-    alert("Für die Zielhaltestelle fehlt die EVA-ID. Bitte Ziel-Datenbank prüfen oder beim freien Ziel eine EVA-ID eintragen.");
+  const isCustomTarget = document.getElementById("ziel")?.value === "custom";
+
+  if(transportState.bahn.active && !isCustomTarget && (!bahnZielInfo || !bahnZielInfo.eva)){
+    alert("Für die Zielhaltestelle fehlt die EVA-ID. Bitte Ziel-Datenbank prüfen.");
     return;
   }
 
@@ -3830,56 +3880,3 @@ function updateSummaryPage(){
 </script>
 </body>
 </html>
-    <div id="custom-target-box" class="custom-target-box" style="display:none;margin-top:16px;">
-      <div class="grid2">
-        <div class="field">
-          <label>Name des Ziels</label>
-          <input id="custom-target-name" type="text" placeholder="z. B. Niederlassung Hamburg">
-        </div>
-
-        <div class="field">
-          <label>Zieltyp</label>
-          <input id="custom-target-type" type="text" placeholder="z. B. Büro, Klinik, Hotel">
-        </div>
-      </div>
-
-      <div class="field" style="margin-top:14px;">
-        <label>Vollständige Anschrift</label>
-        <input id="custom-target-address" type="text" placeholder="Straße Hausnummer, PLZ Ort">
-      </div>
-
-      <div class="grid2" style="margin-top:14px;">
-        <div class="field">
-          <label>Nächstgelegene Haltestelle</label>
-          <input id="custom-target-station" type="text" placeholder="z. B. Hamburg Hbf">
-        </div>
-
-        <div class="field">
-          <label>EVA-ID der Haltestelle</label>
-          <input id="custom-target-eva" type="text" placeholder="z. B. 8002549">
-        </div>
-
-        <div class="field">
-          <label>Entfernung zur Haltestelle (Min)</label>
-          <input id="custom-target-station-min" type="number" min="0" step="1" placeholder="10">
-        </div>
-      </div>
-
-      <div class="grid2" style="margin-top:14px;">
-        <div class="field">
-          <label>Nächstgelegener Flughafen (optional)</label>
-          <input id="custom-target-airport" type="text" placeholder="z. B. HAM">
-        </div>
-
-        <div class="field">
-          <label>Entfernung Flughafen (Min)</label>
-          <input id="custom-target-airport-min" type="number" min="0" step="1" placeholder="35">
-        </div>
-      </div>
-
-      <div class="info-strip" style="margin-top:14px;">
-        <span>ⓘ</span>
-        <span>Freie Ziele nutzen dieselbe Logik wie die interne Zieldatenbank. Für stabile DB-Links ist die EVA-ID der Zielhaltestelle erforderlich.</span>
-      </div>
-    </div>
-
