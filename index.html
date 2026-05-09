@@ -1769,16 +1769,19 @@ function stationLocationRef(name, info){
   Die eigentliche Bahnhofssuche erfolgt weiterhin dynamisch über Overpass.
 */
 const LOCAL_RAIL_STATIONS = [
+  // Zielregionen Mercedes-Benz BKK / interne Ziele – nur Bahnhöfe mit EVA-ID
   {name:"Berlin Hbf", eva:"8011160", lat:52.5256, lon:13.3695},
   {name:"Berlin Südkreuz", eva:"8011113", lat:52.4758, lon:13.3650},
   {name:"Berlin Ostbahnhof", eva:"8010255", lat:52.5103, lon:13.4345},
   {name:"Berlin Gesundbrunnen", eva:"8011102", lat:52.5486, lon:13.3894},
   {name:"Berlin-Spandau", eva:"8010404", lat:52.5347, lon:13.1978},
+  {name:"Berlin Zoologischer Garten", eva:"8010406", lat:52.5072, lon:13.3325},
 
   {name:"Hamburg Hbf", eva:"8002549", lat:53.5527, lon:10.0069},
   {name:"Hamburg-Harburg", eva:"8000147", lat:53.4567, lon:9.9910},
   {name:"Hamburg-Altona", eva:"8002553", lat:53.5526, lon:9.9356},
   {name:"Hamburg Dammtor", eva:"8002548", lat:53.5608, lon:9.9896},
+  {name:"Hamburg-Bergedorf", eva:"8002554", lat:53.4891, lon:10.2069},
 
   {name:"Bremen Hbf", eva:"8000050", lat:53.0835, lon:8.8138},
   {name:"Bremen-Mahndorf", eva:"8007755", lat:53.0347, lon:8.9592},
@@ -1788,6 +1791,7 @@ const LOCAL_RAIL_STATIONS = [
   {name:"Bassum", eva:"8000037", lat:52.8484, lon:8.7320},
   {name:"Kirchweyhe", eva:"8003328", lat:52.9802, lon:8.8573},
   {name:"Barrien", eva:"8000735", lat:52.9398, lon:8.8347},
+  {name:"Twistringen", eva:"8005781", lat:52.7930, lon:8.6415},
 
   {name:"Hannover Hbf", eva:"8000152", lat:52.3768, lon:9.7410},
   {name:"Kassel-Wilhelmshöhe", eva:"8003200", lat:51.3120, lon:9.4470},
@@ -1795,6 +1799,7 @@ const LOCAL_RAIL_STATIONS = [
 
   {name:"Düsseldorf Hbf", eva:"8000085", lat:51.2196, lon:6.7943},
   {name:"Düsseldorf Flughafen", eva:"8000082", lat:51.2910, lon:6.7867},
+  {name:"Düsseldorf-Derendorf", eva:"8001587", lat:51.2461, lon:6.8037},
   {name:"Köln Hbf", eva:"8000207", lat:50.9430, lon:6.9587},
   {name:"Bonn Hbf", eva:"8000044", lat:50.7319, lon:7.0969},
   {name:"Dortmund Hbf", eva:"8000080", lat:51.5179, lon:7.4593},
@@ -1802,9 +1807,11 @@ const LOCAL_RAIL_STATIONS = [
 
   {name:"Frankfurt(Main)Hbf", eva:"8000105", lat:50.1071, lon:8.6638},
   {name:"Frankfurt(M) Flughafen Fernbf", eva:"8070003", lat:50.0522, lon:8.5700},
+  {name:"Frankfurt(Main)Süd", eva:"8002041", lat:50.0991, lon:8.6869},
   {name:"Mainz Hbf", eva:"8000240", lat:50.0010, lon:8.2590},
   {name:"Wiesbaden Hbf", eva:"8000250", lat:50.0714, lon:8.2433},
   {name:"Mannheim Hbf", eva:"8000244", lat:49.4792, lon:8.4691},
+  {name:"Ludwigshafen(Rhein)Hbf", eva:"8000236", lat:49.4778, lon:8.4381},
 
   {name:"Karlsruhe Hbf", eva:"8000191", lat:48.9936, lon:8.4005},
   {name:"Rastatt", eva:"8000316", lat:48.8586, lon:8.2077},
@@ -1812,17 +1819,23 @@ const LOCAL_RAIL_STATIONS = [
   {name:"Gaggenau", eva:"8002184", lat:48.8038, lon:8.3205},
   {name:"Germersheim", eva:"8002225", lat:49.2145, lon:8.3745},
   {name:"Wörth(Rhein)", eva:"8006460", lat:49.0516, lon:8.2596},
+  {name:"Landau(Pfalz)Hbf", eva:"8000222", lat:49.1996, lon:8.1232},
 
   {name:"Stuttgart Hbf", eva:"8000096", lat:48.7834, lon:9.1816},
   {name:"Stuttgart Neckarpark", eva:"8006743", lat:48.7920, lon:9.2411},
+  {name:"Stuttgart-Bad Cannstatt", eva:"8005769", lat:48.8026, lon:9.2186},
   {name:"Stuttgart-Vaihingen", eva:"8005779", lat:48.7260, lon:9.1110},
   {name:"Sindelfingen", eva:"8005557", lat:48.7086, lon:9.0037},
   {name:"Böblingen", eva:"8000031", lat:48.6857, lon:9.0086},
   {name:"Leinfelden", eva:"8003634", lat:48.6942, lon:9.1421},
   {name:"Esslingen(Neckar)", eva:"8001901", lat:48.7391, lon:9.3009},
+  {name:"Ludwigsburg", eva:"8000234", lat:48.8930, lon:9.1910},
 
   {name:"Ulm Hbf", eva:"8000170", lat:48.3990, lon:9.9823},
   {name:"Neu-Ulm", eva:"8004266", lat:48.3938, lon:10.0060},
+  {name:"Günzburg", eva:"8000135", lat:48.4549, lon:10.2770},
+  {name:"Augsburg Hbf", eva:"8000013", lat:48.3655, lon:10.8863},
+
   {name:"München Hbf", eva:"8000261", lat:48.1402, lon:11.5583},
   {name:"München Ost", eva:"8000262", lat:48.1274, lon:11.6040},
   {name:"Nürnberg Hbf", eva:"8000284", lat:49.4456, lon:11.0830},
@@ -1856,6 +1869,83 @@ function mergeLocalStations(stations, geo, radiusKm=70){
 
     if(!existing || local.km < existing.km || !existing.eva){
       byKey.set(key, local);
+    }
+  }
+
+  return Array.from(byKey.values())
+    .sort((a,b) => {
+      if(Math.abs(a.km - b.km) > 1.5) return a.km - b.km;
+      return (b.score || 0) - (a.score || 0);
+    })
+    .slice(0, 50);
+}
+
+
+
+function stationAliasKeys(name){
+  const raw = String(name || "").toLowerCase().replace(/\s+/g," ").trim();
+  const norm = normalizeStationName(name);
+  const keys = new Set([raw, norm]);
+
+  keys.add(raw.replace("hauptbahnhof","hbf"));
+  keys.add(raw.replace(" hbf"," hauptbahnhof"));
+  keys.add(raw.replace("(main)","").replace(/\s+/g," ").trim());
+  keys.add(raw.replace("-"," ").replace(/\s+/g," ").trim());
+  keys.add(norm.replace("-"," ").replace(/\s+/g," ").trim());
+
+  return Array.from(keys).filter(Boolean);
+}
+
+function regionalStationByName(name){
+  const keys = stationAliasKeys(name);
+  return LOCAL_RAIL_STATIONS.find(s => {
+    const skeys = stationAliasKeys(s.name);
+    return keys.some(k => skeys.includes(k));
+  }) || null;
+}
+
+function enrichWithEvaRequired(stations, geo, radiusKm){
+  const byKey = new Map();
+
+  function add(st, source){
+    const known = regionalStationByName(st.name);
+    const eva = st.eva || stationEvaByName(st.name) || known?.eva || "";
+    if(!eva) return;
+
+    const lat = Number(st.lat || known?.lat || 0);
+    const lon = Number(st.lon || known?.lon || 0);
+    if(!lat || !lon) return;
+
+    const km = Number.isFinite(st.km) ? st.km : havKm(geo.lat, geo.lon, lat, lon);
+    if(km > radiusKm / 1000 + 0.1) return;
+
+    const enriched = {
+      ...st,
+      name: known?.name || st.name,
+      eva,
+      lat,
+      lon,
+      km,
+      minutes: st.minutes || minutesFromKm(km, 35),
+      score: st.score || 0,
+      source
+    };
+
+    const key = normalizeStationName(enriched.name);
+    const existing = byKey.get(key);
+    if(!existing || enriched.km < existing.km){
+      byKey.set(key, enriched);
+    }
+  }
+
+  for(const st of stations || []) add(st, "overpass");
+
+  // Regionale Zielbahnhöfe nur ergänzen, wenn sie wirklich im Suchradius liegen
+  // und eine EVA-ID besitzen. Dadurch wird die alte lokale Overpass-Suche nicht übersteuert.
+  for(const st of LOCAL_RAIL_STATIONS){
+    const km = havKm(geo.lat, geo.lon, st.lat, st.lon);
+    if(km <= radiusKm / 1000 + 0.1){
+      add({...st, km, minutes:minutesFromKm(km,35), score:25}, "regional-eva");
     }
   }
 
@@ -1986,6 +2076,7 @@ function fillSelect(type, items, placeholder, autoSelectNearest=false){
   sel.innerHTML = `<option value="">${placeholder}</option>` + items
     .map((x, idx) => {
       const eva = x.eva || stationEvaByName(x.name);
+      if(type === "bahn" && !eva) return "";
       const iata = x.iata || x.code || "";
       const codeText = type === "flug" && iata ? ` · ${iata}` : "";
       return `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" data-iata="${iata}" data-lat="${x.lat || ""}" data-lon="${x.lon || ""}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name}${codeText} · ca. ${x.minutes} min · ${Math.round(x.km)} km</option>`;
@@ -2124,11 +2215,11 @@ async function fetchNearbyRailStations(geo, radius=45000){
     }
   }
 
-  return stations
+  return enrichWithEvaRequired(stations, geo, radius)
     .sort((a,b) => {
       // Primär tatsächliche Nähe, sekundär Qualität. So wird der nächstgelegene Bahnhof direkt vorausgewählt.
       if(Math.abs(a.km - b.km) > 1.5) return a.km - b.km;
-      return b.score - a.score;
+      return (b.score || 0) - (a.score || 0);
     })
     .slice(0, 50);
 }
@@ -2154,13 +2245,13 @@ async function updateNearbyStations(){
       fillSelect("bahn", nearby, "— Bahnhof/Haltestelle auswählen —", true);
       const note = document.getElementById("bahn-note");
       if(note){
-        note.textContent = `${nearby.length} Bahnhöfe/Haltepunkte gefunden · nächster Bahnhof vorausgewählt`;
+        note.textContent = `${nearby.length} Bahnhöfe/Haltepunkte mit EVA-ID gefunden · nächster Bahnhof vorausgewählt`;
       }
       return;
     }
     throw new Error("Keine Stationen gefunden");
   }catch(e){
-    const fallback = sortedByDistance(DEFAULT_STATIONS, geo, 35, 30);
+    const fallback = enrichWithEvaRequired(sortedByDistance(DEFAULT_STATIONS, geo, 35, 30), geo, 90000);
     fillSelect("bahn", fallback, "— Bahnhof/Haltestelle auswählen —", true);
     const note = document.getElementById("bahn-note");
     if(note){
@@ -2535,7 +2626,7 @@ function getCustomTargetData(){
     name: document.getElementById("custom-target-name")?.value || "Freies Ziel",
     address: document.getElementById("custom-target-address")?.value || "",
     stationName: document.getElementById("custom-target-station")?.value || "",
-    stationEva: "",
+    stationEva: document.getElementById("custom-target-eva")?.value || "",
     airportCode: document.getElementById("custom-target-airport")?.value || "",
     airportName: document.getElementById("custom-target-airport")?.value || "",
     stationTransferMin: Number(document.getElementById("custom-target-station-min")?.value || 0),
@@ -2846,9 +2937,19 @@ async function showBahnSearch(){
     return;
   }
 
+  if(transportState.bahn.active && (!bahnStartInfo || !bahnStartInfo.eva)){
+    alert("Für den Startbahnhof fehlt die EVA-ID. Bitte einen Bahnhof aus der Liste mit EVA-ID auswählen.");
+    return;
+  }
+
   const [zielName, zielAdresse, zielStation, _zielStationLabel, zielEvaRaw] = zielRaw.split("|");
   const bahnZielStation = zielStation || zielName;
   const bahnZielInfo = stationDbInfoByName(bahnZielStation) || {eva: zielEvaRaw || stationEvaByName(bahnZielStation), x:null, y:null};
+
+  if(transportState.bahn.active && (!bahnZielInfo || !bahnZielInfo.eva)){
+    alert("Für die Zielhaltestelle fehlt die EVA-ID. Bitte Ziel-Datenbank prüfen oder beim freien Ziel eine EVA-ID eintragen.");
+    return;
+  }
 
 
   const bahnCard = document.getElementById("bahn-card");
@@ -2998,6 +3099,10 @@ function getHotelData(){
     price,
     total:nights * price
   };
+}
+
+function getAutoVehicleCount(persons){
+  return Math.max(1, Math.ceil((persons || 1) / 5));
 }
 
 function getModeData(){
@@ -3662,6 +3767,11 @@ function updateSummaryPage(){
         </div>
 
         <div class="field">
+          <label>EVA-ID der Haltestelle</label>
+          <input id="custom-target-eva" type="text" placeholder="z. B. 8002549">
+        </div>
+
+        <div class="field">
           <label>Entfernung zur Haltestelle (Min)</label>
           <input id="custom-target-station-min" type="number" min="0" step="1" placeholder="10">
         </div>
@@ -3681,7 +3791,7 @@ function updateSummaryPage(){
 
       <div class="info-strip" style="margin-top:14px;">
         <span>ⓘ</span>
-        <span>Freie Ziele nutzen dieselbe Logik wie die interne Zieldatenbank.</span>
+        <span>Freie Ziele nutzen dieselbe Logik wie die interne Zieldatenbank. Für stabile DB-Links ist die EVA-ID der Zielhaltestelle erforderlich.</span>
       </div>
     </div>
 
