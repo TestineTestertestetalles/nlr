@@ -40,7 +40,7 @@ body::before{
 .app{
   position:relative;
   z-index:1;
-  max-width:680px;
+  max-width:1180px;
   margin:0 auto;
   padding:44px 20px 80px;
 }
@@ -993,6 +993,52 @@ input[type=date],input[type=time]{color-scheme:dark}
   .option-kpis{grid-template-columns:1fr;}
 }
 
+
+/* Struktur-Update */
+.app{max-width:1180px!important;}
+.option-grid{
+  grid-template-columns:1fr!important;
+}
+.option-side{
+  border-right:none!important;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.option-middle{
+  grid-template-columns:1fr!important;
+}
+.option-leg{
+  border-right:none!important;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.option-cost{
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.option-route{
+  font-size:15px;
+}
+.option-topline{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.option-summary-kpis{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.option-summary-kpis .option-kpi{
+  min-width:140px;
+}
+.cost-row.total-only{
+  font-size:14px;
+}
+.cost-row.total-only strong{
+  font-size:24px;
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -1034,8 +1080,8 @@ input[type=date],input[type=time]{color-scheme:dark}
         <label>Ziel aus interner Datenbank</label>
         <select id="ziel">
           <option value="">— Ziel wählen —</option>
-          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Neckarpark|Stuttgart Neckarpark|8006743|STR|Stuttgart Airport|10|35">MHP Arena Stuttgart · Mercedesstraße 87, 70372 Stuttgart</option>
-          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf|8000105|FRA|Frankfurt Airport|12|20">Deutsche Bank Park Frankfurt · Mörfelder Landstraße 362, 60528 Frankfurt am Main</option>
+          <option value="MHP Arena Stuttgart|Mercedesstraße 87, 70372 Stuttgart|Stuttgart Neckarpark|Stuttgart Neckarpark|8006743|STR|Stuttgart Airport|10|35|48.7922|9.2320">MHP Arena Stuttgart · Mercedesstraße 87, 70372 Stuttgart</option>
+          <option value="Deutsche Bank Park Frankfurt|Mörfelder Landstraße 362, 60528 Frankfurt am Main|Frankfurt(Main)Hbf|Frankfurt(Main)Hbf|8000105|FRA|Frankfurt Airport|12|20|50.0686|8.6455">Deutsche Bank Park Frankfurt · Mörfelder Landstraße 362, 60528 Frankfurt am Main</option>
         </select>
       </div>
       <div class="field">
@@ -1132,11 +1178,7 @@ input[type=date],input[type=time]{color-scheme:dark}
         </label>
       </div>
     </div>
-
-    <div class="transport-hint" id="transport-hint">
-      <strong>Hinweis:</strong> Die nächstgelegenen Startpunkte werden automatisch vorausgewählt. Bahn und Flugzeug können später für Hin- und Rückreise kombiniert werden. Auto gilt immer für Hin- und Rückreise und wird nur berücksichtigt, wenn eine gültige Fahrerlaubnis bestätigt ist.
-    </div>
-    <div class="source-note">
+<div class="source-note">
       <strong>Datenquellen:</strong> Startstadt- und Umkreissuche über OpenStreetMap/Nominatim/Overpass. EVA-/IBNR-Zuordnung zunächst als lokale Lookup-Tabelle aus frei nutzbaren Open-Data-Quellen; später erweiterbar. Keine kostenpflichtige oder inoffizielle DB-API.
     </div>
   </section>
@@ -1188,7 +1230,7 @@ input[type=date],input[type=time]{color-scheme:dark}
           </div>
         </label>
       </div>
-      <div class="small-note">Zeiten oben, Ticketpreis und Sitzplatzreservierung darunter.</div>
+      
     </div>
 
     <div class="trip-block">
@@ -1225,7 +1267,7 @@ input[type=date],input[type=time]{color-scheme:dark}
           </div>
         </label>
       </div>
-      <div class="small-note">Die Rückreise bleibt getrennt erfassbar, damit später Kombinationen sauber berechnet werden können.</div>
+      
     </div>
   </section>
 
@@ -1233,10 +1275,7 @@ input[type=date],input[type=time]{color-scheme:dark}
   <section id="flight-card" class="card flight-card">
     <div class="ctitle"><span class="cdot" style="background:var(--blue)"></span> Flugverbindung eintragen</div>
 
-    <div class="hint">
-      Öffne zuerst die Google-Flights-Suche, wähle eine passende Verbindung aus und trage anschließend Abflugzeit, Ankunftszeit und Flugpreis ein.
-      Für den Test sind Hinreise 21.07.2026 Ankunft 13:00 Uhr und Rückreise 22.07.2026 ab 15:00 Uhr vorbelegt. Hin- und Rückflug werden jeweils separat als echte einfache Strecke gesucht.
-    </div>
+    <div class="hint">Öffne die Google-Flights-Suche, wähle eine passende Verbindung aus und trage anschließend Zeiten und Flugpreis ein.</div>
 
     <div class="trip-block">
       <div class="trip-head">↗ Hinflug</div>
@@ -1371,11 +1410,7 @@ input[type=date],input[type=time]{color-scheme:dark}
           <div class="summary-master-label">Ziel</div>
           <div class="summary-master-value" id="s2-target">—</div>
         </div>
-        <div class="summary-master-item">
-          <div class="summary-master-label">Reisende</div>
-          <div class="summary-master-value" id="s2-persons">—</div>
-        </div>
-        <div class="summary-master-item">
+<div class="summary-master-item">
           <div class="summary-master-label">Hinfahrt</div>
           <div class="summary-master-value" id="s2-hin">—</div>
         </div>
@@ -1388,22 +1423,7 @@ input[type=date],input[type=time]{color-scheme:dark}
           <div class="summary-master-label">Hotel</div>
           <div class="summary-master-value" id="s2-hotel">—</div>
         </div>
-
-        <div class="summary-master-item">
-          <div class="summary-master-label">Reisende</div>
-
-          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
-            <button class="counter-btn" id="s2-persons-minus" type="button">−</button>
-            <span class="counter-num" id="s2-persons-num">1</span>
-            <button class="counter-btn" id="s2-persons-plus" type="button">+</button>
-          </div>
-
-          <div class="summary-master-value" id="s2-persons-label" style="margin-top:10px;">
-            1 Person reist
-          </div>
-        </div>
-
-      </div>
+</div>
     </section>
 
     <div id="s2-entries"></div>
@@ -1430,6 +1450,20 @@ input[type=date],input[type=time]{color-scheme:dark}
       <div class="page-title">Optionenvergleich</div>
       <div class="page-sub">Vergleichen Sie die möglichen Reiseoptionen inklusive Transferzeiten und Gesamtkosten.</div>
     </div>
+
+    <section class="summary-master" style="margin-bottom:16px;">
+      <div class="summary-master-title">👥 Reisende</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button class="counter-btn" id="compare-persons-minus" type="button" onclick="changeComparePersons(-1)">−</button>
+        <span class="counter-num" id="compare-persons-num">1</span>
+        <button class="counter-btn" id="compare-persons-plus" type="button" onclick="changeComparePersons(1)">+</button>
+        <span class="persons-label" id="compare-persons-label">1 Person reist</span>
+      </div>
+      <div class="info-strip" style="margin:12px 0 0;">
+        <span>ⓘ</span>
+        <span>Pro Fuhrparkfahrzeug können maximal 5 Personen mitfahren. Ab 6 Personen werden automatisch mehrere Fahrzeuge berücksichtigt.</span>
+      </div>
+    </section>
 
     <div class="compare-controls" id="compare-controls">
       <button class="compare-control active" type="button" data-mode="balanced" onclick="setCompareMode('balanced')">⚖️ Ausgeglichen</button>
@@ -2250,7 +2284,9 @@ function getSelectedDestinationData(){
     airportIata: parts[5] || "",
     airportName: parts[6] || "",
     trainTransferMin: Number(parts[7] || 0),
-    airportTransferMin: Number(parts[8] || 0)
+    airportTransferMin: Number(parts[8] || 0),
+    lat: Number(parts[9] || 0),
+    lon: Number(parts[10] || 0)
   };
 }
 
@@ -2422,9 +2458,11 @@ function initTravelers(){
         transportState.auto.active = false;
       }
 
-      note.textContent = tripState.hasLicence
-        ? "Auto/Fuhrpark wurde automatisch ausgewählt."
-        : "Auto/Fuhrpark erst mit Führerschein auswählbar.";
+      if(note){
+        note.textContent = tripState.hasLicence
+          ? "Auto/Fuhrpark auswählbar."
+          : "Auto/Fuhrpark erst mit Führerschein auswählbar.";
+      }
       updateTransportUi();
     });
   }
@@ -2692,6 +2730,40 @@ function getHotelData(){
 }
 
 
+
+function getSelectedOptionLatLon(selectId){
+  const opt = document.getElementById(selectId)?.selectedOptions?.[0];
+  if(!opt) return null;
+  const lat = Number(opt.dataset.lat || 0);
+  const lon = Number(opt.dataset.lon || 0);
+  return lat && lon ? {lat, lon} : null;
+}
+
+function getAutoDriveMinutes(){
+  const dest = getSelectedDestinationData();
+  const start = getSelectedOptionLatLon("auto-station");
+
+  if(!dest || !dest.lat || !dest.lon || !start) return 0;
+
+  const km = havKm(start.lat, start.lon, dest.lat, dest.lon);
+  return minutesFromKm(km, 70);
+}
+
+function getAutoVehicleCount(persons){
+  return Math.max(1, Math.ceil((persons || 1) / 5));
+}
+
+function changeComparePersons(delta){
+  tripState.persons = Math.max(1, (tripState.persons || 1) + delta);
+  const p = tripState.persons;
+  const num = document.getElementById("compare-persons-num");
+  const label = document.getElementById("compare-persons-label");
+  if(num) num.textContent = p;
+  if(label) label.textContent = p === 1 ? "1 Person reist" : `${p} Personen reisen`;
+  renderComparePage();
+}
+
+
 function getModeData(){
   const persons = tripState.persons || 1;
   const dest = getSelectedDestinationData();
@@ -2740,12 +2812,17 @@ function getModeData(){
   };
   flug.total = (flug.hinPrice + flug.rueckPrice + flug.bagHin + flug.bagRueck) * persons;
 
+  const autoVehicles = getAutoVehicleCount(persons);
+  const autoBasePrice = parseEuroInput("auto-price");
   const auto = {
     active: autoActive,
     from: document.getElementById("auto-from")?.textContent || "",
     to: document.getElementById("auto-to")?.textContent || "",
-    price: parseEuroInput("auto-price"),
+    price: autoBasePrice * autoVehicles,
+    basePrice: autoBasePrice,
+    vehicles: autoVehicles,
     transfer: getTransferMinutes("auto"),
+    driveMin: getAutoDriveMinutes(),
     startBuffer: 10,
     endBuffer: 20
   };
@@ -2755,40 +2832,11 @@ function getModeData(){
 }
 
 
-function initPage2Persons(){
-  const minus = document.getElementById("s2-persons-minus");
-  const plus = document.getElementById("s2-persons-plus");
-
-  if(!minus || !plus || minus.dataset.bound === "1") return;
-
-  function render(){
-    const p = tripState.persons || 1;
-    document.getElementById("s2-persons-num").textContent = p;
-    document.getElementById("s2-persons-label").textContent =
-      p === 1 ? "1 Person reist" : `${p} Personen reisen`;
-  }
-
-  minus.addEventListener("click", ()=>{
-    tripState.persons = Math.max(1, (tripState.persons || 1) - 1);
-    render();
-  });
-
-  plus.addEventListener("click", ()=>{
-    tripState.persons = (tripState.persons || 1) + 1;
-    render();
-  });
-
-  minus.dataset.bound = "1";
-  render();
-}
-
-
 function renderPage2Summary(){
   const {persons, dest, bahn, flug, auto} = getModeData();
   document.getElementById("s2-start").textContent = getStartName();
   document.getElementById("s2-target").textContent = dest?.name || "—";
 
-  initPage2Persons();
 
   document.getElementById("s2-hin").innerHTML = `${fmtDate(document.getElementById("hin-date")?.value)}<br>Ankunft bis ${document.getElementById("hin-arrival-target")?.value || "—"} Uhr`;
   document.getElementById("s2-rueck").innerHTML = `${fmtDate(document.getElementById("rueck-date")?.value)}<br>Abfahrt ab ${document.getElementById("rueck-departure-target")?.value || "—"} Uhr`;
@@ -2830,37 +2878,7 @@ function renderPage2Summary(){
         <tbody><tr><td>${flug.rueckFrom} → ${flug.rueckTo}</td><td>${flug.rueckDep || "—"}</td><td>${flug.rueckArr || "—"}</td><td>${formatEuro(flug.rueckPrice)}</td><td>${flug.bagRueck ? formatEuro(flug.bagRueck) : "—"}</td></tr></tbody></table>
       </section>`);
   }
-  if(hotel.active){
-    entries.push(`
-      <section class="summary-entry">
-        <div class="summary-entry-head">
-          <div>
-            <div class="summary-entry-title">🏨 Hotelübernachtung</div>
-            <div class="summary-entry-sub">${hotel.nights} Nacht/Nächte</div>
-          </div>
-        </div>
-
-        <table class="summary-table">
-          <thead>
-            <tr>
-              <th>Nächte</th>
-              <th>Preis/Nacht</th>
-              <th>Gesamt</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${hotel.nights}</td>
-              <td>${formatEuro(hotel.price)}</td>
-              <td>${formatEuro(hotel.total)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-    `);
-  }
-
-  if(auto.active){
+if(auto.active){
     entries.push(`
       <section class="summary-entry auto">
         <div class="summary-entry-head"><div><div class="summary-entry-title">🚗 Auto / Fuhrpark</div><div class="summary-entry-sub">${auto.from} ↔ ${auto.to}</div></div></div>
@@ -2938,19 +2956,22 @@ function renderOptionCard(option, rank){
             <span class="accent">${option.title}</span>
           </div>
           <div class="option-route">${option.route}</div>
-          <span class="option-badge">${option.badge || "Hin & Rück"}</span>
-          ${best ? `<div class="best-label">⭐ Beste Option nach aktueller Auswahl</div>` : ""}
-          <div class="option-kpis">
-            <div class="option-kpi">
-              <div class="option-kpi-label">Gesamtzeit</div>
-              <div class="option-kpi-value">${dur(option.totalTime)}</div>
-            </div>
-            <div class="option-kpi">
-              <div class="option-kpi-label">Gesamtkosten</div>
-              <div class="option-kpi-value">${formatEuro(option.totalCost)}</div>
+          <div class="option-topline">
+            <span class="option-badge">${option.badge || "Hin & Rück"}</span>
+            ${best ? `<div class="best-label">⭐ Beste Option nach aktueller Auswahl</div>` : ""}
+            <div class="option-summary-kpis">
+              <div class="option-kpi">
+                <div class="option-kpi-label">Gesamtzeit</div>
+                <div class="option-kpi-value">${dur(option.totalTime)}</div>
+              </div>
+              <div class="option-kpi">
+                <div class="option-kpi-label">Gesamtkosten</div>
+                <div class="option-kpi-value">${formatEuro(option.totalCost)}</div>
+              </div>
             </div>
           </div>
         </div>
+
         <div class="option-middle">
           <div class="option-leg">
             <div class="option-leg-title accent">${option.hinTitle}</div>
@@ -2963,11 +2984,16 @@ function renderOptionCard(option, rank){
             <div class="option-transfer">${option.rueckTransfer}</div>
           </div>
         </div>
-        <div class="option-cost">${optionCostRows(option.costRows, option.totalCost)}</div>
+
+        <div class="option-cost">
+          ${option.costRows.map(r => `<div class="cost-row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join("")}
+          <div class="cost-row total-only"><span>Gesamt inkl. Hotel</span><strong>${formatEuro(option.totalCost)}</strong></div>
+        </div>
       </div>
     </section>
   `;
 }
+
 
 function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, travelCost, hotelCost, totalTime, badge){
   return {
@@ -2990,6 +3016,11 @@ function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueck
 }
 
 function renderComparePage(){
+  const pNum = document.getElementById("compare-persons-num");
+  const pLabel = document.getElementById("compare-persons-label");
+  if(pNum) pNum.textContent = tripState.persons || 1;
+  if(pLabel) pLabel.textContent = (tripState.persons || 1) === 1 ? "1 Person reist" : `${tripState.persons} Personen reisen`;
+
   const {persons, bahn, flug, auto} = getModeData();
   const hotel = getHotelData();
   const hotelCost = hotel.active ? hotel.total : 0;
@@ -3048,20 +3079,21 @@ function renderComparePage(){
   if(auto.active){
     const transferStart = auto.transfer + auto.startBuffer;
     const transferReturn = auto.transfer + auto.endBuffer;
+    const driveTotal = auto.driveMin * 2;
     const travelCost = auto.price;
-    const totalTime = transferStart + transferReturn;
+    const totalTime = transferStart + transferReturn + driveTotal;
 
     options.push(createOption(
       "auto",
       "🚗 Auto / Fuhrpark",
       `${auto.from} ↔<br>${auto.to}`,
       "Start",
-      `Fahrzeug übernehmen`,
-      `Transfer + Übergabe<br>Start → Fuhrpark<br>${auto.transfer} Min + ${auto.startBuffer} Min = <strong>${transferStart} Min</strong>`,
+      `Fahrzeit: ${dur(auto.driveMin)}`,
+      `Transfer + Übergabe<br>Start → Fuhrpark<br>${auto.transfer} Min + ${auto.startBuffer} Min = <strong>${transferStart} Min</strong><br>Fuhrpark → Ziel: <strong>${dur(auto.driveMin)}</strong>`,
       "Rückkehr",
-      `Fahrzeug zurückgeben`,
-      `Rückgabe + Reinigung<br>Fuhrpark → Start<br>${auto.transfer} Min + ${auto.endBuffer} Min = <strong>${transferReturn} Min</strong>`,
-      [["Fahrzeugkosten", formatEuro(auto.price)]],
+      `Fahrzeit: ${dur(auto.driveMin)}`,
+      `Rückfahrt Ziel → Fuhrpark: <strong>${dur(auto.driveMin)}</strong><br>Rückgabe + Reinigung<br>${auto.transfer} Min + ${auto.endBuffer} Min = <strong>${transferReturn} Min</strong>`,
+      [[`Fahrzeugkosten (${auto.vehicles} Fahrzeug${auto.vehicles === 1 ? "" : "e"})`, formatEuro(auto.price)]],
       travelCost,
       hotelCost,
       totalTime
