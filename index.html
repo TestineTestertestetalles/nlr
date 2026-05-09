@@ -821,6 +821,121 @@ input[type=date],input[type=time]{color-scheme:dark}
   font-weight:800;
 }
 
+
+.summary-dashboard{
+  display:grid;
+  gap:18px;
+}
+
+.master-card{
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+  border-radius:20px;
+  padding:18px;
+}
+
+.master-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;
+  margin-top:14px;
+}
+
+.master-item{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:14px;
+  padding:12px;
+}
+
+.master-label{
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:6px;
+}
+
+.master-value{
+  font-weight:800;
+  line-height:1.35;
+}
+
+.mode-cards{
+  display:grid;
+  gap:16px;
+}
+
+.mode-card{
+  border-radius:22px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.025);
+}
+
+.mode-card.train{border-color:rgba(16,185,129,.22)}
+.mode-card.flight{border-color:rgba(96,165,250,.25)}
+.mode-card.auto{border-color:rgba(251,191,36,.25)}
+
+.mode-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.mode-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:20px;
+  font-weight:900;
+}
+
+.mode-total{
+  font-size:20px;
+  font-weight:900;
+}
+
+.mode-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+}
+
+.metric{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:14px;
+  padding:12px;
+}
+
+.metric-label{
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:6px;
+}
+
+.metric-value{
+  font-weight:800;
+  line-height:1.45;
+}
+
+.route-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border-radius:999px;
+  padding:5px 10px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  font-size:12px;
+  font-weight:700;
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -2433,71 +2548,193 @@ function showSummaryPage(){
   window.scrollTo({top:0, behavior:"smooth"});
 }
 
+
 function updateSummaryPage(){
   const persons = tripState.persons || 1;
+  const dest = getSelectedDestinationData();
 
   const bahnActive = !!transportState.bahn.active && document.getElementById("bahn-card")?.style.display !== "none";
   const flugActive = !!transportState.flug.active && document.getElementById("flight-card")?.style.display !== "none";
-
-  const hinPrice = bahnActive ? parseEuroInput("bahn-hin-price") : 0;
-  const rueckPrice = bahnActive ? parseEuroInput("bahn-rueck-price") : 0;
-
-  const hinSeat = bahnActive && document.getElementById("seat-hin")?.checked ? tripState.seatReservationPrice : 0;
-  const rueckSeat = bahnActive && document.getElementById("seat-rueck")?.checked ? tripState.seatReservationPrice : 0;
-
-  const flugHinPrice = flugActive ? parseEuroInput("flug-hin-price") : 0;
-  const flugRueckPrice = flugActive ? parseEuroInput("flug-rueck-price") : 0;
-
-  const baggageHin = flugActive && document.getElementById("baggage-hin")?.checked ? tripState.baggagePrice : 0;
-  const baggageRueck = flugActive && document.getElementById("baggage-rueck")?.checked ? tripState.baggagePrice : 0;
-
   const autoActive = !!transportState.auto.active && document.getElementById("auto-card")?.style.display !== "none";
-  const autoPrice = autoActive ? parseEuroInput("auto-price") : 0;
 
-  const ticketTotal = (hinPrice + rueckPrice + flugHinPrice + flugRueckPrice) * persons + autoPrice;
-  const extrasTotal = (hinSeat + rueckSeat + baggageHin + baggageRueck) * persons;
-  const total = ticketTotal + extrasTotal;
+  const hinDate = document.getElementById("hin-date")?.value || "-";
+  const hinTarget = document.getElementById("hin-arrival-target")?.value || "-";
+  const rueckDate = document.getElementById("rueck-date")?.value || "-";
+  const rueckTarget = document.getElementById("rueck-departure-target")?.value || "-";
 
-  const hinFrom = document.getElementById("hin-from")?.textContent || "Start";
-  const hinTo = document.getElementById("hin-to")?.textContent || "Ziel";
-  const flugFrom = document.getElementById("flug-hin-from")?.textContent || "Startflughafen";
-  const flugTo = document.getElementById("flug-hin-to")?.textContent || "Zielflughafen";
+  document.getElementById("master-start").textContent =
+    document.getElementById("start-city")?.value || "-";
 
-  const routeParts = [];
-  if(bahnActive) routeParts.push(`🚆 <strong>${hinFrom} → ${hinTo}</strong>`);
-  if(flugActive) routeParts.push(`✈️ <strong>${flugFrom} → ${flugTo}</strong>`);
-  if(autoActive){
-    const autoFrom = document.getElementById("auto-from")?.textContent || "Fuhrpark";
-    const autoTo = document.getElementById("auto-to")?.textContent || "Ziel";
-    routeParts.push(`🚗 <strong>${autoFrom} ↔ ${autoTo}</strong>`);
+  document.getElementById("master-target").textContent =
+    dest?.name || "-";
+
+  document.getElementById("master-hin").innerHTML =
+    `${hinDate}<br>Ankunft bis ${hinTarget} Uhr`;
+
+  document.getElementById("master-rueck").innerHTML =
+    `${rueckDate}<br>Abfahrt ab ${rueckTarget} Uhr`;
+
+  document.getElementById("master-persons").textContent = persons;
+
+  const cards = [];
+
+  if(bahnActive){
+    const hinPrice = parseEuroInput("bahn-hin-price");
+    const rueckPrice = parseEuroInput("bahn-rueck-price");
+
+    const seatHin = document.getElementById("seat-hin")?.checked ? tripState.seatReservationPrice : 0;
+    const seatRueck = document.getElementById("seat-rueck")?.checked ? tripState.seatReservationPrice : 0;
+
+    const total =
+      ((hinPrice + rueckPrice + seatHin + seatRueck) * persons);
+
+    const transferHin = getTransferMinutes("bahn") + 15;
+    const transferRueck = (dest?.trainTransferMin || 0) + 15;
+
+    cards.push(`
+      <section class="mode-card train">
+        <div class="mode-head">
+          <div class="mode-title">🚆 Bahn</div>
+          <div class="mode-total">${formatEuro(total)}</div>
+        </div>
+
+        <div class="mode-grid">
+          <div class="metric">
+            <div class="metric-label">Strecke</div>
+            <div class="metric-value">
+              <div class="route-badge">${document.getElementById("hin-from")?.textContent || ""} → ${document.getElementById("hin-to")?.textContent || ""}</div>
+              <br><br>
+              <div class="route-badge">${document.getElementById("rueck-from")?.textContent || ""} → ${document.getElementById("rueck-to")?.textContent || ""}</div>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Zeiten</div>
+            <div class="metric-value">
+              Hin: ${document.getElementById("bahn-hin-departure")?.value || "--"} – ${document.getElementById("bahn-hin-arrival")?.value || "--"}<br>
+              Rück: ${document.getElementById("bahn-rueck-departure")?.value || "--"} – ${document.getElementById("bahn-rueck-arrival")?.value || "--"}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Transfer & Puffer</div>
+            <div class="metric-value">
+              Hinreise: ${transferHin} Min<br>
+              Rückreise: ${transferRueck} Min
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Kosten</div>
+            <div class="metric-value">
+              Tickets: ${formatEuro((hinPrice + rueckPrice) * persons)}<br>
+              Reservierung: ${formatEuro((seatHin + seatRueck) * persons)}
+            </div>
+          </div>
+        </div>
+      </section>
+    `);
   }
 
-  document.getElementById("summary-route").innerHTML = routeParts.join("<br>") || "—";
-  const activeNames = [];
-  if(bahnActive) activeNames.push("Bahn");
-  if(flugActive) activeNames.push("Flug");
-  if(autoActive) activeNames.push("Auto");
-  document.getElementById("summary-title").textContent = activeNames.length ? activeNames.join(" & ") : "Reisezusammenfassung";
+  if(flugActive){
+    const hinPrice = parseEuroInput("flug-hin-price");
+    const rueckPrice = parseEuroInput("flug-rueck-price");
 
-  document.getElementById("sum-ticket").textContent = formatEuro(ticketTotal);
-  document.getElementById("sum-seat").textContent = formatEuro(extrasTotal);
-  document.getElementById("sum-total").textContent = formatEuro(total);
+    const baggageHin = document.getElementById("baggage-hin")?.checked ? tripState.baggagePrice : 0;
+    const baggageRueck = document.getElementById("baggage-rueck")?.checked ? tripState.baggagePrice : 0;
 
-  document.getElementById("detail-hin-price").textContent = bahnActive ? `${formatEuro(hinPrice * persons)} (${formatEuro(hinPrice)} × ${persons})` : "nicht ausgewählt";
-  document.getElementById("detail-rueck-price").textContent = bahnActive ? `${formatEuro(rueckPrice * persons)} (${formatEuro(rueckPrice)} × ${persons})` : "nicht ausgewählt";
-  document.getElementById("detail-seat-hin").textContent = hinSeat ? `${formatEuro(hinSeat * persons)} (${formatEuro(hinSeat)} × ${persons})` : "nicht ausgewählt";
-  document.getElementById("detail-seat-rueck").textContent = rueckSeat ? `${formatEuro(rueckSeat * persons)} (${formatEuro(rueckSeat)} × ${persons})` : "nicht ausgewählt";
+    const total =
+      ((hinPrice + rueckPrice + baggageHin + baggageRueck) * persons);
 
-  document.getElementById("detail-flug-hin-price").textContent = flugActive ? `${formatEuro(flugHinPrice * persons)} (${formatEuro(flugHinPrice)} × ${persons})` : "nicht ausgewählt";
-  document.getElementById("detail-flug-rueck-price").textContent = flugActive ? `${formatEuro(flugRueckPrice * persons)} (${formatEuro(flugRueckPrice)} × ${persons})` : "nicht ausgewählt";
-  document.getElementById("detail-baggage-hin").textContent = baggageHin ? `${formatEuro(baggageHin * persons)} (${formatEuro(baggageHin)} × ${persons})` : "nicht ausgewählt";
-  document.getElementById("detail-baggage-rueck").textContent = baggageRueck ? `${formatEuro(baggageRueck * persons)} (${formatEuro(baggageRueck)} × ${persons})` : "nicht ausgewählt";
-  document.getElementById("detail-auto-price").textContent = autoActive ? formatEuro(autoPrice) : "nicht ausgewählt";
-  document.getElementById("detail-persons").textContent = String(persons);
+    const transferHin = getTransferMinutes("flug") + 90;
+    const transferRueck = (dest?.airportTransferMin || 0) + 90;
 
-  renderTransferSummary();
+    cards.push(`
+      <section class="mode-card flight">
+        <div class="mode-head">
+          <div class="mode-title">✈️ Flug</div>
+          <div class="mode-total">${formatEuro(total)}</div>
+        </div>
+
+        <div class="mode-grid">
+          <div class="metric">
+            <div class="metric-label">Strecke</div>
+            <div class="metric-value">
+              <div class="route-badge">${document.getElementById("flug-hin-from")?.textContent || ""} → ${document.getElementById("flug-hin-to")?.textContent || ""}</div>
+              <br><br>
+              <div class="route-badge">${document.getElementById("flug-rueck-from")?.textContent || ""} → ${document.getElementById("flug-rueck-to")?.textContent || ""}</div>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Zeiten</div>
+            <div class="metric-value">
+              Hin: ${document.getElementById("flug-hin-departure")?.value || "--"} – ${document.getElementById("flug-hin-arrival")?.value || "--"}<br>
+              Rück: ${document.getElementById("flug-rueck-departure")?.value || "--"} – ${document.getElementById("flug-rueck-arrival")?.value || "--"}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Transfer & Puffer</div>
+            <div class="metric-value">
+              Hinflug: ${transferHin} Min<br>
+              Rückflug: ${transferRueck} Min
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Kosten</div>
+            <div class="metric-value">
+              Flüge: ${formatEuro((hinPrice + rueckPrice) * persons)}<br>
+              Gepäck: ${formatEuro((baggageHin + baggageRueck) * persons)}
+            </div>
+          </div>
+        </div>
+      </section>
+    `);
+  }
+
+  if(autoActive){
+    const autoPrice = parseEuroInput("auto-price");
+    const transferStart = getTransferMinutes("auto") + 10;
+    const transferReturn = getTransferMinutes("auto") + 20;
+
+    cards.push(`
+      <section class="mode-card auto">
+        <div class="mode-head">
+          <div class="mode-title">🚗 Auto / Fuhrpark</div>
+          <div class="mode-total">${formatEuro(autoPrice)}</div>
+        </div>
+
+        <div class="mode-grid">
+          <div class="metric">
+            <div class="metric-label">Strecke</div>
+            <div class="metric-value">
+              <div class="route-badge">${document.getElementById("auto-from")?.textContent || ""} ↔ ${document.getElementById("auto-to")?.textContent || ""}</div>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Transfer & Übergabe</div>
+            <div class="metric-value">
+              Start: ${transferStart} Min<br>
+              Rückgabe: ${transferReturn} Min
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Kosten</div>
+            <div class="metric-value">
+              Fahrzeug gesamt: ${formatEuro(autoPrice)}
+            </div>
+          </div>
+        </div>
+      </section>
+    `);
+  }
+
+  document.getElementById("mode-cards").innerHTML = cards.join("");
 }
-
 
 </script>
 </body>
