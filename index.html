@@ -1271,10 +1271,7 @@ input::placeholder{
   <button class="btn-primary" onclick="showBahnSearch()">
     🔎 Reiseverbindungen suchen
   </button>
-
-  <div id="route-summary" class="route-summary"></div>
-
-  <section id="bahn-card" class="card bahn-card">
+<section id="bahn-card" class="card bahn-card">
     <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Bahnverbindung eintragen</div>
 
     <div class="hint">
@@ -1510,6 +1507,7 @@ input::placeholder{
         
 <div class="summary-master-item">
   <div class="summary-master-label">Hotel</div>
+  <div id="s2-hotel" style="display:none;"></div>
 
   <div style="display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;margin-top:8px;">
     <div>
@@ -1711,7 +1709,14 @@ function normalizeStationName(name){
 function stationEvaByName(name){
   const raw = String(name || "").toLowerCase().replace(/\s+/g," ").trim();
   const norm = normalizeStationName(name);
-  return STATION_EVA_LOOKUP[raw] || STATION_EVA_LOOKUP[norm] || "";
+  const fromLookup = STATION_EVA_LOOKUP[raw] || STATION_EVA_LOOKUP[norm];
+  if(fromLookup) return fromLookup;
+
+  const local = (typeof LOCAL_RAIL_STATIONS !== "undefined")
+    ? LOCAL_RAIL_STATIONS.find(s => normalizeStationName(s.name) === norm || String(s.name || "").toLowerCase() === raw)
+    : null;
+
+  return local?.eva || "";
 }
 
 function stationDbInfoByName(name){
@@ -1746,6 +1751,115 @@ function stationLocationRef(name, info){
   if(info.i) s += `@i=${info.i}`;
   s += `@`;
   return s;
+}
+
+
+
+/*
+  Lokale Bahnhofsdatenbank als robuste Ergänzung zur Overpass-Suche.
+  Prinzip:
+  - Overpass bleibt aktiv und liefert aktuelle lokale Treffer.
+  - Diese lokale Liste wird zusätzlich eingemischt.
+  - Deduplizierung und Entfernungssortierung bleiben bestehen.
+  - EVA-IDs sind für DB-Links hinterlegt, wenn bekannt.
+*/
+const LOCAL_RAIL_STATIONS = [
+  {name:"Berlin Hbf", eva:"8011160", lat:52.5256, lon:13.3695},
+  {name:"Berlin Südkreuz", eva:"8011113", lat:52.4758, lon:13.3650},
+  {name:"Berlin Ostbahnhof", eva:"8010255", lat:52.5103, lon:13.4345},
+  {name:"Berlin Gesundbrunnen", eva:"8011102", lat:52.5486, lon:13.3894},
+  {name:"Berlin-Spandau", eva:"8010404", lat:52.5347, lon:13.1978},
+
+  {name:"Hamburg Hbf", eva:"8002549", lat:53.5527, lon:10.0069},
+  {name:"Hamburg-Harburg", eva:"8000147", lat:53.4567, lon:9.9910},
+  {name:"Hamburg-Altona", eva:"8002553", lat:53.5526, lon:9.9356},
+  {name:"Hamburg Dammtor", eva:"8002548", lat:53.5608, lon:9.9896},
+
+  {name:"Bremen Hbf", eva:"8000050", lat:53.0835, lon:8.8138},
+  {name:"Bremen-Mahndorf", eva:"8007755", lat:53.0347, lon:8.9592},
+  {name:"Bremen-Sebaldsbrück", eva:"8001125", lat:53.0676, lon:8.8893},
+  {name:"Bremen-Hemelingen", eva:"8001118", lat:53.0604, lon:8.8860},
+  {name:"Syke", eva:"8005809", lat:52.9162, lon:8.8098},
+  {name:"Bassum", eva:"8000037", lat:52.8484, lon:8.7320},
+  {name:"Kirchweyhe", eva:"8003328", lat:52.9802, lon:8.8573},
+  {name:"Barrien", eva:"8000735", lat:52.9398, lon:8.8347},
+
+  {name:"Hannover Hbf", eva:"8000152", lat:52.3768, lon:9.7410},
+  {name:"Kassel-Wilhelmshöhe", eva:"8003200", lat:51.3120, lon:9.4470},
+  {name:"Kassel Hbf", eva:"8000196", lat:51.3188, lon:9.4892},
+
+  {name:"Düsseldorf Hbf", eva:"8000085", lat:51.2196, lon:6.7943},
+  {name:"Düsseldorf Flughafen", eva:"8000082", lat:51.2910, lon:6.7867},
+  {name:"Köln Hbf", eva:"8000207", lat:50.9430, lon:6.9587},
+  {name:"Bonn Hbf", eva:"8000044", lat:50.7319, lon:7.0969},
+  {name:"Dortmund Hbf", eva:"8000080", lat:51.5179, lon:7.4593},
+  {name:"Essen Hbf", eva:"8000098", lat:51.4515, lon:7.0148},
+
+  {name:"Frankfurt(Main)Hbf", eva:"8000105", lat:50.1071, lon:8.6638},
+  {name:"Frankfurt(M) Flughafen Fernbf", eva:"8070003", lat:50.0522, lon:8.5700},
+  {name:"Mainz Hbf", eva:"8000240", lat:50.0010, lon:8.2590},
+  {name:"Wiesbaden Hbf", eva:"8000250", lat:50.0714, lon:8.2433},
+  {name:"Mannheim Hbf", eva:"8000244", lat:49.4792, lon:8.4691},
+
+  {name:"Karlsruhe Hbf", eva:"8000191", lat:48.9936, lon:8.4005},
+  {name:"Rastatt", eva:"8000316", lat:48.8586, lon:8.2077},
+  {name:"Baden-Baden", eva:"8000774", lat:48.7903, lon:8.1920},
+  {name:"Gaggenau", eva:"8002184", lat:48.8038, lon:8.3205},
+  {name:"Germersheim", eva:"8002225", lat:49.2145, lon:8.3745},
+  {name:"Wörth(Rhein)", eva:"8006460", lat:49.0516, lon:8.2596},
+
+  {name:"Stuttgart Hbf", eva:"8000096", lat:48.7834, lon:9.1816},
+  {name:"Stuttgart Neckarpark", eva:"8006743", lat:48.7920, lon:9.2411},
+  {name:"Stuttgart-Vaihingen", eva:"8005779", lat:48.7260, lon:9.1110},
+  {name:"Sindelfingen", eva:"8005557", lat:48.7086, lon:9.0037},
+  {name:"Böblingen", eva:"8000031", lat:48.6857, lon:9.0086},
+  {name:"Leinfelden", eva:"8003634", lat:48.6942, lon:9.1421},
+  {name:"Esslingen(Neckar)", eva:"8001901", lat:48.7391, lon:9.3009},
+
+  {name:"Ulm Hbf", eva:"8000170", lat:48.3990, lon:9.9823},
+  {name:"Neu-Ulm", eva:"8004266", lat:48.3938, lon:10.0060},
+  {name:"München Hbf", eva:"8000261", lat:48.1402, lon:11.5583},
+  {name:"München Ost", eva:"8000262", lat:48.1274, lon:11.6040},
+  {name:"Nürnberg Hbf", eva:"8000284", lat:49.4456, lon:11.0830},
+
+  {name:"Leipzig Hbf", eva:"8010205", lat:51.3454, lon:12.3758},
+  {name:"Dresden Hbf", eva:"8010085", lat:51.0406, lon:13.7320},
+  {name:"Erfurt Hbf", eva:"8010101", lat:50.9727, lon:11.0388}
+];
+
+function mergeLocalStations(stations, geo, radiusKm=70){
+  const byKey = new Map();
+
+  for(const st of stations || []){
+    byKey.set(normalizeStationName(st.name), st);
+  }
+
+  for(const st of LOCAL_RAIL_STATIONS){
+    const km = havKm(geo.lat, geo.lon, st.lat, st.lon);
+    if(km > radiusKm) continue;
+
+    const local = {
+      ...st,
+      km,
+      minutes: minutesFromKm(km, 35),
+      score: Math.max(0, 80 - km) + 25,
+      source: "local"
+    };
+
+    const key = normalizeStationName(st.name);
+    const existing = byKey.get(key);
+
+    if(!existing || local.km < existing.km || !existing.eva){
+      byKey.set(key, local);
+    }
+  }
+
+  return Array.from(byKey.values())
+    .sort((a,b) => {
+      if(Math.abs(a.km - b.km) > 1.5) return a.km - b.km;
+      return (b.score || 0) - (a.score || 0);
+    })
+    .slice(0, 50);
 }
 
 
@@ -2005,11 +2119,11 @@ async function fetchNearbyRailStations(geo, radius=45000){
     }
   }
 
-  return stations
+  return mergeLocalStations(stations, geo, 70)
     .sort((a,b) => {
       // Primär tatsächliche Nähe, sekundär Qualität. So wird der nächstgelegene Bahnhof direkt vorausgewählt.
       if(Math.abs(a.km - b.km) > 1.5) return a.km - b.km;
-      return b.score - a.score;
+      return (b.score || 0) - (a.score || 0);
     })
     .slice(0, 50);
 }
@@ -2041,7 +2155,7 @@ async function updateNearbyStations(){
     }
     throw new Error("Keine Stationen gefunden");
   }catch(e){
-    const fallback = sortedByDistance(DEFAULT_STATIONS, geo, 35, 30);
+    const fallback = mergeLocalStations(sortedByDistance(DEFAULT_STATIONS, geo, 35, 30), geo, 90);
     fillSelect("bahn", fallback, "— Bahnhof/Haltestelle auswählen —", true);
     const note = document.getElementById("bahn-note");
     if(note){
@@ -2731,28 +2845,6 @@ async function showBahnSearch(){
   const bahnZielStation = zielStation || zielName;
   const bahnZielInfo = stationDbInfoByName(bahnZielStation) || {eva: zielEvaRaw || stationEvaByName(bahnZielStation), x:null, y:null};
 
-  document.getElementById("route-summary").style.display = "block";
-
-  const licenceText = tripState.hasLicence
-    ? "gültige Fahrerlaubnis vorhanden"
-    : "keine Fahrerlaubnis bestätigt";
-
-  const activeTransports = Object.entries(transportState)
-    .filter(([type, data]) => data.active)
-    .map(([type, data]) => {
-      const label = type === "bahn" ? "Bahn" : type === "flug" ? "Flugzeug" : "Auto";
-      const point = data.point ? ` (${data.point}${data.minutes ? ", ca. " + data.minutes + " min" : ""})` : "";
-      return label + point;
-    })
-    .join(", ") || "keine Verkehrsmittel ausgewählt";
-
-  document.getElementById("route-summary").innerHTML =
-    `<strong>Route vorbereitet:</strong> ${startCity} → ${zielName}<br>` +
-    `<span>${zielAdresse}</span><br>` +
-    `<span>${tripState.persons} ${tripState.persons === 1 ? "reisende Person" : "reisende Personen"} · ${licenceText}</span><br>` +
-    `<span>Verkehrsmittel: ${activeTransports}</span><br>` +
-    `<span>${seatReservationSummary()}</span><br>` +
-    `<span>Bahnlink: ${bahnStartStation}${bahnStartInfo && bahnStartInfo.eva ? " (EVA " + bahnStartInfo.eva + ")" : ""} → ${bahnZielStation}${bahnZielInfo && bahnZielInfo.eva ? " (EVA " + bahnZielInfo.eva + ")" : ""}</span>`;
 
   const bahnCard = document.getElementById("bahn-card");
   if(transportState.bahn.active){
