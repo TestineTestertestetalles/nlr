@@ -1110,6 +1110,23 @@ input::placeholder{
   box-shadow:0 10px 30px rgba(0,0,0,.22);
 }
 
+
+.easteregg{
+  margin-top:18px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px dashed rgba(255,255,255,.16);
+  background:rgba(255,255,255,.035);
+  color:#cbd5e1;
+  font-size:13px;
+  line-height:1.5;
+  animation:eggfade .35s ease;
+}
+@keyframes eggfade{
+  from{opacity:0;transform:translateY(4px);}
+  to{opacity:1;transform:none;}
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -1129,7 +1146,7 @@ input::placeholder{
 
   <header class="hero">
     <div class="hero-badge"><span class="pulse"></span> 100% KOSTENLOS · KEINE REGISTRIERUNG</div>
-    <h1>Reisekosten<span>tool</span></h1>
+    <h1 class="hero-title">Next Level Reisekostentool</h1>
     <p class="hero-sub">Dienstreise clever planen · Schritt für Schritt zur besten Reisevariante</p>
   </header>
 
@@ -1554,6 +1571,7 @@ input::placeholder{
     <div class="score-note" id="score-note">Sortierung: Ausgeglichen bewertet Kosten und Zeit gleich stark.</div>
 
     <div id="option-list" class="option-list"></div>
+<div id="easteregg-box"></div>
 
     <div class="summary-actions">
       <button class="btn-secondary" type="button" onclick="showSummaryOnly()">← Zurück zur Zusammenfassung</button>
@@ -3209,6 +3227,76 @@ function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueck
   };
 }
 
+
+function renderEasterEgg(options){
+  const box = document.getElementById("easteregg-box");
+  if(!box) return;
+
+  const {persons, bahn, flug, auto} = getModeData();
+  const cheapest = [...options].sort((a,b)=>a.totalCost-b.totalCost)[0];
+  const fastest = [...options].sort((a,b)=>a.effectiveLoss-b.effectiveLoss)[0];
+
+  const eggs = [];
+
+  if(bahn.active && bahn.totalTime > 240){
+    eggs.push("🚆 Optimistische Reiseplanung aktiviert.");
+  }
+
+  if(bahn.active && getWorkability('bahn','hin') >= 0.75){
+    eggs.push("💼 Mobiles Büro erfolgreich aktiviert.");
+  }
+
+  if(flug.active && bahn.active){
+    const train = options.find(o => o.kind === "train");
+    const flight = options.find(o => o.kind === "flight");
+
+    if(train && flight){
+      if((flight.effectiveLoss < train.effectiveLoss) && (flight.totalCost > train.totalCost * 1.4)){
+        eggs.push("📶 Für diese Strecke gewinnt vermutlich das WLAN.");
+      }
+
+      if(flight.totalTime >= train.totalTime){
+        eggs.push("🛂 Sicherheitskontrolle übernimmt die Zeitoptimierung.");
+      }
+    }
+  }
+
+  if(auto.active && persons === 1){
+    eggs.push("☕ Kaffee- und Podcast-Pausen nicht eingerechnet.");
+  }
+
+  if(cheapest && cheapest.totalTime > 500){
+    eggs.push("💶 Finanzabteilung zufrieden.");
+  }
+
+  if(fastest && fastest.totalCost > cheapest.totalCost * 1.8){
+    eggs.push("📈 Budget verlässt den Chat.");
+  }
+
+  const hotel = getHotelData();
+  if(hotel.active && hotel.price > 250){
+    eggs.push("🏨 Frühstück hoffentlich inklusive.");
+  }
+
+  if(Math.random() < 0.03){
+    eggs.push("🚄 Alle Angaben ohne Gewähr und ohne Schienenersatzverkehr.");
+  }
+
+  if(!eggs.length){
+    box.innerHTML = "";
+    return;
+  }
+
+  const msg = eggs[Math.floor(Math.random() * eggs.length)];
+
+  box.innerHTML = `
+    <div class="easteregg">
+      ${msg}
+    </div>
+  `;
+}
+
+
 function renderComparePage(){
   const dest = getSelectedDestinationData();
   const destinationName = dest?.name || "Ziel";
@@ -3357,6 +3445,8 @@ function renderComparePage(){
     sorted.length
       ? sorted.map((option, idx) => renderOptionCard(option, idx + 1)).join("")
       : `<div class="info-strip">Noch keine Optionen verfügbar.</div>`;
+
+  renderEasterEgg(sorted);
 }
 
 
