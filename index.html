@@ -992,7 +992,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 
     <div class="hint">
       Öffne zuerst die Google-Flights-Suche, wähle eine passende Verbindung aus und trage anschließend Abflugzeit, Ankunftszeit und Flugpreis ein.
-      Für den Test sind Hinreise 21.07.2026 Ankunft 13:00 Uhr und Rückreise 22.07.2026 ab 15:00 Uhr vorbelegt. Hin- und Rückflug werden jeweils separat als einfache Strecke gesucht.
+      Für den Test sind Hinreise 21.07.2026 Ankunft 13:00 Uhr und Rückreise 22.07.2026 ab 15:00 Uhr vorbelegt. Hin- und Rückflug werden jeweils separat als echte einfache Strecke gesucht.
     </div>
 
     <div class="trip-block">
@@ -1824,8 +1824,12 @@ function buildGoogleFlightsTfs(fromIata, toIata, departDate, returnDate){
     bytes.push(...flightSegmentBytes(returnDate, toIata, fromIata));
   }
 
-  // Standardwerte analog zum von Google Flights generierten Link:
-  // Economy, 1 Reisende/r, keine weiteren Sonderfilter.
+  // Standardwerte analog zum von Google Flights generierten Link.
+  // Wichtig:
+  // - Roundtrip endet mit 0x01
+  // - One-Way endet mit 0x02, sonst setzt Google Flights wieder Hin- und Rückreise
+  const tripType = returnDate ? 0x01 : 0x02;
+
   bytes.push(
     0x40, 0x01,
     0x48, 0x01,
@@ -1833,7 +1837,7 @@ function buildGoogleFlightsTfs(fromIata, toIata, departDate, returnDate){
     0x82, 0x01, 0x0b, 0x08,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
     0x01,
-    0x98, 0x01, 0x01
+    0x98, 0x01, tripType
   );
 
   return base64UrlFromBytes(bytes);
@@ -1847,7 +1851,10 @@ function buildGoogleFlightsUrl(fromIata, toIata, departDate, returnDate){
   }
 
   const tfs = buildGoogleFlightsTfs(fromIata, toIata, departDate, returnDate);
-  return `https://www.google.com/travel/flights/search?tfs=${tfs}&hl=de`;
+
+  // tfu=EgYIABAAGAA entspricht dem von Google erzeugten One-Way-Link.
+  const tfu = returnDate ? "" : "&tfu=EgYIABAAGAA";
+  return `https://www.google.com/travel/flights/search?tfs=${tfs}${tfu}&hl=de`;
 }
 
 function initBaggage(){
