@@ -1087,6 +1087,29 @@ input[type=date],input[type=time]{color-scheme:dark}
   padding:9px 10px;
   font-size:12px;
 }
+
+input, select{
+  background:rgba(255,255,255,.09)!important;
+  border:1.5px solid rgba(255,255,255,.22)!important;
+  color:#fff!important;
+}
+input::placeholder{
+  color:rgba(255,255,255,.55)!important;
+}
+.summary-table td{
+  color:#fff!important;
+}
+.field label,
+.summary-master-label,
+.option-leg-title{
+  color:#dbeafe!important;
+}
+.card,
+.summary-entry,
+.option-card{
+  box-shadow:0 10px 30px rgba(0,0,0,.22);
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -1152,33 +1175,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 
     
   </section>
-
-
-  <section id="hotel-box" class="card" style="display:none;">
-    <div class="ctitle"><span class="cdot" style="background:var(--gold)"></span> Hotelübernachtung</div>
-
-    <div class="hint">
-      Da Hin- und Rückreise nicht am selben Tag stattfinden, wird eine Hotelübernachtung als eigener Kostenblock berücksichtigt.
-    </div>
-
-    <div class="grid2">
-      <div class="field">
-        <label>Anzahl Nächte</label>
-        <input id="hotel-nights" type="number" readonly value="1">
-      </div>
-
-      <div class="field">
-        <label>Preis pro Nacht (€)</label>
-        <input id="hotel-price" type="number" min="0" step="0.01" value="100">
-      </div>
-    </div>
-
-    <div class="route-summary" style="display:block;margin-top:14px;">
-      <strong>Hotelkosten:</strong> <span id="hotel-total">100,00 €</span>
-    </div>
-  </section>
-
-  <section class="card">
+<section class="card">
     <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Verfügbare Verkehrsmittel</div>
 
     <label class="licence-inline" id="licence-cb">
@@ -1468,16 +1465,51 @@ input[type=date],input[type=time]{color-scheme:dark}
           <div class="summary-master-label">Rückfahrt</div>
           <div class="summary-master-value" id="s2-rueck">—</div>
         </div>
-        <div class="summary-master-item">
-          <div class="summary-master-label">Hotel</div>
-          <div class="summary-master-value" id="s2-hotel">—</div>
-        </div>
+        
+<div class="summary-master-item">
+  <div class="summary-master-label">Hotel</div>
+
+  <div style="display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;margin-top:8px;">
+    <div>
+      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Nächte</div>
+      <input id="hotel-nights" type="number" readonly value="0">
+    </div>
+
+    <div>
+      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">€/Nacht</div>
+      <input id="hotel-price" type="number" min="0" step="0.01" value="100" onchange="updateHotelBox()">
+    </div>
+
+    <div>
+      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Gesamt</div>
+      <input id="hotel-total-input" type="text" readonly value="0,00 €">
+    </div>
+  </div>
+
+  <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;">
+    <input type="checkbox" id="hotel-disable">
+    <span>Keine Hotelübernachtung erforderlich</span>
+  </label>
+</div>
+
       </div>
     </section>
 
     <div id="s2-entries"></div>
 
-    <div class="summary-actions">
+    
+<section class="summary-master" style="margin-top:18px;">
+  <div class="summary-master-title">💼 Arbeitsfähigkeit während der Reise</div>
+
+  <div class="info-strip" style="margin-bottom:16px;">
+    <span>ⓘ</span>
+    <span>Produktive Reisezeit wird bei der Bewertung der optimalen Reiseoption berücksichtigt.</span>
+  </div>
+
+  <div id="workability-content"></div>
+</section>
+
+<div class="summary-actions">
       <button class="btn-secondary" type="button" onclick="showInputPage()">← Zurück zur Eingabe</button>
       <button class="btn-primary" type="button" onclick="showComparePage()">Weiter zum Optionenvergleich →</button>
     </div>
@@ -2528,7 +2560,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initBaggage();
   initSummaryButtonWatchers();
 
-  ["hin-date","rueck-date","hotel-price"].forEach(id=>{
+  ["hin-date","rueck-date","hotel-price","hotel-disable"].forEach(id=>{
     const el=document.getElementById(id);
     if(el){
       el.addEventListener("change", updateHotelBox);
@@ -2671,7 +2703,7 @@ async function showBahnSearch(){
   setupAutoOption(zielRaw);
   initSummaryButtonWatchers();
 
-  ["hin-date","rueck-date","hotel-price"].forEach(id=>{
+  ["hin-date","rueck-date","hotel-price","hotel-disable"].forEach(id=>{
     const el=document.getElementById(id);
     if(el){
       el.addEventListener("change", updateHotelBox);
@@ -2737,81 +2769,63 @@ function dur(min){
 }
 
 
+
 function updateHotelBox(){
   const hin = document.getElementById("hin-date")?.value;
   const rueck = document.getElementById("rueck-date")?.value;
-  const box = document.getElementById("hotel-box");
 
-  if(!hin || !rueck){
-    box.style.display = "none";
+  const nightsEl = document.getElementById("hotel-nights");
+  const totalEl = document.getElementById("hotel-total-input");
+  const disabled = document.getElementById("hotel-disable")?.checked;
+
+  if(!hin || !rueck || !nightsEl || !totalEl){
     return;
   }
 
-  const start = new Date(hin);
-  const end = new Date(rueck);
-
-  const diff = Math.round((end - start) / (1000*60*60*24));
-
-  if(diff <= 0){
-    box.style.display = "none";
+  if(disabled){
+    nightsEl.value = 0;
+    totalEl.value = "0,00 €";
     return;
   }
 
-  box.style.display = "block";
+  const startDate = new Date(hin);
+  const endDate = new Date(rueck);
 
-  document.getElementById("hotel-nights").value = diff;
+  const diff = Math.max(0, Math.round((endDate - startDate) / (1000*60*60*24)));
+
+  nightsEl.value = diff;
 
   const price = Number(document.getElementById("hotel-price")?.value || 100);
   const total = diff * price;
 
-  document.getElementById("hotel-total").value =
-    total.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
+  totalEl.value = total.toLocaleString("de-DE", {
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  }) + " €";
 }
 
 function getHotelData(){
-  const visible = document.getElementById("hotel-box")?.style.display !== "none";
+  const disabled = document.getElementById("hotel-disable")?.checked;
+
+  if(disabled){
+    return {
+      active:false,
+      nights:0,
+      price:0,
+      total:0
+    };
+  }
+
+  const nights = Number(document.getElementById("hotel-nights")?.value || 0);
+  const price = Number(document.getElementById("hotel-price")?.value || 0);
+
   return {
-    active: visible,
-    nights: Number(document.getElementById("hotel-nights")?.value || 0),
-    price: Number(document.getElementById("hotel-price")?.value || 0),
-    total: Number((document.getElementById("hotel-nights")?.value || 0)) * Number(document.getElementById("hotel-price")?.value || 0)
+    active:nights > 0,
+    nights,
+    price,
+    total:nights * price
   };
 }
-
-
-
-function getSelectedOptionLatLon(selectId){
-  const opt = document.getElementById(selectId)?.selectedOptions?.[0];
-  if(!opt) return null;
-  const lat = Number(opt.dataset.lat || 0);
-  const lon = Number(opt.dataset.lon || 0);
-  return lat && lon ? {lat, lon} : null;
-}
-
-function getAutoDriveMinutes(){
-  const dest = getSelectedDestinationData();
-  const start = getSelectedOptionLatLon("auto-station");
-
-  if(!dest || !dest.lat || !dest.lon || !start) return 0;
-
-  const km = havKm(start.lat, start.lon, dest.lat, dest.lon);
-  return minutesFromKm(km, 70);
-}
-
-function getAutoVehicleCount(persons){
-  return Math.max(1, Math.ceil((persons || 1) / 5));
-}
-
-function changeComparePersons(delta){
-  tripState.persons = Math.max(1, (tripState.persons || 1) + delta);
-  const p = tripState.persons;
-  const num = document.getElementById("compare-persons-num");
-  const label = document.getElementById("compare-persons-label");
-  if(num) num.textContent = p;
-  if(label) label.textContent = p === 1 ? "1 Person reist" : `${p} Personen reisen`;
-  renderComparePage();
-}
-
 
 function getModeData(){
   const persons = tripState.persons || 1;
@@ -2881,6 +2895,94 @@ function getModeData(){
 }
 
 
+
+function getWorkFactor(value){
+  const map = {
+    "0": 0,
+    "50": 0.5,
+    "75": 0.75,
+    "100": 1
+  };
+  return map[String(value)] ?? 0;
+}
+
+function renderWorkabilitySection(){
+  const wrap = document.getElementById("workability-content");
+  if(!wrap) return;
+
+  const {bahn, flug, auto} = getModeData();
+
+  const options = [
+    ["bahn","🚆 Bahn",bahn.active],
+    ["flug","✈️ Flug",flug.active],
+    ["auto","🚗 Auto / Fuhrpark",auto.active]
+  ];
+
+  const levels = `
+    <option value="0">Nicht möglich (0%)</option>
+    <option value="50">Eingeschränkt möglich (50%)</option>
+    <option value="75">Gut möglich (75%)</option>
+    <option value="100">Voll möglich (100%)</option>
+  `;
+
+  wrap.innerHTML = options.filter(o => o[2]).map(o => `
+    <section class="s2-mode-card ${o[0]}">
+      <div class="s2-mode-title">${o[1]}</div>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Richtung</th>
+            <th>Arbeitsfähigkeit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Hinfahrt</td>
+            <td>
+              <select id="${o[0]}-work-hin">
+                ${levels}
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Rückfahrt</td>
+            <td>
+              <select id="${o[0]}-work-rueck">
+                ${levels}
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  `).join("");
+
+  // sensible defaults
+  const defaults = {
+    "bahn-work-hin":"75",
+    "bahn-work-rueck":"75",
+    "flug-work-hin":"50",
+    "flug-work-rueck":"50",
+    "auto-work-hin":"0",
+    "auto-work-rueck":"0"
+  };
+
+  Object.entries(defaults).forEach(([id,val])=>{
+    const el = document.getElementById(id);
+    if(el && !el.dataset.init){
+      el.value = val;
+      el.dataset.init = "1";
+    }
+  });
+}
+
+function getWorkability(mode, dir){
+  const el = document.getElementById(`${mode}-work-${dir}`);
+  return getWorkFactor(el?.value || "0");
+}
+
+
 function renderPage2Summary(){
   const {persons, dest, bahn, flug, auto} = getModeData();
   const hotel = getHotelData();
@@ -2889,9 +2991,7 @@ function renderPage2Summary(){
   document.getElementById("s2-target").textContent = dest?.name || "—";
   document.getElementById("s2-hin").innerHTML = `${fmtDate(document.getElementById("hin-date")?.value)}<br>Ankunft bis ${document.getElementById("hin-arrival-target")?.value || "—"} Uhr`;
   document.getElementById("s2-rueck").innerHTML = `${fmtDate(document.getElementById("rueck-date")?.value)}<br>Abfahrt ab ${document.getElementById("rueck-departure-target")?.value || "—"} Uhr`;
-  document.getElementById("s2-hotel").innerHTML = hotel.active
-    ? `${hotel.nights} Nacht/Nächte<br>${formatEuro(hotel.price)} pro Nacht`
-    : "Keine Übernachtung";
+
 
   const entries = [];
 
@@ -2965,6 +3065,7 @@ function renderPage2Summary(){
   }
 
   document.getElementById("s2-entries").innerHTML = entries.join("") || `<div class="info-strip">Noch keine ausgefüllten Verkehrsmittel vorhanden.</div>`;
+  renderWorkabilitySection();
 }
 
 function syncFromPage2(id, value){
@@ -2986,11 +3087,11 @@ function optionCostRows(rows, total){
 function optionScore(options, option){
   const minCost = Math.min(...options.map(o => o.totalCost));
   const maxCost = Math.max(...options.map(o => o.totalCost));
-  const minTime = Math.min(...options.map(o => o.totalTime));
-  const maxTime = Math.max(...options.map(o => o.totalTime));
+  const minTime = Math.min(...options.map(o => o.effectiveLoss));
+  const maxTime = Math.max(...options.map(o => o.effectiveLoss));
 
   const costNorm = maxCost === minCost ? 0 : (option.totalCost - minCost) / (maxCost - minCost);
-  const timeNorm = maxTime === minTime ? 0 : (option.totalTime - minTime) / (maxTime - minTime);
+  const timeNorm = maxTime === minTime ? 0 : (option.effectiveLoss - minTime) / (maxTime - minTime);
 
   if(compareMode === "cheap") return costNorm;
   if(compareMode === "fast") return timeNorm;
@@ -3005,7 +3106,7 @@ function sortOptions(options){
   }
 
   if(compareMode === "fast"){
-    return scored.sort((a,b) => a.totalTime - b.totalTime || a.totalCost - b.totalCost);
+    return scored.sort((a,b) => a.effectiveLoss - b.effectiveLoss || a.totalCost - b.totalCost);
   }
 
   return scored.sort((a,b) => a.score - b.score || a.totalCost - b.totalCost || a.totalTime - b.totalTime);
@@ -3046,8 +3147,12 @@ function renderOptionCard(option, rank){
             ${best ? `<div class="best-label">⭐ Beste Option nach aktueller Auswahl</div>` : ""}
             <div class="option-summary-kpis">
               <div class="option-kpi">
-                <div class="option-kpi-label">Gesamtzeit</div>
-                <div class="option-kpi-value">${dur(option.totalTime)}</div>
+                <div class="option-kpi-label">Effektiver Zeitverlust</div>
+                <div class="option-kpi-value">${dur(option.effectiveLoss)}</div>
+              </div>
+              <div class="option-kpi">
+                <div class="option-kpi-label">Produktive Reisezeit</div>
+                <div class="option-kpi-value">${dur(option.productiveTime)}</div>
               </div>
               <div class="option-kpi">
                 <div class="option-kpi-label">Gesamtkosten</div>
@@ -3080,7 +3185,7 @@ function renderOptionCard(option, rank){
 }
 
 
-function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, travelCost, hotelCost, totalTime, badge){
+function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, travelCost, hotelCost, totalTime, productiveTime, badge){
   return {
     kind,
     title,
@@ -3096,6 +3201,8 @@ function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueck
     hotelCost,
     totalCost: travelCost + hotelCost,
     totalTime,
+    productiveTime,
+    effectiveLoss: Math.max(0, totalTime - productiveTime),
     badge
   };
 }
@@ -3120,6 +3227,7 @@ function renderComparePage(){
     const rueckTransferTotal = bahn.transferRueck + bahn.buffer;
     const travelCost = (bahn.hinPrice + bahn.rueckPrice + bahn.seatHin + bahn.seatRueck) * persons;
     const totalTime = hinRide + rueckRide + hinTransferTotal + rueckTransferTotal;
+    const productiveTime = (hinRide * getWorkability('bahn','hin')) + (rueckRide * getWorkability('bahn','rueck'));
 
     options.push(createOption(
       "train",
@@ -3134,7 +3242,8 @@ function renderComparePage(){
       [["Tickets", formatEuro((bahn.hinPrice+bahn.rueckPrice)*persons)],["Sitzplatz", formatEuro((bahn.seatHin+bahn.seatRueck)*persons)]],
       travelCost,
       hotelCost,
-      totalTime
+      totalTime,
+      productiveTime
     ));
   }
 
@@ -3145,6 +3254,7 @@ function renderComparePage(){
     const rueckTransferTotal = flug.transferRueck + flug.buffer;
     const travelCost = (flug.hinPrice + flug.rueckPrice + flug.bagHin + flug.bagRueck) * persons;
     const totalTime = hinFlight + rueckFlight + hinTransferTotal + rueckTransferTotal;
+    const productiveTime = (hinFlight * getWorkability('flug','hin')) + (rueckFlight * getWorkability('flug','rueck'));
 
     options.push(createOption(
       "flight",
@@ -3159,7 +3269,8 @@ function renderComparePage(){
       [["Flugtickets", formatEuro((flug.hinPrice+flug.rueckPrice)*persons)],["Gepäck", formatEuro((flug.bagHin+flug.bagRueck)*persons)]],
       travelCost,
       hotelCost,
-      totalTime
+      totalTime,
+      productiveTime
     ));
   }
 
@@ -3169,6 +3280,7 @@ function renderComparePage(){
     const driveTotal = auto.driveMin * 2;
     const travelCost = auto.price;
     const totalTime = transferStart + transferReturn + driveTotal;
+    const productiveTime = driveTotal * getWorkability('auto','hin');
 
     options.push(createOption(
       "auto",
@@ -3183,7 +3295,8 @@ function renderComparePage(){
       [[`Fahrzeugkosten (${auto.vehicles} Fahrzeug${auto.vehicles === 1 ? "" : "e"})`, formatEuro(auto.price)]],
       travelCost,
       hotelCost,
-      totalTime
+      totalTime,
+      productiveTime
     ));
   }
 
@@ -3192,6 +3305,7 @@ function renderComparePage(){
     const flugRueckRide = timeDiffMin(flug.rueckDep,flug.rueckArr);
     const combo1Cost = (bahn.hinPrice + bahn.seatHin + flug.rueckPrice + flug.bagRueck) * persons;
     const combo1Time = bahnHinRide + flugRueckRide + (bahn.transferHin + bahn.buffer) + (flug.transferRueck + flug.buffer);
+    const combo1Productive = (bahnHinRide * getWorkability('bahn','hin')) + (flugRueckRide * getWorkability('flug','rueck'));
 
     options.push(createOption(
       "combo1",
@@ -3207,6 +3321,7 @@ function renderComparePage(){
       combo1Cost,
       hotelCost,
       combo1Time,
+      combo1Productive,
       "Bahn hin · Flug zurück"
     ));
 
@@ -3214,6 +3329,7 @@ function renderComparePage(){
     const bahnRueckRide = timeDiffMin(bahn.rueckDep,bahn.rueckArr);
     const combo2Cost = (flug.hinPrice + flug.bagHin + bahn.rueckPrice + bahn.seatRueck) * persons;
     const combo2Time = flugHinRide + bahnRueckRide + (flug.transferHin + flug.buffer) + (bahn.transferRueck + bahn.buffer);
+    const combo2Productive = (flugHinRide * getWorkability('flug','hin')) + (bahnRueckRide * getWorkability('bahn','rueck'));
 
     options.push(createOption(
       "combo2",
@@ -3229,6 +3345,7 @@ function renderComparePage(){
       combo2Cost,
       hotelCost,
       combo2Time,
+      combo2Productive,
       "Flug hin · Bahn zurück"
     ));
   }
