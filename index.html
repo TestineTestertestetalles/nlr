@@ -822,118 +822,90 @@ input[type=date],input[type=time]{color-scheme:dark}
 }
 
 
-.summary-dashboard{
-  display:grid;
-  gap:18px;
+/* ── Page 2/3 refined flow ─────────────────────────────────────────────── */
+.page{display:none;}
+.page.active{display:block;animation:fadeIn .25s ease;}
+.input-page.hidden{display:none!important;}
+.stepbar{
+  display:flex;align-items:center;justify-content:center;gap:14px;margin:0 0 26px;
 }
-
-.master-card{
-  border:1px solid rgba(255,255,255,.08);
-  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-  border-radius:20px;
-  padding:18px;
+.stepitem{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-weight:800;}
+.stepnum{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.04);color:var(--muted);font-size:12px;}
+.stepitem.active .stepnum{background:#2563eb;border-color:#2563eb;color:#fff;}
+.stepitem.done .stepnum{background:#16a34a;border-color:#16a34a;color:#fff;}
+.stepline{width:90px;height:1px;background:rgba(255,255,255,.17);}
+.page-head{margin-bottom:18px;}
+.page-kicker{font-size:11px;color:var(--muted);font-weight:800;margin-bottom:6px;}
+.page-title{font-size:28px;font-weight:900;letter-spacing:-.03em;margin-bottom:6px;}
+.page-sub{font-size:14px;color:var(--muted);}
+.info-strip{display:flex;align-items:flex-start;gap:10px;margin:18px 0;padding:12px 14px;border-radius:10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.25);font-size:12px;color:var(--muted);line-height:1.6;}
+.info-strip strong{color:var(--text);}
+.summary-master{
+  background:rgba(255,255,255,.045);border:1px solid rgba(96,165,250,.22);border-radius:16px;padding:20px;margin-bottom:14px;
 }
-
-.master-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:14px;
-  margin-top:14px;
+.summary-master-title{display:flex;align-items:center;gap:10px;font-weight:900;color:#bfdbfe;margin-bottom:18px;font-size:15px;}
+.summary-master-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 18px;
 }
-
-.master-item{
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:14px;
-  padding:12px;
+.summary-master-item{padding:12px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);}
+.summary-master-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:900;margin-bottom:6px;}
+.summary-master-value{font-size:15px;font-weight:900;line-height:1.45;}
+.summary-entry{
+  border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.035);
 }
-
-.master-label{
-  color:var(--muted);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  margin-bottom:6px;
+.summary-entry.train{border-color:rgba(52,211,153,.30);background:rgba(52,211,153,.035);}
+.summary-entry.flight{border-color:rgba(96,165,250,.30);background:rgba(96,165,250,.035);}
+.summary-entry.auto{border-color:rgba(251,191,36,.30);background:rgba(251,191,36,.04);}
+.summary-entry-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.summary-entry-title{font-size:17px;font-weight:900;display:flex;align-items:center;gap:9px;}
+.summary-entry-sub{font-size:12px;color:var(--muted);}
+.summary-table{width:100%;border-collapse:collapse;font-size:12px;}
+.summary-table th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:left;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.08);}
+.summary-table td{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.055);font-weight:700;}
+.summary-table tr:last-child td{border-bottom:none;}
+.summary-table td:last-child,.summary-table th:last-child{text-align:right;}
+.summary-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);}
+.option-list{display:flex;flex-direction:column;gap:14px;}
+.option-card{
+  border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);overflow:hidden;
 }
-
-.master-value{
-  font-weight:800;
-  line-height:1.35;
-}
-
-.mode-cards{
-  display:grid;
-  gap:16px;
-}
-
-.mode-card{
-  border-radius:22px;
-  padding:18px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.025);
-}
-
-.mode-card.train{border-color:rgba(16,185,129,.22)}
-.mode-card.flight{border-color:rgba(96,165,250,.25)}
-.mode-card.auto{border-color:rgba(251,191,36,.25)}
-
-.mode-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:16px;
-}
-
-.mode-title{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size:20px;
-  font-weight:900;
-}
-
-.mode-total{
-  font-size:20px;
-  font-weight:900;
-}
-
-.mode-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:12px;
-}
-
-.metric{
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:14px;
-  padding:12px;
-}
-
-.metric-label{
-  color:var(--muted);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  margin-bottom:6px;
-}
-
-.metric-value{
-  font-weight:800;
-  line-height:1.45;
-}
-
-.route-badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  border-radius:999px;
-  padding:5px 10px;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.08);
-  font-size:12px;
-  font-weight:700;
+.option-card.train{border-color:rgba(52,211,153,.35);}
+.option-card.flight{border-color:rgba(96,165,250,.35);}
+.option-card.auto{border-color:rgba(251,191,36,.35);}
+.option-card.combo1{border-color:rgba(167,139,250,.35);}
+.option-card.combo2{border-color:rgba(45,212,191,.35);}
+.option-grid{display:grid;grid-template-columns:180px 1fr 210px;min-height:150px;}
+.option-side{padding:18px;border-right:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);}
+.option-title{font-size:17px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.option-route{font-size:13px;font-weight:800;line-height:1.65;}
+.option-badge{display:inline-flex;margin-top:10px;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);font-size:11px;font-weight:900;color:var(--muted);}
+.option-middle{display:grid;grid-template-columns:1fr 1fr;}
+.option-leg{padding:18px;border-right:1px solid rgba(255,255,255,.08);}
+.option-leg:last-child{border-right:none;}
+.option-leg-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+.option-times{font-size:16px;font-weight:900;margin-bottom:12px;}
+.option-muted{font-size:11px;color:var(--muted);line-height:1.55;}
+.option-transfer{font-size:12px;line-height:1.7;font-weight:700;}
+.option-cost{padding:18px;background:rgba(255,255,255,.025);}
+.cost-row{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.cost-row:last-child{border-bottom:none;}
+.cost-row strong{font-size:20px;}
+.cost-total{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);}
+.cost-total-label{font-size:11px;color:var(--muted);font-weight:900;margin-bottom:5px;}
+.cost-total-value{font-size:24px;font-weight:900;}
+.train .accent{color:var(--green);}
+.flight .accent{color:var(--blue);}
+.auto .accent{color:var(--gold);}
+.combo1 .accent{color:var(--purple);}
+.combo2 .accent{color:#2dd4bf;}
+@media(max-width:760px){
+  .summary-master-grid{grid-template-columns:1fr;}
+  .summary-actions{grid-template-columns:1fr;}
+  .option-grid{grid-template-columns:1fr;}
+  .option-side{border-right:none;border-bottom:1px solid rgba(255,255,255,.08);}
+  .option-middle{grid-template-columns:1fr;}
+  .option-leg{border-right:none;border-bottom:1px solid rgba(255,255,255,.08);}
+  .stepline{width:35px;}
 }
 
 @media(max-width:560px){
@@ -1268,127 +1240,87 @@ input[type=date],input[type=time]{color-scheme:dark}
   </div>
   </main>
 
-  <main id="summary-page" class="summary-page">
-    <section class="card summary-card">
-      <div class="summary-head">
-        <div>
-          <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Zusammenfassung</div>
-          <div class="summary-title" id="summary-title">Reisezusammenfassung</div>
+  
+<main id="summary-page" class="page">
+  <div class="stepbar">
+    <div class="stepitem done"><span class="stepnum">✓</span><span>Eingabe</span></div>
+    <div class="stepline"></div>
+    <div class="stepitem active"><span class="stepnum">2</span><span>Zusammenfassung</span></div>
+    <div class="stepline"></div>
+    <div class="stepitem"><span class="stepnum">3</span><span>Optionenvergleich</span></div>
+  </div>
+
+  <section class="card">
+    <div class="page-head">
+      <div class="page-kicker">Seite 2 von 3</div>
+      <div class="page-title">Zusammenfassung</div>
+      <div class="page-sub">Übersicht Ihrer eingegebenen Angaben.</div>
+    </div>
+
+    <div class="info-strip">
+      <span>ⓘ</span>
+      <span>Bitte prüfen Sie Ihre Angaben. Im nächsten Schritt sehen Sie alle Optionen im Detail inklusive Transferzeiten und Gesamtkosten.</span>
+    </div>
+
+    <section class="summary-master">
+      <div class="summary-master-title">📋 Stammdaten der Reise</div>
+      <div class="summary-master-grid">
+        <div class="summary-master-item">
+          <div class="summary-master-label">Abfahrtsort</div>
+          <div class="summary-master-value" id="s2-start">—</div>
         </div>
-        <div class="summary-route" id="summary-route">—</div>
-      </div>
-
-      <div class="summary-calc">
-        <div class="summary-item">
-          <div class="summary-icon">🚆</div>
-          <div>
-            <div class="summary-label">Ticketkosten gesamt</div>
-            <div class="summary-value" id="sum-ticket">0,00 €</div>
-          </div>
+        <div class="summary-master-item">
+          <div class="summary-master-label">Ziel</div>
+          <div class="summary-master-value" id="s2-target">—</div>
         </div>
-
-        <div class="summary-op">+</div>
-
-        <div class="summary-item">
-          <div class="summary-icon">💺</div>
-          <div>
-            <div class="summary-label">Zusatzkosten</div>
-            <div class="summary-value" id="sum-seat">0,00 €</div>
-          </div>
+        <div class="summary-master-item">
+          <div class="summary-master-label">Reisende</div>
+          <div class="summary-master-value" id="s2-persons">—</div>
         </div>
-
-        <div class="summary-op">=</div>
-
-        <div class="summary-item">
-          <div class="summary-icon">💼</div>
-          <div>
-            <div class="summary-label">Gesamtbetrag</div>
-            <div class="summary-value green" id="sum-total">0,00 €</div>
-          </div>
+        <div class="summary-master-item">
+          <div class="summary-master-label">Hinfahrt</div>
+          <div class="summary-master-value" id="s2-hin">—</div>
         </div>
-      </div>
-
-      <div class="summary-note">
-        <span>ⓘ</span>
-        <span>Alle Beträge werden auf Basis der Anzahl Reisenden berechnet. Sitzplatzreservierungen kosten 5,50 € pro Person und Bahnstrecke; Gepäck kostet 20,00 € pro Person und Flugstrecke.</span>
-      </div>
-
-      <table class="summary-detail-table">
-        <tbody>
-          <tr>
-            <td>Hinreise Ticketpreis</td>
-            <td id="detail-hin-price">0,00 €</td>
-          </tr>
-          <tr>
-            <td>Rückreise Ticketpreis</td>
-            <td id="detail-rueck-price">0,00 €</td>
-          </tr>
-          <tr>
-            <td>Sitzplatzreservierung Hinreise</td>
-            <td id="detail-seat-hin">0,00 €</td>
-          </tr>
-          <tr>
-            <td>Sitzplatzreservierung Rückreise</td>
-            <td id="detail-seat-rueck">0,00 €</td>
-          </tr>
-          <tr>
-            <td>Hinflug Flugpreis</td>
-            <td id="detail-flug-hin-price">0,00 €</td>
-          </tr>
-          <tr>
-            <td>Rückflug Flugpreis</td>
-            <td id="detail-flug-rueck-price">0,00 €</td>
-          </tr>
-          <tr>
-            <td>Gepäck Hinflug</td>
-            <td id="detail-baggage-hin">0,00 €</td>
-          </tr>
-          <tr>
-            <td>Gepäck Rückflug</td>
-            <td id="detail-baggage-rueck">0,00 €</td>
-          </tr>
-          <tr>
-            <td>Auto / Fuhrpark</td>
-            <td id="detail-auto-price">0,00 €</td>
-          </tr>
-          <tr>
-            <td>Anzahl Reisende</td>
-            <td id="detail-persons">1</td>
-          </tr>
-        </tbody>
-      </table>
-
-
-      <div class="summary-note" style="margin-top:16px;">
-        <span>⏱️</span>
-        <span>Transfer- und Pufferzeiten werden je aktivem Verkehrsmittel berücksichtigt: Bahn +15 Min, Flug +90 Min, Fuhrpark Start +10 Min und Rückgabe +20 Min.</span>
-      </div>
-
-      <table class="transfer-table">
-        <thead>
-          <tr>
-            <th>Verkehrsmittel</th>
-            <th>Strecke</th>
-            <th>Transfer</th>
-            <th>Puffer</th>
-            <th>Gesamt</th>
-          </tr>
-        </thead>
-        <tbody id="transfer-summary-body">
-        </tbody>
-      </table>
-
-      <div class="summary-note" style="margin-top:16px;">
-        <span>📍</span>
-        <span id="destination-meta-summary">Zieldaten werden nach Auswahl angezeigt.</span>
-      </div>
-
-      <div class="summary-actions">
-        <button class="btn-secondary" type="button" onclick="showInputPage()">← Angaben bearbeiten</button>
-        <button class="btn-primary" type="button" onclick="alert('Ranking-Seite wird im nächsten Schritt ergänzt.')">Weiter zum Ranking →</button>
+        <div class="summary-master-item">
+          <div class="summary-master-label">Rückfahrt</div>
+          <div class="summary-master-value" id="s2-rueck">—</div>
+        </div>
       </div>
     </section>
-  </main>
+
+    <div id="s2-entries"></div>
+
+    <div class="summary-actions">
+      <button class="btn-secondary" type="button" onclick="showInputPage()">← Zurück zur Eingabe</button>
+      <button class="btn-primary" type="button" onclick="showComparePage()">Weiter zum Optionenvergleich →</button>
+    </div>
+  </section>
+</main>
+
+<main id="compare-page" class="page">
+  <div class="stepbar">
+    <div class="stepitem done"><span class="stepnum">✓</span><span>Eingabe</span></div>
+    <div class="stepline"></div>
+    <div class="stepitem done"><span class="stepnum">✓</span><span>Zusammenfassung</span></div>
+    <div class="stepline"></div>
+    <div class="stepitem active"><span class="stepnum">3</span><span>Optionenvergleich</span></div>
+  </div>
+
+  <section class="card">
+    <div class="page-head">
+      <div class="page-kicker">Seite 3 von 3</div>
+      <div class="page-title">Optionenvergleich</div>
+      <div class="page-sub">Vergleichen Sie die möglichen Reiseoptionen inklusive Transferzeiten und Gesamtkosten.</div>
+    </div>
+
+    <div id="option-list" class="option-list"></div>
+
+    <div class="summary-actions">
+      <button class="btn-secondary" type="button" onclick="showSummaryOnly()">← Zurück zur Zusammenfassung</button>
+      <button class="btn-primary" type="button" onclick="alert('Auswahlfunktion wird im nächsten Schritt ergänzt.')">Beste Option wählen →</button>
+    </div>
+  </section>
+</main>
 
 </div>
 
@@ -2537,19 +2469,40 @@ function formatEuro(value){
 
 function showInputPage(){
   document.getElementById("summary-page").classList.remove("active");
+  document.getElementById("compare-page").classList.remove("active");
   document.getElementById("input-page").classList.remove("hidden");
   window.scrollTo({top:0, behavior:"smooth"});
 }
 
-function showSummaryPage(){
-  updateSummaryPage();
-  document.getElementById("input-page").classList.add("hidden");
-  document.getElementById("summary-page").classList.add("active");
-  window.scrollTo({top:0, behavior:"smooth"});
+
+function getStartName(){
+  return document.getElementById("start")?.value || "—";
 }
 
+function fmtDate(d){
+  if(!d) return "—";
+  const parts = d.split("-");
+  return parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : d;
+}
 
-function updateSummaryPage(){
+function timeDiffMin(start, end){
+  if(!start || !end) return 0;
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  if(!Number.isFinite(sh) || !Number.isFinite(eh)) return 0;
+  let v = (eh * 60 + em) - (sh * 60 + sm);
+  if(v < 0) v += 24 * 60;
+  return v;
+}
+
+function dur(min){
+  if(!min || min <= 0) return "—";
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h ? (m ? `${h}h ${m}min` : `${h}h`) : `${m}min`;
+}
+
+function getModeData(){
   const persons = tripState.persons || 1;
   const dest = getSelectedDestinationData();
 
@@ -2557,184 +2510,261 @@ function updateSummaryPage(){
   const flugActive = !!transportState.flug.active && document.getElementById("flight-card")?.style.display !== "none";
   const autoActive = !!transportState.auto.active && document.getElementById("auto-card")?.style.display !== "none";
 
-  const hinDate = document.getElementById("hin-date")?.value || "-";
-  const hinTarget = document.getElementById("hin-arrival-target")?.value || "-";
-  const rueckDate = document.getElementById("rueck-date")?.value || "-";
-  const rueckTarget = document.getElementById("rueck-departure-target")?.value || "-";
+  const bahn = {
+    active: bahnActive,
+    hinFrom: document.getElementById("hin-from")?.textContent || "",
+    hinTo: document.getElementById("hin-to")?.textContent || "",
+    rueckFrom: document.getElementById("rueck-from")?.textContent || "",
+    rueckTo: document.getElementById("rueck-to")?.textContent || "",
+    hinDep: document.getElementById("bahn-hin-departure")?.value || "",
+    hinArr: document.getElementById("bahn-hin-arrival")?.value || "",
+    rueckDep: document.getElementById("bahn-rueck-departure")?.value || "",
+    rueckArr: document.getElementById("bahn-rueck-arrival")?.value || "",
+    hinPrice: parseEuroInput("bahn-hin-price"),
+    rueckPrice: parseEuroInput("bahn-rueck-price"),
+    seatHin: document.getElementById("seat-hin")?.checked ? tripState.seatReservationPrice : 0,
+    seatRueck: document.getElementById("seat-rueck")?.checked ? tripState.seatReservationPrice : 0,
+    transferHin: getTransferMinutes("bahn"),
+    transferRueck: dest?.trainTransferMin || 0,
+    buffer: 15
+  };
+  bahn.total = (bahn.hinPrice + bahn.rueckPrice + bahn.seatHin + bahn.seatRueck) * persons;
 
-  document.getElementById("master-start").textContent =
-    document.getElementById("start-city")?.value || "-";
+  const flug = {
+    active: flugActive,
+    hinFrom: document.getElementById("flug-hin-from")?.textContent || "",
+    hinTo: document.getElementById("flug-hin-to")?.textContent || "",
+    rueckFrom: document.getElementById("flug-rueck-from")?.textContent || "",
+    rueckTo: document.getElementById("flug-rueck-to")?.textContent || "",
+    hinDep: document.getElementById("flug-hin-departure")?.value || "",
+    hinArr: document.getElementById("flug-hin-arrival")?.value || "",
+    rueckDep: document.getElementById("flug-rueck-departure")?.value || "",
+    rueckArr: document.getElementById("flug-rueck-arrival")?.value || "",
+    hinPrice: parseEuroInput("flug-hin-price"),
+    rueckPrice: parseEuroInput("flug-rueck-price"),
+    bagHin: document.getElementById("baggage-hin")?.checked ? tripState.baggagePrice : 0,
+    bagRueck: document.getElementById("baggage-rueck")?.checked ? tripState.baggagePrice : 0,
+    transferHin: getTransferMinutes("flug"),
+    transferRueck: dest?.airportTransferMin || 0,
+    buffer: 90
+  };
+  flug.total = (flug.hinPrice + flug.rueckPrice + flug.bagHin + flug.bagRueck) * persons;
 
-  document.getElementById("master-target").textContent =
-    dest?.name || "-";
+  const auto = {
+    active: autoActive,
+    from: document.getElementById("auto-from")?.textContent || "",
+    to: document.getElementById("auto-to")?.textContent || "",
+    price: parseEuroInput("auto-price"),
+    transfer: getTransferMinutes("auto"),
+    startBuffer: 10,
+    endBuffer: 20
+  };
+  auto.total = auto.price;
 
-  document.getElementById("master-hin").innerHTML =
-    `${hinDate}<br>Ankunft bis ${hinTarget} Uhr`;
-
-  document.getElementById("master-rueck").innerHTML =
-    `${rueckDate}<br>Abfahrt ab ${rueckTarget} Uhr`;
-
-  document.getElementById("master-persons").textContent = persons;
-
-  const cards = [];
-
-  if(bahnActive){
-    const hinPrice = parseEuroInput("bahn-hin-price");
-    const rueckPrice = parseEuroInput("bahn-rueck-price");
-
-    const seatHin = document.getElementById("seat-hin")?.checked ? tripState.seatReservationPrice : 0;
-    const seatRueck = document.getElementById("seat-rueck")?.checked ? tripState.seatReservationPrice : 0;
-
-    const total =
-      ((hinPrice + rueckPrice + seatHin + seatRueck) * persons);
-
-    const transferHin = getTransferMinutes("bahn") + 15;
-    const transferRueck = (dest?.trainTransferMin || 0) + 15;
-
-    cards.push(`
-      <section class="mode-card train">
-        <div class="mode-head">
-          <div class="mode-title">🚆 Bahn</div>
-          <div class="mode-total">${formatEuro(total)}</div>
-        </div>
-
-        <div class="mode-grid">
-          <div class="metric">
-            <div class="metric-label">Strecke</div>
-            <div class="metric-value">
-              <div class="route-badge">${document.getElementById("hin-from")?.textContent || ""} → ${document.getElementById("hin-to")?.textContent || ""}</div>
-              <br><br>
-              <div class="route-badge">${document.getElementById("rueck-from")?.textContent || ""} → ${document.getElementById("rueck-to")?.textContent || ""}</div>
-            </div>
-          </div>
-
-          <div class="metric">
-            <div class="metric-label">Zeiten</div>
-            <div class="metric-value">
-              Hin: ${document.getElementById("bahn-hin-departure")?.value || "--"} – ${document.getElementById("bahn-hin-arrival")?.value || "--"}<br>
-              Rück: ${document.getElementById("bahn-rueck-departure")?.value || "--"} – ${document.getElementById("bahn-rueck-arrival")?.value || "--"}
-            </div>
-          </div>
-
-          <div class="metric">
-            <div class="metric-label">Transfer & Puffer</div>
-            <div class="metric-value">
-              Hinreise: ${transferHin} Min<br>
-              Rückreise: ${transferRueck} Min
-            </div>
-          </div>
-
-          <div class="metric">
-            <div class="metric-label">Kosten</div>
-            <div class="metric-value">
-              Tickets: ${formatEuro((hinPrice + rueckPrice) * persons)}<br>
-              Reservierung: ${formatEuro((seatHin + seatRueck) * persons)}
-            </div>
-          </div>
-        </div>
-      </section>
-    `);
-  }
-
-  if(flugActive){
-    const hinPrice = parseEuroInput("flug-hin-price");
-    const rueckPrice = parseEuroInput("flug-rueck-price");
-
-    const baggageHin = document.getElementById("baggage-hin")?.checked ? tripState.baggagePrice : 0;
-    const baggageRueck = document.getElementById("baggage-rueck")?.checked ? tripState.baggagePrice : 0;
-
-    const total =
-      ((hinPrice + rueckPrice + baggageHin + baggageRueck) * persons);
-
-    const transferHin = getTransferMinutes("flug") + 90;
-    const transferRueck = (dest?.airportTransferMin || 0) + 90;
-
-    cards.push(`
-      <section class="mode-card flight">
-        <div class="mode-head">
-          <div class="mode-title">✈️ Flug</div>
-          <div class="mode-total">${formatEuro(total)}</div>
-        </div>
-
-        <div class="mode-grid">
-          <div class="metric">
-            <div class="metric-label">Strecke</div>
-            <div class="metric-value">
-              <div class="route-badge">${document.getElementById("flug-hin-from")?.textContent || ""} → ${document.getElementById("flug-hin-to")?.textContent || ""}</div>
-              <br><br>
-              <div class="route-badge">${document.getElementById("flug-rueck-from")?.textContent || ""} → ${document.getElementById("flug-rueck-to")?.textContent || ""}</div>
-            </div>
-          </div>
-
-          <div class="metric">
-            <div class="metric-label">Zeiten</div>
-            <div class="metric-value">
-              Hin: ${document.getElementById("flug-hin-departure")?.value || "--"} – ${document.getElementById("flug-hin-arrival")?.value || "--"}<br>
-              Rück: ${document.getElementById("flug-rueck-departure")?.value || "--"} – ${document.getElementById("flug-rueck-arrival")?.value || "--"}
-            </div>
-          </div>
-
-          <div class="metric">
-            <div class="metric-label">Transfer & Puffer</div>
-            <div class="metric-value">
-              Hinflug: ${transferHin} Min<br>
-              Rückflug: ${transferRueck} Min
-            </div>
-          </div>
-
-          <div class="metric">
-            <div class="metric-label">Kosten</div>
-            <div class="metric-value">
-              Flüge: ${formatEuro((hinPrice + rueckPrice) * persons)}<br>
-              Gepäck: ${formatEuro((baggageHin + baggageRueck) * persons)}
-            </div>
-          </div>
-        </div>
-      </section>
-    `);
-  }
-
-  if(autoActive){
-    const autoPrice = parseEuroInput("auto-price");
-    const transferStart = getTransferMinutes("auto") + 10;
-    const transferReturn = getTransferMinutes("auto") + 20;
-
-    cards.push(`
-      <section class="mode-card auto">
-        <div class="mode-head">
-          <div class="mode-title">🚗 Auto / Fuhrpark</div>
-          <div class="mode-total">${formatEuro(autoPrice)}</div>
-        </div>
-
-        <div class="mode-grid">
-          <div class="metric">
-            <div class="metric-label">Strecke</div>
-            <div class="metric-value">
-              <div class="route-badge">${document.getElementById("auto-from")?.textContent || ""} ↔ ${document.getElementById("auto-to")?.textContent || ""}</div>
-            </div>
-          </div>
-
-          <div class="metric">
-            <div class="metric-label">Transfer & Übergabe</div>
-            <div class="metric-value">
-              Start: ${transferStart} Min<br>
-              Rückgabe: ${transferReturn} Min
-            </div>
-          </div>
-
-          <div class="metric">
-            <div class="metric-label">Kosten</div>
-            <div class="metric-value">
-              Fahrzeug gesamt: ${formatEuro(autoPrice)}
-            </div>
-          </div>
-        </div>
-      </section>
-    `);
-  }
-
-  document.getElementById("mode-cards").innerHTML = cards.join("");
+  return { persons, dest, bahn, flug, auto };
 }
+
+function renderPage2Summary(){
+  const {persons, dest, bahn, flug, auto} = getModeData();
+  document.getElementById("s2-start").textContent = getStartName();
+  document.getElementById("s2-target").textContent = dest?.name || "—";
+  document.getElementById("s2-persons").textContent = `${persons} ${persons === 1 ? "Person" : "Personen"}`;
+  document.getElementById("s2-hin").innerHTML = `${fmtDate(document.getElementById("hin-date")?.value)}<br>Ankunft bis ${document.getElementById("hin-arrival-target")?.value || "—"} Uhr`;
+  document.getElementById("s2-rueck").innerHTML = `${fmtDate(document.getElementById("rueck-date")?.value)}<br>Abfahrt ab ${document.getElementById("rueck-departure-target")?.value || "—"} Uhr`;
+
+  const entries = [];
+  if(bahn.active){
+    entries.push(`
+      <section class="summary-entry train">
+        <div class="summary-entry-head">
+          <div>
+            <div class="summary-entry-title">🚆 Hinfahrt – Bahn</div>
+            <div class="summary-entry-sub">${bahn.hinFrom} → ${bahn.hinTo}</div>
+          </div>
+        </div>
+        <table class="summary-table"><thead><tr><th>Strecke</th><th>Abfahrt</th><th>Ankunft</th><th>Ticketpreis</th><th>Sitzplatz</th></tr></thead>
+        <tbody><tr><td>${bahn.hinFrom} → ${bahn.hinTo}</td><td>${bahn.hinDep || "—"}</td><td>${bahn.hinArr || "—"}</td><td>${formatEuro(bahn.hinPrice)}</td><td>${bahn.seatHin ? formatEuro(bahn.seatHin) : "—"}</td></tr></tbody></table>
+      </section>
+      <section class="summary-entry train">
+        <div class="summary-entry-head"><div><div class="summary-entry-title">🚆 Rückfahrt – Bahn</div><div class="summary-entry-sub">${bahn.rueckFrom} → ${bahn.rueckTo}</div></div></div>
+        <table class="summary-table"><thead><tr><th>Strecke</th><th>Abfahrt</th><th>Ankunft</th><th>Ticketpreis</th><th>Sitzplatz</th></tr></thead>
+        <tbody><tr><td>${bahn.rueckFrom} → ${bahn.rueckTo}</td><td>${bahn.rueckDep || "—"}</td><td>${bahn.rueckArr || "—"}</td><td>${formatEuro(bahn.rueckPrice)}</td><td>${bahn.seatRueck ? formatEuro(bahn.seatRueck) : "—"}</td></tr></tbody></table>
+      </section>`);
+  }
+  if(flug.active){
+    entries.push(`
+      <section class="summary-entry flight">
+        <div class="summary-entry-head"><div><div class="summary-entry-title">✈️ Hinflug</div><div class="summary-entry-sub">${flug.hinFrom} → ${flug.hinTo}</div></div></div>
+        <table class="summary-table"><thead><tr><th>Strecke</th><th>Abflug</th><th>Ankunft</th><th>Flugpreis</th><th>Gepäck</th></tr></thead>
+        <tbody><tr><td>${flug.hinFrom} → ${flug.hinTo}</td><td>${flug.hinDep || "—"}</td><td>${flug.hinArr || "—"}</td><td>${formatEuro(flug.hinPrice)}</td><td>${flug.bagHin ? formatEuro(flug.bagHin) : "—"}</td></tr></tbody></table>
+      </section>
+      <section class="summary-entry flight">
+        <div class="summary-entry-head"><div><div class="summary-entry-title">✈️ Rückflug</div><div class="summary-entry-sub">${flug.rueckFrom} → ${flug.rueckTo}</div></div></div>
+        <table class="summary-table"><thead><tr><th>Strecke</th><th>Abflug</th><th>Ankunft</th><th>Flugpreis</th><th>Gepäck</th></tr></thead>
+        <tbody><tr><td>${flug.rueckFrom} → ${flug.rueckTo}</td><td>${flug.rueckDep || "—"}</td><td>${flug.rueckArr || "—"}</td><td>${formatEuro(flug.rueckPrice)}</td><td>${flug.bagRueck ? formatEuro(flug.bagRueck) : "—"}</td></tr></tbody></table>
+      </section>`);
+  }
+  if(auto.active){
+    entries.push(`
+      <section class="summary-entry auto">
+        <div class="summary-entry-head"><div><div class="summary-entry-title">🚗 Auto / Fuhrpark</div><div class="summary-entry-sub">${auto.from} ↔ ${auto.to}</div></div></div>
+        <table class="summary-table"><thead><tr><th>Fahrzeug</th><th>Strecke</th><th>Gesamtkosten</th></tr></thead>
+        <tbody><tr><td>Fuhrparkfahrzeug</td><td>${auto.from} ↔ ${auto.to}</td><td>${formatEuro(auto.price)}</td></tr></tbody></table>
+      </section>`);
+  }
+
+  document.getElementById("s2-entries").innerHTML = entries.join("") || `<div class="info-strip">Noch keine ausgefüllten Verkehrsmittel vorhanden.</div>`;
+}
+
+function optionCostRows(rows, total){
+  return `
+    ${rows.map(r => `<div class="cost-row"><span>${r[0]}</span><strong>${r[1]}</strong></div>`).join("")}
+    <div class="cost-total"><div class="cost-total-label">Gesamtkosten</div><div class="cost-total-value">${formatEuro(total)}</div></div>
+  `;
+}
+
+function renderOptionCard(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, total){
+  return `
+    <section class="option-card ${kind}">
+      <div class="option-grid">
+        <div class="option-side">
+          <div class="option-title"><span class="accent">${title}</span></div>
+          <div class="option-route">${route}</div>
+          <span class="option-badge">Hin & Rück</span>
+        </div>
+        <div class="option-middle">
+          <div class="option-leg">
+            <div class="option-leg-title accent">${hinTitle}</div>
+            <div class="option-times">${hinTimes}</div>
+            <div class="option-transfer">${hinTransfer}</div>
+          </div>
+          <div class="option-leg">
+            <div class="option-leg-title accent">${rueckTitle}</div>
+            <div class="option-times">${rueckTimes}</div>
+            <div class="option-transfer">${rueckTransfer}</div>
+          </div>
+        </div>
+        <div class="option-cost">${optionCostRows(costRows,total)}</div>
+      </div>
+    </section>
+  `;
+}
+
+function renderComparePage(){
+  const {persons, bahn, flug, auto} = getModeData();
+  const options = [];
+
+  if(bahn.active){
+    options.push(renderOptionCard(
+      "train",
+      "🚆 Bahn",
+      `${bahn.hinFrom} ↔<br>${bahn.hinTo}`,
+      "Hinfahrt",
+      `${bahn.hinDep || "—"} → ${bahn.hinArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(timeDiffMin(bahn.hinDep,bahn.hinArr))}</span>`,
+      `Transfer + Puffer<br>${bahn.hinFrom} → Bahnhof<br>${bahn.transferHin} Min + ${bahn.buffer} Min`,
+      "Rückfahrt",
+      `${bahn.rueckDep || "—"} → ${bahn.rueckArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(timeDiffMin(bahn.rueckDep,bahn.rueckArr))}</span>`,
+      `Transfer + Puffer<br>Ziel → ${bahn.rueckFrom}<br>${bahn.transferRueck} Min + ${bahn.buffer} Min`,
+      [["Tickets", formatEuro((bahn.hinPrice+bahn.rueckPrice)*persons)],["Sitzplatz", formatEuro((bahn.seatHin+bahn.seatRueck)*persons)]],
+      bahn.total
+    ));
+  }
+
+  if(flug.active){
+    options.push(renderOptionCard(
+      "flight",
+      "✈️ Flug",
+      `${flug.hinFrom} ↔<br>${flug.hinTo}`,
+      "Hinflug",
+      `${flug.hinDep || "—"} → ${flug.hinArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(timeDiffMin(flug.hinDep,flug.hinArr))}</span>`,
+      `Transfer + Puffer<br>Start → Flughafen<br>${flug.transferHin} Min + ${flug.buffer} Min`,
+      "Rückflug",
+      `${flug.rueckDep || "—"} → ${flug.rueckArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(timeDiffMin(flug.rueckDep,flug.rueckArr))}</span>`,
+      `Transfer + Puffer<br>Ziel → Flughafen<br>${flug.transferRueck} Min + ${flug.buffer} Min`,
+      [["Flugtickets", formatEuro((flug.hinPrice+flug.rueckPrice)*persons)],["Gepäck", formatEuro((flug.bagHin+flug.bagRueck)*persons)]],
+      flug.total
+    ));
+  }
+
+  if(auto.active){
+    options.push(renderOptionCard(
+      "auto",
+      "🚗 Auto / Fuhrpark",
+      `${auto.from} ↔<br>${auto.to}`,
+      "Start",
+      `Fahrzeug übernehmen`,
+      `Transfer + Übergabe<br>Start → Fuhrpark<br>${auto.transfer} Min + ${auto.startBuffer} Min`,
+      "Rückkehr",
+      `Fahrzeug zurückgeben`,
+      `Rückgabe + Reinigung<br>Fuhrpark → Start<br>${auto.transfer} Min + ${auto.endBuffer} Min`,
+      [["Fahrzeugkosten", formatEuro(auto.price)]],
+      auto.total
+    ));
+  }
+
+  if(bahn.active && flug.active){
+    const combo1 = (bahn.hinPrice + bahn.seatHin + flug.rueckPrice + flug.bagRueck) * persons;
+    options.push(renderOptionCard(
+      "combo1",
+      "🚆 → ✈️ Kombi 1",
+      `${bahn.hinFrom} → ${bahn.hinTo}<br>${flug.rueckFrom} → ${flug.rueckTo}`,
+      "Hinfahrt Bahn",
+      `${bahn.hinDep || "—"} → ${bahn.hinArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(timeDiffMin(bahn.hinDep,bahn.hinArr))}</span>`,
+      `Transfer + Puffer<br>${bahn.transferHin} Min + ${bahn.buffer} Min`,
+      "Rückflug",
+      `${flug.rueckDep || "—"} → ${flug.rueckArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(timeDiffMin(flug.rueckDep,flug.rueckArr))}</span>`,
+      `Transfer + Puffer<br>${flug.transferRueck} Min + ${flug.buffer} Min`,
+      [["Bahn", formatEuro((bahn.hinPrice+bahn.seatHin)*persons)],["Flug", formatEuro((flug.rueckPrice+flug.bagRueck)*persons)]],
+      combo1
+    ));
+
+    const combo2 = (flug.hinPrice + flug.bagHin + bahn.rueckPrice + bahn.seatRueck) * persons;
+    options.push(renderOptionCard(
+      "combo2",
+      "✈️ → 🚆 Kombi 2",
+      `${flug.hinFrom} → ${flug.hinTo}<br>${bahn.rueckFrom} → ${bahn.rueckTo}`,
+      "Hinflug",
+      `${flug.hinDep || "—"} → ${flug.hinArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(timeDiffMin(flug.hinDep,flug.hinArr))}</span>`,
+      `Transfer + Puffer<br>${flug.transferHin} Min + ${flug.buffer} Min`,
+      "Rückfahrt Bahn",
+      `${bahn.rueckDep || "—"} → ${bahn.rueckArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(timeDiffMin(bahn.rueckDep,bahn.rueckArr))}</span>`,
+      `Transfer + Puffer<br>${bahn.transferRueck} Min + ${bahn.buffer} Min`,
+      [["Flug", formatEuro((flug.hinPrice+flug.bagHin)*persons)],["Bahn", formatEuro((bahn.rueckPrice+bahn.seatRueck)*persons)]],
+      combo2
+    ));
+  }
+
+  document.getElementById("option-list").innerHTML = options.join("") || `<div class="info-strip">Noch keine Optionen verfügbar.</div>`;
+}
+
+function showSummaryOnly(){
+  document.getElementById("input-page").classList.add("hidden");
+  document.getElementById("summary-page").classList.add("active");
+  document.getElementById("compare-page").classList.remove("active");
+  renderPage2Summary();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function showComparePage(){
+  document.getElementById("summary-page").classList.remove("active");
+  document.getElementById("compare-page").classList.add("active");
+  renderComparePage();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function showSummaryPage(){
+  renderPage2Summary();
+  document.getElementById("input-page").classList.add("hidden");
+  document.getElementById("summary-page").classList.add("active");
+  document.getElementById("compare-page").classList.remove("active");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function updateSummaryPage(){
+  renderPage2Summary();
+}
+
+
 
 </script>
 </body>
