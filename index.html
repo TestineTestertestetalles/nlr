@@ -974,25 +974,31 @@ input[type=date],input[type=time]{color-scheme:dark}
     
   </section>
 
-  <section class="card">
-    <div class="ctitle"><span class="cdot" style="background:var(--blue)"></span> Reisende & Fahrerlaubnis</div>
 
-    <div class="persons-row">
-      <label style="margin-right:4px">Anzahl Personen</label>
-      <button class="counter-btn" id="persons-minus" type="button" aria-label="Person entfernen">−</button>
-      <span class="counter-num" id="persons-num">1</span>
-      <button class="counter-btn" id="persons-plus" type="button" aria-label="Person hinzufügen">+</button>
-      <span class="persons-label" id="persons-label">1 Person reist allein</span>
+  <section id="hotel-box" class="card" style="display:none;">
+    <div class="ctitle"><span class="cdot" style="background:var(--gold)"></span> Hotelübernachtung</div>
+
+    <div class="hint">
+      Da Hin- und Rückreise nicht am selben Tag stattfinden, wird eine Hotelübernachtung als eigener Kostenblock berücksichtigt.
     </div>
 
-    <label class="cb-row" id="licence-cb">
-      <input type="checkbox" id="licence-check">
-      <div>
-        <div class="cb-label">Mindestens eine reisende Person besitzt eine gültige Fahrerlaubnis</div>
-        <div class="cb-note" id="licence-note">Ohne gültige Fahrerlaubnis wird die Auto-/Fuhrpark-Option später ausgeschlossen.</div>
+    <div class="grid2">
+      <div class="field">
+        <label>Anzahl Nächte</label>
+        <input id="hotel-nights" type="number" readonly value="1">
       </div>
-    </label>
+
+      <div class="field">
+        <label>Preis pro Nacht (€)</label>
+        <input id="hotel-price" type="number" min="0" step="0.01" value="100">
+      </div>
+    </div>
+
+    <div class="route-summary" style="display:block;margin-top:14px;">
+      <strong>Hotelkosten:</strong> <span id="hotel-total">100,00 €</span>
+    </div>
   </section>
+
   <section class="card">
     <div class="ctitle"><span class="cdot" style="background:var(--green)"></span> Verfügbare Verkehrsmittel</div>
 
@@ -1032,6 +1038,13 @@ input[type=date],input[type=time]{color-scheme:dark}
           <input class="transport-min" id="auto-min" type="number" min="0" max="999" placeholder="—" onclick="event.stopPropagation()" onchange="setTransferMinutes('auto', this.value)">
           <span class="transport-min-label">min</span>
         </div>
+        <label class="cb-row" id="licence-cb" onclick="event.stopPropagation()" style="margin-top:10px;padding:8px 9px;">
+          <input type="checkbox" id="licence-check">
+          <div>
+            <div class="cb-label" style="font-size:11px;">Führerschein vorhanden</div>
+            <div class="cb-note" id="licence-note">Auto aktivierbar</div>
+          </div>
+        </label>
       </div>
     </div>
 
@@ -1285,6 +1298,26 @@ input[type=date],input[type=time]{color-scheme:dark}
           <div class="summary-master-label">Rückfahrt</div>
           <div class="summary-master-value" id="s2-rueck">—</div>
         </div>
+
+        <div class="summary-master-item">
+          <div class="summary-master-label">Hotel</div>
+          <div class="summary-master-value" id="s2-hotel">—</div>
+        </div>
+
+        <div class="summary-master-item">
+          <div class="summary-master-label">Reisende</div>
+
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+            <button class="counter-btn" id="s2-persons-minus" type="button">−</button>
+            <span class="counter-num" id="s2-persons-num">1</span>
+            <button class="counter-btn" id="s2-persons-plus" type="button">+</button>
+          </div>
+
+          <div class="summary-master-value" id="s2-persons-label" style="margin-top:10px;">
+            1 Person reist
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -2296,8 +2329,8 @@ function initTravelers(){
       }
 
       note.textContent = tripState.hasLicence
-        ? "Auto-/Fuhrpark-Option wurde automatisch ausgewählt."
-        : "Ohne gültige Fahrerlaubnis wird die Auto-/Fuhrpark-Option ausgeschlossen.";
+        ? "Auto/Fuhrpark wurde automatisch ausgewählt."
+        : "Auto/Fuhrpark erst mit Führerschein auswählbar.";
       updateTransportUi();
     });
   }
@@ -2313,6 +2346,16 @@ document.addEventListener("DOMContentLoaded", () => {
   initSeatReservations();
   initBaggage();
   initSummaryButtonWatchers();
+
+  ["hin-date","rueck-date","hotel-price"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.addEventListener("change", updateHotelBox);
+      el.addEventListener("input", updateHotelBox);
+    }
+  });
+
+  updateHotelBox();
 });
 
 function formatDateForDb(date){
@@ -2446,6 +2489,16 @@ async function showBahnSearch(){
   setupFlightSearch(zielRaw, hinDate, rueckDate);
   setupAutoOption(zielRaw);
   initSummaryButtonWatchers();
+
+  ["hin-date","rueck-date","hotel-price"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.addEventListener("change", updateHotelBox);
+      el.addEventListener("input", updateHotelBox);
+    }
+  });
+
+  updateHotelBox();
   updateSummaryButtonVisibility();
 
   const firstVisible = ["bahn-card","flight-card","auto-card"]
@@ -2501,6 +2554,49 @@ function dur(min){
   const m = min % 60;
   return h ? (m ? `${h}h ${m}min` : `${h}h`) : `${m}min`;
 }
+
+
+function updateHotelBox(){
+  const hin = document.getElementById("hin-date")?.value;
+  const rueck = document.getElementById("rueck-date")?.value;
+  const box = document.getElementById("hotel-box");
+
+  if(!hin || !rueck){
+    box.style.display = "none";
+    return;
+  }
+
+  const start = new Date(hin);
+  const end = new Date(rueck);
+
+  const diff = Math.round((end - start) / (1000*60*60*24));
+
+  if(diff <= 0){
+    box.style.display = "none";
+    return;
+  }
+
+  box.style.display = "block";
+
+  document.getElementById("hotel-nights").value = diff;
+
+  const price = Number(document.getElementById("hotel-price")?.value || 100);
+  const total = diff * price;
+
+  document.getElementById("hotel-total").value =
+    total.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
+}
+
+function getHotelData(){
+  const visible = document.getElementById("hotel-box")?.style.display !== "none";
+  return {
+    active: visible,
+    nights: Number(document.getElementById("hotel-nights")?.value || 0),
+    price: Number(document.getElementById("hotel-price")?.value || 0),
+    total: Number((document.getElementById("hotel-nights")?.value || 0)) * Number(document.getElementById("hotel-price")?.value || 0)
+  };
+}
+
 
 function getModeData(){
   const persons = tripState.persons || 1;
@@ -2564,13 +2660,49 @@ function getModeData(){
   return { persons, dest, bahn, flug, auto };
 }
 
+
+function initPage2Persons(){
+  const minus = document.getElementById("s2-persons-minus");
+  const plus = document.getElementById("s2-persons-plus");
+
+  if(!minus || !plus || minus.dataset.bound === "1") return;
+
+  function render(){
+    const p = tripState.persons || 1;
+    document.getElementById("s2-persons-num").textContent = p;
+    document.getElementById("s2-persons-label").textContent =
+      p === 1 ? "1 Person reist" : `${p} Personen reisen`;
+  }
+
+  minus.addEventListener("click", ()=>{
+    tripState.persons = Math.max(1, (tripState.persons || 1) - 1);
+    render();
+  });
+
+  plus.addEventListener("click", ()=>{
+    tripState.persons = (tripState.persons || 1) + 1;
+    render();
+  });
+
+  minus.dataset.bound = "1";
+  render();
+}
+
+
 function renderPage2Summary(){
   const {persons, dest, bahn, flug, auto} = getModeData();
   document.getElementById("s2-start").textContent = getStartName();
   document.getElementById("s2-target").textContent = dest?.name || "—";
-  document.getElementById("s2-persons").textContent = `${persons} ${persons === 1 ? "Person" : "Personen"}`;
+
+  initPage2Persons();
+
   document.getElementById("s2-hin").innerHTML = `${fmtDate(document.getElementById("hin-date")?.value)}<br>Ankunft bis ${document.getElementById("hin-arrival-target")?.value || "—"} Uhr`;
   document.getElementById("s2-rueck").innerHTML = `${fmtDate(document.getElementById("rueck-date")?.value)}<br>Abfahrt ab ${document.getElementById("rueck-departure-target")?.value || "—"} Uhr`;
+
+  const hotel = getHotelData();
+  document.getElementById("s2-hotel").innerHTML = hotel.active
+    ? `${hotel.nights} Nacht/Nächte<br>${formatEuro(hotel.price)} pro Nacht`
+    : "Keine Übernachtung";
 
   const entries = [];
   if(bahn.active){
@@ -2604,6 +2736,36 @@ function renderPage2Summary(){
         <tbody><tr><td>${flug.rueckFrom} → ${flug.rueckTo}</td><td>${flug.rueckDep || "—"}</td><td>${flug.rueckArr || "—"}</td><td>${formatEuro(flug.rueckPrice)}</td><td>${flug.bagRueck ? formatEuro(flug.bagRueck) : "—"}</td></tr></tbody></table>
       </section>`);
   }
+  if(hotel.active){
+    entries.push(`
+      <section class="summary-entry">
+        <div class="summary-entry-head">
+          <div>
+            <div class="summary-entry-title">🏨 Hotelübernachtung</div>
+            <div class="summary-entry-sub">${hotel.nights} Nacht/Nächte</div>
+          </div>
+        </div>
+
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Nächte</th>
+              <th>Preis/Nacht</th>
+              <th>Gesamt</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${hotel.nights}</td>
+              <td>${formatEuro(hotel.price)}</td>
+              <td>${formatEuro(hotel.total)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    `);
+  }
+
   if(auto.active){
     entries.push(`
       <section class="summary-entry auto">
@@ -2652,6 +2814,7 @@ function renderOptionCard(kind, title, route, hinTitle, hinTimes, hinTransfer, r
 
 function renderComparePage(){
   const {persons, bahn, flug, auto} = getModeData();
+  const hotel = getHotelData();
   const options = [];
 
   if(bahn.active){
@@ -2734,7 +2897,12 @@ function renderComparePage(){
     ));
   }
 
-  document.getElementById("option-list").innerHTML = options.join("") || `<div class="info-strip">Noch keine Optionen verfügbar.</div>`;
+  const hotelInfo = hotel.active
+    ? `<div class="info-strip"><span>🏨</span><span>Zusätzliche Hotelkosten: <strong>${formatEuro(hotel.total)}</strong> (${hotel.nights} Nacht/Nächte à ${formatEuro(hotel.price)}).</span></div>`
+    : "";
+
+  document.getElementById("option-list").innerHTML =
+    hotelInfo + (options.join("") || `<div class="info-strip">Noch keine Optionen verfügbar.</div>`);
 }
 
 function showSummaryOnly(){
