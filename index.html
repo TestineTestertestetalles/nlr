@@ -1127,6 +1127,14 @@ input::placeholder{
   to{opacity:1;transform:none;}
 }
 
+
+.custom-target-box{
+  padding:18px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.03);
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -1165,7 +1173,7 @@ input::placeholder{
         </div>
       </div>
       <div class="field">
-        <label>Ziel aus interner Datenbank</label>
+        <label>Reiseziel</label>
         <select id="ziel">
                     <option value="">— Ziel wählen —</option>
           <option value="Mercedes-Benz BKK Berlin|Daimlerstraße 112, 12277 Berlin|Berlin Südkreuz|Berlin Südkreuz|8011113|BER|Berlin Brandenburg|30|35|52.414|13.374">Mercedes-Benz BKK Berlin · Daimlerstraße 112, 12277 Berlin</option>
@@ -1186,6 +1194,7 @@ input::placeholder{
           <option value="Mercedes-Benz BKK Wörth|Daimlerstraße 1, 76744 Wörth am Rhein|Karlsruhe Hbf|Karlsruhe Hbf|8000191|FKB|Karlsruhe/Baden-Baden Airport|25|45|49.049|8.255">Mercedes-Benz BKK Wörth · Daimlerstraße 1, 76744 Wörth am Rhein</option>
           <option value="Mercedes-Benz BKK Leinfelden|Fasanenweg 10, 70771 Leinfelden-Echterdingen|Stuttgart Hbf|Stuttgart Hbf|8000096|STR|Stuttgart Airport|25|10|48.699|9.137">Mercedes-Benz BKK Leinfelden · Fasanenweg 10, 70771 Leinfelden-Echterdingen</option>
           <option value="Mercedes-Benz BKK Germersheim|Mercedes-Benz Straße 1, 76726 Germersheim|Karlsruhe Hbf|Karlsruhe Hbf|8000191|FKB|Karlsruhe/Baden-Baden Airport|40|55|49.22|8.381">Mercedes-Benz BKK Germersheim · Mercedes-Benz Straße 1, 76726 Germersheim</option>
+                  <option value="custom">➕ Ziel hinzufügen</option>
         </select>
       </div>
       <div class="field">
@@ -2392,6 +2401,32 @@ function initSummaryButtonWatchers(){
 
 
 
+
+function toggleCustomTarget(){
+  const val = document.getElementById("ziel")?.value;
+  const box = document.getElementById("custom-target-box");
+
+  if(!box) return;
+
+  box.style.display = val === "custom" ? "block" : "none";
+}
+
+function getCustomTargetData(){
+  return {
+    name: document.getElementById("custom-target-name")?.value || "Freies Ziel",
+    address: document.getElementById("custom-target-address")?.value || "",
+    stationName: document.getElementById("custom-target-station")?.value || "",
+    stationEva: "",
+    airportCode: document.getElementById("custom-target-airport")?.value || "",
+    airportName: document.getElementById("custom-target-airport")?.value || "",
+    stationTransferMin: Number(document.getElementById("custom-target-station-min")?.value || 0),
+    airportTransferMin: Number(document.getElementById("custom-target-airport-min")?.value || 0),
+    lat: 0,
+    lon: 0
+  };
+}
+
+
 function getSelectedDestinationData(){
   const raw = document.getElementById("ziel")?.value || "";
   if(!raw) return null;
@@ -3505,3 +3540,51 @@ function updateSummaryPage(){
 </script>
 </body>
 </html>
+    <div id="custom-target-box" class="custom-target-box" style="display:none;margin-top:16px;">
+      <div class="grid2">
+        <div class="field">
+          <label>Name des Ziels</label>
+          <input id="custom-target-name" type="text" placeholder="z. B. Niederlassung Hamburg">
+        </div>
+
+        <div class="field">
+          <label>Zieltyp</label>
+          <input id="custom-target-type" type="text" placeholder="z. B. Büro, Klinik, Hotel">
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:14px;">
+        <label>Vollständige Anschrift</label>
+        <input id="custom-target-address" type="text" placeholder="Straße Hausnummer, PLZ Ort">
+      </div>
+
+      <div class="grid2" style="margin-top:14px;">
+        <div class="field">
+          <label>Nächstgelegene Haltestelle</label>
+          <input id="custom-target-station" type="text" placeholder="z. B. Hamburg Hbf">
+        </div>
+
+        <div class="field">
+          <label>Entfernung zur Haltestelle (Min)</label>
+          <input id="custom-target-station-min" type="number" min="0" step="1" placeholder="10">
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:14px;">
+        <div class="field">
+          <label>Nächstgelegener Flughafen (optional)</label>
+          <input id="custom-target-airport" type="text" placeholder="z. B. HAM">
+        </div>
+
+        <div class="field">
+          <label>Entfernung Flughafen (Min)</label>
+          <input id="custom-target-airport-min" type="number" min="0" step="1" placeholder="35">
+        </div>
+      </div>
+
+      <div class="info-strip" style="margin-top:14px;">
+        <span>ⓘ</span>
+        <span>Freie Ziele nutzen dieselbe Logik wie die interne Zieldatenbank.</span>
+      </div>
+    </div>
+
