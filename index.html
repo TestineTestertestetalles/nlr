@@ -864,7 +864,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 .summary-table td{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.055);font-weight:700;}
 .summary-table tr:last-child td{border-bottom:none;}
 .summary-table td:last-child,.summary-table th:last-child{text-align:right;}
-.summary-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);}
+.summary-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);}
 .option-list{display:flex;flex-direction:column;gap:14px;}
 .option-card{
   border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);overflow:hidden;
@@ -1199,6 +1199,34 @@ input::placeholder{
   line-height:1.5;
 }
 
+
+.pdf-button{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1.5px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border-radius:12px;
+  padding:10px 13px;
+  font-weight:900;
+  cursor:pointer;
+}
+.pdf-button:hover{background:rgba(255,255,255,.11);}
+.compare-head-row{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:flex-start;
+}
+@media print{
+  body{background:#fff!important;color:#111!important;}
+  .hero, #input-page, #summary-page, .compare-controls, .summary-actions, .pdf-button, .stepbar{display:none!important;}
+  #compare-page{display:block!important;}
+  .card,.option-card,.summary-master{box-shadow:none!important;border:1px solid #ccc!important;background:#fff!important;color:#111!important;}
+  *{color:#111!important;}
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -1301,8 +1329,8 @@ input::placeholder{
 
       <div class="grid2" style="margin-top:14px;">
         <div class="field">
-          <label>Nächstgelegene Haltestelle</label>
-          <input id="custom-target-station" type="text" placeholder="z. B. Hamburg Hbf">
+          <label>Nächster größerer Bahnhof / Hbf</label>
+          <input id="custom-target-station" type="text" placeholder="z. B. Hamburg Hbf oder Stuttgart Hbf">
         </div>
 
         <div class="field">
@@ -1325,7 +1353,7 @@ input::placeholder{
 
       <div class="info-strip" style="margin-top:14px;">
         <span>ⓘ</span>
-        <span>Für freie Ziele genügt der Name der nächstgelegenen Haltestelle. Wenn die Haltestelle bekannt ist, wird die passende EVA-ID automatisch ergänzt.</span>
+        <span>Für freie Ziele möglichst den nächsten größeren Bahnhof/Hbf angeben. Das erleichtert die automatische Suche und stabilisiert die DB-Verlinkung.</span>
       </div>
     </div>
 </section>
@@ -1649,24 +1677,14 @@ input::placeholder{
         
 <div class="summary-master-item">
   <div class="summary-master-label">Hotel</div>
-  <div id="s2-hotel" style="display:none;"></div>
 
-  <div style="display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;margin-top:8px;">
-    <div>
-      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Nächte</div>
-      <div id="hotel-nights-display" class="summary-master-value" style="padding:10px 0;">0</div><input id="hotel-nights" type="hidden" value="0">
-    </div>
-
-    <div>
-      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Preis pro Nacht bearbeiten</div>
-      <input id="hotel-price" type="number" min="0" step="0.01" value="100" oninput="updateHotelBox()" onchange="updateHotelBox()">
-    </div>
-
-    <div>
-      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Gesamt</div>
-      <input id="hotel-total-input" type="text" readonly value="0,00 €">
-    </div>
+  <div style="margin-top:8px;">
+    <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Preis pro Nacht bearbeiten</div>
+    <input id="hotel-price" type="number" min="0" step="0.01" value="100" oninput="updateHotelBox()" onchange="updateHotelBox()">
   </div>
+
+  <input id="hotel-nights" type="hidden" value="0">
+  <input id="hotel-total-input" type="hidden" value="0,00 €">
 
   <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;">
     <input type="checkbox" id="hotel-disable" onchange="updateHotelBox()">
@@ -1713,10 +1731,13 @@ input::placeholder{
   </div>
 
   <section class="card">
-    <div class="page-head">
-      <div class="page-kicker">Seite 3 von 3</div>
-      <div class="page-title">Optionenvergleich</div>
-      <div class="page-sub">Vergleichen Sie die möglichen Reiseoptionen inklusive Transferzeiten und Gesamtkosten.</div>
+    <div class="compare-head-row">
+      <div class="page-head">
+        <div class="page-kicker">Seite 3 von 3</div>
+        <div class="page-title">Optionenvergleich</div>
+        <div class="page-sub">Vergleichen Sie die möglichen Reiseoptionen inklusive Transferzeiten und Gesamtkosten.</div>
+      </div>
+      <button class="pdf-button" type="button" onclick="exportResultPdf()">📄 PDF</button>
     </div>
 
     <section class="summary-master" style="margin-bottom:16px;">
@@ -1745,6 +1766,7 @@ input::placeholder{
 
     <div class="summary-actions">
       <button class="btn-secondary" type="button" onclick="showSummaryOnly()">← Zurück zur Zusammenfassung</button>
+      <button class="btn-secondary" type="button" onclick="exportResultPdf()">📄 Ergebnis als PDF speichern</button>
       <button class="btn-primary" type="button" onclick="alert('Auswahlfunktion wird im nächsten Schritt ergänzt.')">Beste Option wählen →</button>
     </div>
   </section>
@@ -3721,6 +3743,19 @@ function syncFromPage2(id, value){
   }
 }
 
+function changeComparePersons(delta){
+  tripState.persons = Math.max(1, Math.min(20, (tripState.persons || 1) + delta));
+
+  const p = tripState.persons;
+  const num = document.getElementById("compare-persons-num");
+  const label = document.getElementById("compare-persons-label");
+
+  if(num) num.textContent = p;
+  if(label) label.textContent = p === 1 ? "1 Person reist" : `${p} Personen reisen`;
+
+  renderComparePage();
+}
+
 function optionCostRows(rows, total){
   return `
     ${rows.map(r => `<div class="cost-row"><span>${r[0]}</span><strong>${r[1]}</strong></div>`).join("")}
@@ -4174,6 +4209,10 @@ function renderComparePage(){
   renderEasterEgg(sorted);
 }
 
+
+function exportResultPdf(){
+  window.print();
+}
 
 function showSummaryOnly(){
   document.getElementById("input-page").classList.add("hidden");
