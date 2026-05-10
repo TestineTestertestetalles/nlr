@@ -1135,6 +1135,70 @@ input::placeholder{
   background:rgba(255,255,255,.03);
 }
 
+
+.summary-table select,
+#workability-content select{
+  background:#0f172a!important;
+  color:#fff!important;
+  border:1.5px solid rgba(255,255,255,.28)!important;
+}
+.summary-table select option,
+#workability-content select option{
+  background:#0f172a;
+  color:#fff;
+}
+
+
+.trip-date-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin:12px 0;
+}
+.timeline-box{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.08);
+  font-size:12px;
+  line-height:1.7;
+}
+.timeline-box strong{
+  color:#fff;
+}
+.option-timeline{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px;
+}
+.option-timeline-card{
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  padding:12px;
+}
+.option-timeline-title{
+  font-size:11px;
+  font-weight:900;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  margin-bottom:8px;
+}
+.option-timeline-main{
+  font-size:14px;
+  font-weight:900;
+  line-height:1.6;
+}
+.option-timeline-sub{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:6px;
+  line-height:1.5;
+}
+
 @media(max-width:560px){
   .flight-price-row{grid-template-columns:1fr}
 }
@@ -1159,6 +1223,14 @@ input::placeholder{
   </header>
 
   <main id="input-page" class="input-page">
+  <div class="stepbar">
+    <div class="stepitem active"><span class="stepnum">1</span><span>Eingabe</span></div>
+    <div class="stepline"></div>
+    <div class="stepitem"><span class="stepnum">2</span><span>Zusammenfassung</span></div>
+    <div class="stepline"></div>
+    <div class="stepitem"><span class="stepnum">3</span><span>Optionenvergleich</span></div>
+  </div>
+
   <section class="card">
     <div class="ctitle"><span class="cdot"></span> Reisedaten</div>
     <div class="grid2">
@@ -1320,6 +1392,16 @@ input::placeholder{
 
     <div class="trip-block">
       <div class="trip-head">↗ Hinreise</div>
+      <div class="trip-date-grid">
+        <div class="field">
+          <label>Buchungsdatum Hinfahrt</label>
+          <input id="bahn-hin-date" type="date">
+        </div>
+        <div class="field">
+          <label>Buchungsdatum Rückfahrt</label>
+          <input id="bahn-rueck-date" type="date">
+        </div>
+      </div>
       <div class="route-line">
         <span id="hin-from">Start</span>
         <span class="arrow">→</span>
@@ -1401,6 +1483,16 @@ input::placeholder{
 
     <div class="trip-block">
       <div class="trip-head">↗ Hinflug</div>
+      <div class="trip-date-grid">
+        <div class="field">
+          <label>Buchungsdatum Hinflug</label>
+          <input id="flug-hin-date" type="date">
+        </div>
+        <div class="field">
+          <label>Buchungsdatum Rückflug</label>
+          <input id="flug-rueck-date" type="date">
+        </div>
+      </div>
       <div class="route-line">
         <span id="flug-hin-from">Startflughafen</span>
         <span class="arrow">→</span>
@@ -1480,6 +1572,16 @@ input::placeholder{
 
     <div class="trip-block">
       <div class="trip-head">🚗 Auto / Fuhrpark</div>
+      <div class="trip-date-grid">
+        <div class="field">
+          <label>Datum Hinfahrt</label>
+          <input id="auto-hin-date" type="date">
+        </div>
+        <div class="field">
+          <label>Datum Rückfahrt</label>
+          <input id="auto-rueck-date" type="date">
+        </div>
+      </div>
       <div class="route-line">
         <span id="auto-from">Start/Fuhrpark</span>
         <span class="arrow">↔</span>
@@ -1552,11 +1654,11 @@ input::placeholder{
   <div style="display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;margin-top:8px;">
     <div>
       <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Nächte</div>
-      <input id="hotel-nights" type="number" readonly value="0">
+      <div id="hotel-nights-display" class="summary-master-value" style="padding:10px 0;">0</div><input id="hotel-nights" type="hidden" value="0">
     </div>
 
     <div>
-      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">€/Nacht</div>
+      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Preis pro Nacht bearbeiten</div>
       <input id="hotel-price" type="number" min="0" step="0.01" value="100" oninput="updateHotelBox()" onchange="updateHotelBox()">
     </div>
 
@@ -1583,10 +1685,15 @@ input::placeholder{
 
   <div class="info-strip" style="margin-bottom:16px;">
     <span>ⓘ</span>
-    <span>Produktive Reisezeit wird bei der Bewertung der optimalen Reiseoption berücksichtigt.</span>
+    <span>Gemeint ist: Habe ich Aufgaben, die ich im ICE oder am Gate/im Flugzeug durchführen kann, z. B. Unterlagen sichten, LinkedIn Learning, konzeptionelle Arbeit oder ähnliches?</span>
   </div>
 
-  <div id="workability-content"></div>
+  <div class="grid2" style="margin-bottom:16px;">
+    <button id="work-no" class="compare-control active" type="button" onclick="setWorkMode(false)">Nein</button>
+    <button id="work-yes" class="compare-control" type="button" onclick="setWorkMode(true)">Ja</button>
+  </div>
+
+  <div id="workability-content" style="display:none;"></div>
 </section>
 
 <div class="summary-actions">
@@ -2463,6 +2570,7 @@ function updateTransportUi(){
 
 
 let compareMode = "balanced";
+let workabilityEnabled = false;
 
 const tripState = {
   persons: 1,
@@ -2958,6 +3066,14 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleCustomTarget();
   }
 
+  ["bahn-hin-date","bahn-rueck-date","flug-hin-date","flug-rueck-date","auto-hin-date","auto-rueck-date"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.addEventListener("change", updateSummaryButtonVisibility);
+      el.addEventListener("input", updateSummaryButtonVisibility);
+    }
+  });
+
   updateHotelBox();
 });
 
@@ -3030,6 +3146,15 @@ async function showBahnSearch(){
   const rueckDate = document.getElementById("rueck-date").value;
   const rueckDepartureTarget = document.getElementById("rueck-departure-target").value;
 
+  syncTravelDatesToModeInputs();
+
+  const bahnHinDate = getDateInputValue("bahn-hin-date", "hin-date");
+  const bahnRueckDate = getDateInputValue("bahn-rueck-date", "rueck-date");
+  const flugHinDate = getDateInputValue("flug-hin-date", "hin-date");
+  const flugRueckDate = getDateInputValue("flug-rueck-date", "rueck-date");
+  const autoHinDate = getDateInputValue("auto-hin-date", "hin-date");
+  const autoRueckDate = getDateInputValue("auto-rueck-date", "rueck-date");
+
   const bahnStartSelect = document.getElementById("bahn-station");
   const bahnStartStation = bahnStartSelect ? bahnStartSelect.value : "";
   const bahnStartInfo = bahnStartSelect && bahnStartSelect.selectedOptions[0]
@@ -3075,8 +3200,8 @@ async function showBahnSearch(){
   document.getElementById("rueck-from").textContent = bahnZielStation;
   document.getElementById("rueck-to").textContent = bahnStartStation;
 
-  const hinUrl = buildDbUrl(bahnStartStation, bahnStartInfo, bahnZielStation, bahnZielInfo, hinDate, hinArrivalTarget, true);
-  const rueckUrl = buildDbUrl(bahnZielStation, bahnZielInfo, bahnStartStation, bahnStartInfo, rueckDate, rueckDepartureTarget, false);
+  const hinUrl = buildDbUrl(bahnStartStation, bahnStartInfo, bahnZielStation, bahnZielInfo, bahnHinDate, hinArrivalTarget, true);
+  const rueckUrl = buildDbUrl(bahnZielStation, bahnZielInfo, bahnStartStation, bahnStartInfo, bahnRueckDate, rueckDepartureTarget, false);
 
   document.getElementById("hin-db-link").href = hinUrl;
   document.getElementById("hin-db-link").title = hinUrl;
@@ -3084,7 +3209,7 @@ async function showBahnSearch(){
   document.getElementById("rueck-db-link").href = rueckUrl;
   document.getElementById("rueck-db-link").title = rueckUrl;
 
-  setupFlightSearch(zielRaw, hinDate, rueckDate);
+  setupFlightSearch(zielRaw, flugHinDate, flugRueckDate);
   setupAutoOption(zielRaw);
   initSummaryButtonWatchers();
 
@@ -3122,13 +3247,80 @@ function showInputPage(){
   document.getElementById("summary-page").classList.remove("active");
   document.getElementById("compare-page").classList.remove("active");
   document.getElementById("input-page").classList.remove("hidden");
-  window.scrollTo({top:0, behavior:"smooth"});
+  window.scrollTo(0, 0);
 }
 
 
 function getStartName(){
   return document.getElementById("start")?.value || "—";
 }
+
+
+function getDateInputValue(id, fallbackId){
+  return document.getElementById(id)?.value || document.getElementById(fallbackId)?.value || "";
+}
+
+function setDateIfEmpty(id, fallbackId){
+  const el = document.getElementById(id);
+  const fallback = document.getElementById(fallbackId)?.value || "";
+  if(el && fallback && !el.value){
+    el.value = fallback;
+  }
+}
+
+function daysBetweenDates(startDate, endDate){
+  if(!startDate || !endDate) return 0;
+  const start = new Date(startDate + "T00:00:00");
+  const end = new Date(endDate + "T00:00:00");
+  const diff = Math.round((end - start) / (1000*60*60*24));
+  return Math.max(0, diff);
+}
+
+function minutesToClock(dateVal, timeVal){
+  if(!dateVal || !timeVal) return null;
+  const d = new Date(`${dateVal}T${timeVal}:00`);
+  if(Number.isNaN(d.getTime())) return null;
+  return d;
+}
+
+function addMinutesDate(dateObj, minutes){
+  if(!dateObj) return null;
+  return new Date(dateObj.getTime() + minutes * 60000);
+}
+
+function subMinutesDate(dateObj, minutes){
+  if(!dateObj) return null;
+  return new Date(dateObj.getTime() - minutes * 60000);
+}
+
+function formatDateTime(dt){
+  if(!dt) return "—";
+  return dt.toLocaleString("de-DE", {
+    weekday:"short",
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+function formatTimeOnly(dt){
+  if(!dt) return "—";
+  return dt.toLocaleTimeString("de-DE", {hour:"2-digit", minute:"2-digit"});
+}
+
+function syncTravelDatesToModeInputs(){
+  const hin = document.getElementById("hin-date")?.value || "";
+  const rueck = document.getElementById("rueck-date")?.value || "";
+  ["bahn","flug","auto"].forEach(mode => {
+    const h = document.getElementById(`${mode}-hin-date`);
+    const r = document.getElementById(`${mode}-rueck-date`);
+    if(h && !h.value) h.value = hin;
+    if(r && !r.value) r.value = rueck;
+  });
+}
+
 
 function fmtDate(d){
   if(!d) return "—";
@@ -3169,6 +3361,8 @@ function updateHotelBox(){
 
   if(disabled){
     nightsEl.value = 0;
+    const nightsDisplay = document.getElementById("hotel-nights-display");
+    if(nightsDisplay) nightsDisplay.textContent = "0";
     totalEl.value = "0,00 €";
     return;
   }
@@ -3179,6 +3373,8 @@ function updateHotelBox(){
   const diff = Math.max(0, Math.round((endDate - startDate) / (1000*60*60*24)));
 
   nightsEl.value = diff;
+  const nightsDisplay = document.getElementById("hotel-nights-display");
+  if(nightsDisplay) nightsDisplay.textContent = String(diff);
 
   const price = Number(document.getElementById("hotel-price")?.value || 100);
   const total = diff * price;
@@ -3256,6 +3452,8 @@ function getModeData(){
     hinArr: document.getElementById("bahn-hin-arrival")?.value || "",
     rueckDep: document.getElementById("bahn-rueck-departure")?.value || "",
     rueckArr: document.getElementById("bahn-rueck-arrival")?.value || "",
+    hinDate: getDateInputValue("bahn-hin-date", "hin-date"),
+    rueckDate: getDateInputValue("bahn-rueck-date", "rueck-date"),
     hinPrice: parseEuroInput("bahn-hin-price"),
     rueckPrice: parseEuroInput("bahn-rueck-price"),
     seatHin: document.getElementById("seat-hin")?.checked ? tripState.seatReservationPrice : 0,
@@ -3276,6 +3474,8 @@ function getModeData(){
     hinArr: document.getElementById("flug-hin-arrival")?.value || "",
     rueckDep: document.getElementById("flug-rueck-departure")?.value || "",
     rueckArr: document.getElementById("flug-rueck-arrival")?.value || "",
+    hinDate: getDateInputValue("flug-hin-date", "hin-date"),
+    rueckDate: getDateInputValue("flug-rueck-date", "rueck-date"),
     hinPrice: parseEuroInput("flug-hin-price"),
     rueckPrice: parseEuroInput("flug-rueck-price"),
     bagHin: document.getElementById("baggage-hin")?.checked ? tripState.baggagePrice : 0,
@@ -3292,6 +3492,8 @@ function getModeData(){
     active: autoActive,
     from: document.getElementById("auto-from")?.textContent || "",
     to: document.getElementById("auto-to")?.textContent || "",
+    hinDate: getDateInputValue("auto-hin-date", "hin-date"),
+    rueckDate: getDateInputValue("auto-rueck-date", "rueck-date"),
     price: autoBasePrice * autoVehicles,
     basePrice: autoBasePrice,
     vehicles: autoVehicles,
@@ -3317,9 +3519,31 @@ function getWorkFactor(value){
   return map[String(value)] ?? 0;
 }
 
+function setWorkMode(enabled){
+  workabilityEnabled = !!enabled;
+
+  const yes = document.getElementById("work-yes");
+  const no = document.getElementById("work-no");
+  const content = document.getElementById("workability-content");
+
+  if(yes) yes.classList.toggle("active", workabilityEnabled);
+  if(no) no.classList.toggle("active", !workabilityEnabled);
+  if(content) content.style.display = workabilityEnabled ? "block" : "none";
+
+  if(workabilityEnabled){
+    renderWorkabilitySection();
+  }
+}
+
 function renderWorkabilitySection(){
   const wrap = document.getElementById("workability-content");
   if(!wrap) return;
+
+  wrap.style.display = workabilityEnabled ? "block" : "none";
+  if(!workabilityEnabled){
+    wrap.innerHTML = "";
+    return;
+  }
 
   const {bahn, flug, auto} = getModeData();
 
@@ -3389,6 +3613,7 @@ function renderWorkabilitySection(){
 }
 
 function getWorkability(mode, dir){
+  if(!workabilityEnabled) return 0;
   const el = document.getElementById(`${mode}-work-${dir}`);
   return getWorkFactor(el?.value || "0");
 }
@@ -3413,10 +3638,11 @@ function renderPage2Summary(){
       <section class="s2-mode-card train">
         <div class="s2-mode-title">🚆 Bahn</div>
         <table class="summary-table">
-          <thead><tr><th>Strecke</th><th>Abfahrt</th><th>Ankunft</th><th>Preis p. P.</th><th>Sitzplatz</th></tr></thead>
+          <thead><tr><th>Strecke</th><th>Datum</th><th>Abfahrt</th><th>Ankunft</th><th>Preis p. P.</th><th>Sitzplatz</th></tr></thead>
           <tbody>
             <tr>
               <td>${bahn.hinFrom} → ${bahn.hinTo}</td>
+              <td><input id="s2-bahn-hin-date" type="date" value="${bahn.hinDate}" onchange="syncFromPage2('bahn-hin-date', this.value)"></td>
               <td><input id="s2-bahn-hin-departure" type="time" value="${bahn.hinDep}" onchange="syncFromPage2('bahn-hin-departure', this.value)"></td>
               <td><input id="s2-bahn-hin-arrival" type="time" value="${bahn.hinArr}" onchange="syncFromPage2('bahn-hin-arrival', this.value)"></td>
               <td><input id="s2-bahn-hin-price" type="number" min="0" step="0.01" value="${bahn.hinPrice || ""}" onchange="syncFromPage2('bahn-hin-price', this.value)"></td>
@@ -3424,6 +3650,7 @@ function renderPage2Summary(){
             </tr>
             <tr>
               <td>${bahn.rueckFrom} → ${bahn.rueckTo}</td>
+              <td><input id="s2-bahn-rueck-date" type="date" value="${bahn.rueckDate}" onchange="syncFromPage2('bahn-rueck-date', this.value)"></td>
               <td><input id="s2-bahn-rueck-departure" type="time" value="${bahn.rueckDep}" onchange="syncFromPage2('bahn-rueck-departure', this.value)"></td>
               <td><input id="s2-bahn-rueck-arrival" type="time" value="${bahn.rueckArr}" onchange="syncFromPage2('bahn-rueck-arrival', this.value)"></td>
               <td><input id="s2-bahn-rueck-price" type="number" min="0" step="0.01" value="${bahn.rueckPrice || ""}" onchange="syncFromPage2('bahn-rueck-price', this.value)"></td>
@@ -3443,6 +3670,7 @@ function renderPage2Summary(){
           <tbody>
             <tr>
               <td>${flug.hinFrom} → ${flug.hinTo}</td>
+              <td><input id="s2-flug-hin-date" type="date" value="${flug.hinDate}" onchange="syncFromPage2('flug-hin-date', this.value)"></td>
               <td><input id="s2-flug-hin-departure" type="time" value="${flug.hinDep}" onchange="syncFromPage2('flug-hin-departure', this.value)"></td>
               <td><input id="s2-flug-hin-arrival" type="time" value="${flug.hinArr}" onchange="syncFromPage2('flug-hin-arrival', this.value)"></td>
               <td><input id="s2-flug-hin-price" type="number" min="0" step="0.01" value="${flug.hinPrice || ""}" onchange="syncFromPage2('flug-hin-price', this.value)"></td>
@@ -3450,6 +3678,7 @@ function renderPage2Summary(){
             </tr>
             <tr>
               <td>${flug.rueckFrom} → ${flug.rueckTo}</td>
+              <td><input id="s2-flug-rueck-date" type="date" value="${flug.rueckDate}" onchange="syncFromPage2('flug-rueck-date', this.value)"></td>
               <td><input id="s2-flug-rueck-departure" type="time" value="${flug.rueckDep}" onchange="syncFromPage2('flug-rueck-departure', this.value)"></td>
               <td><input id="s2-flug-rueck-arrival" type="time" value="${flug.rueckArr}" onchange="syncFromPage2('flug-rueck-arrival', this.value)"></td>
               <td><input id="s2-flug-rueck-price" type="number" min="0" step="0.01" value="${flug.rueckPrice || ""}" onchange="syncFromPage2('flug-rueck-price', this.value)"></td>
@@ -3465,11 +3694,13 @@ function renderPage2Summary(){
       <section class="s2-mode-card auto">
         <div class="s2-mode-title">🚗 Auto / Fuhrpark</div>
         <table class="summary-table">
-          <thead><tr><th>Fahrzeug</th><th>Strecke</th><th>Preis je Fahrzeug</th></tr></thead>
+          <thead><tr><th>Fahrzeug</th><th>Strecke</th><th>Hinfahrt</th><th>Rückfahrt</th><th>Preis je Fahrzeug</th></tr></thead>
           <tbody>
             <tr>
               <td>Fuhrparkfahrzeug</td>
               <td>${auto.from} ↔ ${auto.to}</td>
+              <td><input id="s2-auto-hin-date" type="date" value="${auto.hinDate}" onchange="syncFromPage2('auto-hin-date', this.value)"></td>
+              <td><input id="s2-auto-rueck-date" type="date" value="${auto.rueckDate}" onchange="syncFromPage2('auto-rueck-date', this.value)"></td>
               <td><input id="s2-auto-price" type="number" min="0" step="0.01" value="${auto.basePrice || auto.price || ""}" onchange="syncFromPage2('auto-price', this.value)"></td>
             </tr>
           </tbody>
@@ -3555,13 +3786,26 @@ function renderOptionCard(option, rank){
             <span class="accent">${option.title}</span>
           </div>
           <div class="option-route">${option.route}</div>
+          <div class="option-timeline">
+            <div class="option-timeline-card">
+              <div class="option-timeline-title">Hinfahrt</div>
+              <div class="option-timeline-main">Start zuhause: ${formatDateTime(option.timeline?.hinStart)}<br>Ankunft Ziel: ${formatDateTime(option.timeline?.hinArrive)}</div>
+              <div class="option-timeline-sub">${option.timeline?.hinNote || ""}</div>
+            </div>
+            <div class="option-timeline-card">
+              <div class="option-timeline-title">Rückfahrt</div>
+              <div class="option-timeline-main">Start am Ziel: ${formatDateTime(option.timeline?.rueckStart)}<br>Ankunft zuhause: ${formatDateTime(option.timeline?.rueckArrive)}</div>
+              <div class="option-timeline-sub">${option.timeline?.rueckNote || ""}</div>
+            </div>
+          </div>
+
           <div class="option-topline">
             <span class="option-badge">${option.badge || "Hin & Rück"}</span>
             ${best ? `<div class="best-label">⭐ Beste Option nach aktueller Auswahl</div>` : ""}
             <div class="option-summary-kpis">
               <div class="option-kpi">
-                <div class="option-kpi-label">Effektiver Zeitverlust</div>
-                <div class="option-kpi-value">${dur(option.effectiveLoss)}</div>
+                <div class="option-kpi-label">Reisezeit</div>
+                <div class="option-kpi-value">${dur(option.totalTime)}</div>
               </div>
               <div class="option-kpi">
                 <div class="option-kpi-label">Produktive Reisezeit</div>
@@ -3598,7 +3842,7 @@ function renderOptionCard(option, rank){
 }
 
 
-function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, travelCost, hotelCost, totalTime, productiveTime, badge){
+function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, travelCost, hotelCost, totalTime, productiveTime, badge, timeline, hotelNights){
   return {
     kind,
     title,
@@ -3609,9 +3853,11 @@ function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueck
     rueckTitle,
     rueckTimes,
     rueckTransfer,
-    costRows: [...costRows, ["Hotel", formatEuro(hotelCost)]],
+    costRows: [...costRows, ["Hotel", hotelNights ? `${hotelNights} Nacht/Nächte · ${formatEuro(hotelCost)}` : formatEuro(0)]],
     travelCost,
     hotelCost,
+    hotelNights,
+    timeline,
     totalCost: travelCost + hotelCost,
     totalTime,
     productiveTime,
@@ -3690,6 +3936,26 @@ function renderEasterEgg(options){
 }
 
 
+
+function optionHotelNights(hinDate, rueckDate){
+  const disabled = document.getElementById("hotel-disable")?.checked;
+  if(disabled) return 0;
+  return daysBetweenDates(hinDate, rueckDate);
+}
+
+function optionHotelCost(hinDate, rueckDate){
+  const price = Number(document.getElementById("hotel-price")?.value || 0);
+  return optionHotelNights(hinDate, rueckDate) * price;
+}
+
+function calcTimelineForLeg(dateVal, departTime, arriveTime, transferBefore, bufferBefore, modeLabel){
+  const dep = minutesToClock(dateVal, departTime);
+  const arr = minutesToClock(dateVal, arriveTime);
+  const startHome = subMinutesDate(dep, transferBefore + bufferBefore);
+  return {start:startHome, depart:dep, arrive:arr, modeLabel};
+}
+
+
 function renderComparePage(){
   const dest = getSelectedDestinationData();
   const destinationName = dest?.name || "Ziel";
@@ -3700,7 +3966,6 @@ function renderComparePage(){
 
   const {persons, bahn, flug, auto} = getModeData();
   const hotel = getHotelData();
-  const hotelCost = hotel.active ? hotel.total : 0;
   const options = [];
 
   if(bahn.active){
@@ -3709,8 +3974,18 @@ function renderComparePage(){
     const hinTransferTotal = bahn.transferHin + bahn.buffer;
     const rueckTransferTotal = bahn.transferRueck + bahn.buffer;
     const travelCost = (bahn.hinPrice + bahn.rueckPrice + bahn.seatHin + bahn.seatRueck) * persons;
+    const bahnHotelNights = optionHotelNights(bahn.hinDate, bahn.rueckDate);
+    const bahnHotelCost = optionHotelCost(bahn.hinDate, bahn.rueckDate);
     const totalTime = hinRide + rueckRide + hinTransferTotal + rueckTransferTotal;
     const productiveTime = (hinRide * getWorkability('bahn','hin')) + (rueckRide * getWorkability('bahn','rueck'));
+    const bahnTimeline = {
+      hinStart: subMinutesDate(minutesToClock(bahn.hinDate, bahn.hinDep), hinTransferTotal),
+      hinArrive: minutesToClock(bahn.hinDate, bahn.hinArr),
+      rueckStart: subMinutesDate(minutesToClock(bahn.rueckDate, bahn.rueckDep), rueckTransferTotal),
+      rueckArrive: minutesToClock(bahn.rueckDate, bahn.rueckArr),
+      hinNote: `inkl. ${hinTransferTotal} Min Transfer/Puffer zum Startbahnhof`,
+      rueckNote: `Start am Ziel ca. ${rueckTransferTotal} Min vor Abfahrt`
+    };
 
     options.push(createOption(
       "train",
@@ -3718,15 +3993,18 @@ function renderComparePage(){
       `${bahn.hinFrom} ↔<br>${bahn.hinTo}`,
       "Hinfahrt",
       `${bahn.hinDep || "—"} → ${bahn.hinArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(hinRide)}</span>`,
-      `Transfer + Puffer<br>Fahrt vom Startort zur Haltestelle ${bahn.hinFrom}: ${bahn.transferHin} Min + ${bahn.buffer} Min Puffer = <strong>${hinTransferTotal} Min</strong>`,
+      `Fahrt vom Startort zur Haltestelle ${bahn.hinFrom}: ${bahn.transferHin} Min + ${bahn.buffer} Min Puffer = <strong>${hinTransferTotal} Min</strong>`,
       "Rückfahrt",
       `${bahn.rueckDep || "—"} → ${bahn.rueckArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(rueckRide)}</span>`,
-      `Transfer + Puffer<br>Fahrt von ${destinationName} zur Haltestelle ${bahn.rueckFrom}: ${bahn.transferRueck} Min + ${bahn.buffer} Min Puffer = <strong>${rueckTransferTotal} Min</strong>`,
+      `Fahrt von ${destinationName} zur Haltestelle ${bahn.rueckFrom}: ${bahn.transferRueck} Min + ${bahn.buffer} Min Puffer = <strong>${rueckTransferTotal} Min</strong>`,
       [["Tickets", formatEuro((bahn.hinPrice+bahn.rueckPrice)*persons)],["Sitzplatz", formatEuro((bahn.seatHin+bahn.seatRueck)*persons)]],
       travelCost,
-      hotelCost,
+      bahnHotelCost,
       totalTime,
-      productiveTime
+      productiveTime,
+      undefined,
+      bahnTimeline,
+      bahnHotelNights
     ));
   }
 
@@ -3736,8 +4014,18 @@ function renderComparePage(){
     const hinTransferTotal = flug.transferHin + flug.buffer;
     const rueckTransferTotal = flug.transferRueck + flug.buffer;
     const travelCost = (flug.hinPrice + flug.rueckPrice + flug.bagHin + flug.bagRueck) * persons;
+    const flugHotelNights = optionHotelNights(flug.hinDate, flug.rueckDate);
+    const flugHotelCost = optionHotelCost(flug.hinDate, flug.rueckDate);
     const totalTime = hinFlight + rueckFlight + hinTransferTotal + rueckTransferTotal;
     const productiveTime = (hinFlight * getWorkability('flug','hin')) + (rueckFlight * getWorkability('flug','rueck'));
+    const flugTimeline = {
+      hinStart: subMinutesDate(minutesToClock(flug.hinDate, flug.hinDep), hinTransferTotal),
+      hinArrive: minutesToClock(flug.hinDate, flug.hinArr),
+      rueckStart: subMinutesDate(minutesToClock(flug.rueckDate, flug.rueckDep), rueckTransferTotal),
+      rueckArrive: minutesToClock(flug.rueckDate, flug.rueckArr),
+      hinNote: `inkl. ${hinTransferTotal} Min Transfer/Puffer zum Startflughafen`,
+      rueckNote: `Start am Ziel ca. ${rueckTransferTotal} Min vor Abflug`
+    };
 
     options.push(createOption(
       "flight",
@@ -3745,15 +4033,18 @@ function renderComparePage(){
       `${flug.hinFrom} ↔<br>${flug.hinTo}`,
       "Hinflug",
       `${flug.hinDep || "—"} → ${flug.hinArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(hinFlight)}</span>`,
-      `Transfer + Puffer<br>Fahrt vom Startort zum Flughafen: ${flug.transferHin} Min + ${flug.buffer} Min Puffer = <strong>${hinTransferTotal} Min</strong>`,
+      `Fahrt vom Startort zum Flughafen: ${flug.transferHin} Min + ${flug.buffer} Min Puffer = <strong>${hinTransferTotal} Min</strong>`,
       "Rückflug",
       `${flug.rueckDep || "—"} → ${flug.rueckArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(rueckFlight)}</span>`,
-      `Transfer + Puffer<br>Fahrt von ${destinationName} zum Flughafen: ${flug.transferRueck} Min + ${flug.buffer} Min Puffer = <strong>${rueckTransferTotal} Min</strong>`,
+      `Fahrt von ${destinationName} zum Flughafen: ${flug.transferRueck} Min + ${flug.buffer} Min Puffer = <strong>${rueckTransferTotal} Min</strong>`,
       [["Flugtickets", formatEuro((flug.hinPrice+flug.rueckPrice)*persons)],["Gepäck", formatEuro((flug.bagHin+flug.bagRueck)*persons)]],
       travelCost,
-      hotelCost,
+      flugHotelCost,
       totalTime,
-      productiveTime
+      productiveTime,
+      undefined,
+      flugTimeline,
+      flugHotelNights
     ));
   }
 
@@ -3762,8 +4053,22 @@ function renderComparePage(){
     const transferReturn = auto.transfer + auto.endBuffer;
     const driveTotal = auto.driveMin * 2;
     const travelCost = auto.price;
+    const autoHotelNights = optionHotelNights(auto.hinDate, auto.rueckDate);
+    const autoHotelCost = optionHotelCost(auto.hinDate, auto.rueckDate);
     const totalTime = transferStart + transferReturn + driveTotal;
     const productiveTime = driveTotal * getWorkability('auto','hin');
+    const autoHinStart = subMinutesDate(minutesToClock(auto.hinDate, document.getElementById("hin-arrival-target")?.value || "13:00"), totalTime);
+    const autoHinArrive = addMinutesDate(autoHinStart, transferStart + auto.driveMin);
+    const autoRueckStart = minutesToClock(auto.rueckDate, document.getElementById("rueck-departure-target")?.value || "15:00");
+    const autoRueckArrive = addMinutesDate(autoRueckStart, auto.driveMin + transferReturn);
+    const autoTimeline = {
+      hinStart: autoHinStart,
+      hinArrive: autoHinArrive,
+      rueckStart: autoRueckStart,
+      rueckArrive: autoRueckArrive,
+      hinNote: `inkl. Übergabe/Fuhrpark und Fahrzeit`,
+      rueckNote: `inkl. Rückfahrt, Rückgabe/Reinigung und Transfer`
+    };
 
     options.push(createOption(
       "auto",
@@ -3777,9 +4082,12 @@ function renderComparePage(){
       `Rückfahrt Ziel → Fuhrpark: <strong>${dur(auto.driveMin)}</strong><br>Rückgabe + Reinigung<br>${auto.transfer} Min + ${auto.endBuffer} Min = <strong>${transferReturn} Min</strong>`,
       [[`Fahrzeugkosten (${auto.vehicles} Fahrzeug${auto.vehicles === 1 ? "" : "e"})`, formatEuro(auto.price)]],
       travelCost,
-      hotelCost,
+      autoHotelCost,
       totalTime,
-      productiveTime
+      productiveTime,
+      undefined,
+      autoTimeline,
+      autoHotelNights
     ));
   }
 
@@ -3787,8 +4095,18 @@ function renderComparePage(){
     const bahnHinRide = timeDiffMin(bahn.hinDep,bahn.hinArr);
     const flugRueckRide = timeDiffMin(flug.rueckDep,flug.rueckArr);
     const combo1Cost = (bahn.hinPrice + bahn.seatHin + flug.rueckPrice + flug.bagRueck) * persons;
+    const combo1HotelNights = optionHotelNights(bahn.hinDate, flug.rueckDate);
+    const combo1HotelCost = optionHotelCost(bahn.hinDate, flug.rueckDate);
     const combo1Time = bahnHinRide + flugRueckRide + (bahn.transferHin + bahn.buffer) + (flug.transferRueck + flug.buffer);
     const combo1Productive = (bahnHinRide * getWorkability('bahn','hin')) + (flugRueckRide * getWorkability('flug','rueck'));
+    const combo1Timeline = {
+      hinStart: subMinutesDate(minutesToClock(bahn.hinDate, bahn.hinDep), bahn.transferHin + bahn.buffer),
+      hinArrive: minutesToClock(bahn.hinDate, bahn.hinArr),
+      rueckStart: subMinutesDate(minutesToClock(flug.rueckDate, flug.rueckDep), flug.transferRueck + flug.buffer),
+      rueckArrive: minutesToClock(flug.rueckDate, flug.rueckArr),
+      hinNote: `Bahn hin inkl. Transfer/Puffer`,
+      rueckNote: `Flug zurück inkl. Transfer/Puffer`
+    };
 
     options.push(createOption(
       "combo1",
@@ -3796,23 +4114,35 @@ function renderComparePage(){
       `${bahn.hinFrom} → ${bahn.hinTo}<br>${flug.rueckFrom} → ${flug.rueckTo}`,
       "Hinfahrt Bahn",
       `${bahn.hinDep || "—"} → ${bahn.hinArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(bahnHinRide)}</span>`,
-      `Transfer + Puffer<br>Fahrt vom Startort zur Haltestelle: ${bahn.transferHin} Min + ${bahn.buffer} Min Puffer = <strong>${bahn.transferHin + bahn.buffer} Min</strong>`,
+      `Fahrt vom Startort zur Haltestelle: ${bahn.transferHin} Min + ${bahn.buffer} Min Puffer = <strong>${bahn.transferHin + bahn.buffer} Min</strong>`,
       "Rückflug",
       `${flug.rueckDep || "—"} → ${flug.rueckArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(flugRueckRide)}</span>`,
-      `Transfer + Puffer<br>Fahrt von ${destinationName} zum Flughafen: ${flug.transferRueck} Min + ${flug.buffer} Min Puffer = <strong>${flug.transferRueck + flug.buffer} Min</strong>`,
+      `Fahrt von ${destinationName} zum Flughafen: ${flug.transferRueck} Min + ${flug.buffer} Min Puffer = <strong>${flug.transferRueck + flug.buffer} Min</strong>`,
       [["Bahn", formatEuro((bahn.hinPrice+bahn.seatHin)*persons)],["Flug", formatEuro((flug.rueckPrice+flug.bagRueck)*persons)]],
       combo1Cost,
-      hotelCost,
+      combo1HotelCost,
       combo1Time,
       combo1Productive,
-      "Bahn hin · Flug zurück"
+      "Bahn hin · Flug zurück",
+      combo1Timeline,
+      combo1HotelNights
     ));
 
     const flugHinRide = timeDiffMin(flug.hinDep,flug.hinArr);
     const bahnRueckRide = timeDiffMin(bahn.rueckDep,bahn.rueckArr);
     const combo2Cost = (flug.hinPrice + flug.bagHin + bahn.rueckPrice + bahn.seatRueck) * persons;
+    const combo2HotelNights = optionHotelNights(flug.hinDate, bahn.rueckDate);
+    const combo2HotelCost = optionHotelCost(flug.hinDate, bahn.rueckDate);
     const combo2Time = flugHinRide + bahnRueckRide + (flug.transferHin + flug.buffer) + (bahn.transferRueck + bahn.buffer);
     const combo2Productive = (flugHinRide * getWorkability('flug','hin')) + (bahnRueckRide * getWorkability('bahn','rueck'));
+    const combo2Timeline = {
+      hinStart: subMinutesDate(minutesToClock(flug.hinDate, flug.hinDep), flug.transferHin + flug.buffer),
+      hinArrive: minutesToClock(flug.hinDate, flug.hinArr),
+      rueckStart: subMinutesDate(minutesToClock(bahn.rueckDate, bahn.rueckDep), bahn.transferRueck + bahn.buffer),
+      rueckArrive: minutesToClock(bahn.rueckDate, bahn.rueckArr),
+      hinNote: `Flug hin inkl. Transfer/Puffer`,
+      rueckNote: `Bahn zurück inkl. Transfer/Puffer`
+    };
 
     options.push(createOption(
       "combo2",
@@ -3820,16 +4150,18 @@ function renderComparePage(){
       `${flug.hinFrom} → ${flug.hinTo}<br>${bahn.rueckFrom} → ${bahn.rueckTo}`,
       "Hinflug",
       `${flug.hinDep || "—"} → ${flug.hinArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(flugHinRide)}</span>`,
-      `Transfer + Puffer<br>Fahrt vom Startort zum Flughafen: ${flug.transferHin} Min + ${flug.buffer} Min Puffer = <strong>${flug.transferHin + flug.buffer} Min</strong>`,
+      `Fahrt vom Startort zum Flughafen: ${flug.transferHin} Min + ${flug.buffer} Min Puffer = <strong>${flug.transferHin + flug.buffer} Min</strong>`,
       "Rückfahrt Bahn",
       `${bahn.rueckDep || "—"} → ${bahn.rueckArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(bahnRueckRide)}</span>`,
-      `Transfer + Puffer<br>Fahrt von ${destinationName} zur Haltestelle: ${bahn.transferRueck} Min + ${bahn.buffer} Min Puffer = <strong>${bahn.transferRueck + bahn.buffer} Min</strong>`,
+      `Fahrt von ${destinationName} zur Haltestelle: ${bahn.transferRueck} Min + ${bahn.buffer} Min Puffer = <strong>${bahn.transferRueck + bahn.buffer} Min</strong>`,
       [["Flug", formatEuro((flug.hinPrice+flug.bagHin)*persons)],["Bahn", formatEuro((bahn.rueckPrice+bahn.seatRueck)*persons)]],
       combo2Cost,
-      hotelCost,
+      combo2HotelCost,
       combo2Time,
       combo2Productive,
-      "Flug hin · Bahn zurück"
+      "Flug hin · Bahn zurück",
+      combo2Timeline,
+      combo2HotelNights
     ));
   }
 
@@ -3848,14 +4180,14 @@ function showSummaryOnly(){
   document.getElementById("summary-page").classList.add("active");
   document.getElementById("compare-page").classList.remove("active");
   renderPage2Summary();
-  window.scrollTo({top:0, behavior:"smooth"});
+  window.scrollTo(0, 0);
 }
 
 function showComparePage(){
   document.getElementById("summary-page").classList.remove("active");
   document.getElementById("compare-page").classList.add("active");
   renderComparePage();
-  window.scrollTo({top:0, behavior:"smooth"});
+  window.scrollTo(0, 0);
 }
 
 function showSummaryPage(){
@@ -3864,7 +4196,7 @@ function showSummaryPage(){
     document.getElementById("input-page").classList.add("hidden");
     document.getElementById("summary-page").classList.add("active");
     document.getElementById("compare-page").classList.remove("active");
-    window.scrollTo({top:0, behavior:"smooth"});
+    window.scrollTo(0, 0);
   }catch(e){
     console.error(e);
     alert("Die Zusammenfassung konnte nicht geöffnet werden. Bitte prüfen Sie die Eingaben auf Seite 1.");
