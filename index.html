@@ -864,7 +864,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 .summary-table td{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.055);font-weight:700;}
 .summary-table tr:last-child td{border-bottom:none;}
 .summary-table td:last-child,.summary-table th:last-child{text-align:right;}
-.summary-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);}
+.summary-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);}
 .option-list{display:flex;flex-direction:column;gap:14px;}
 .option-card{
   border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);overflow:hidden;
@@ -1199,6 +1199,146 @@ input::placeholder{
   line-height:1.5;
 }
 
+@media(max-width:560px){
+  .flight-price-row{grid-template-columns:1fr}
+}
+
+@media(max-width:560px){
+  .price-reservation-row{grid-template-columns:1fr}
+}
+
+@media(max-width:560px){
+  .grid2,.time-grid{grid-template-columns:1fr}
+  .card{padding:20px}
+}
+
+@media print{
+  .hero, #input-page, #summary-page, .compare-controls, .summary-actions, .pdf-button, .stepbar{display:none!important;}
+
+  @page{
+    size:A4 portrait;
+    margin:10mm;
+  }
+
+  body{
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+
+  #compare-page .card{
+    padding:0!important;
+    border:none!important;
+  }
+
+  .option-list{
+    gap:0!important;
+  }
+
+  .option-card{
+    page-break-after:always;
+    break-after:page;
+    page-break-inside:avoid;
+    break-inside:avoid;
+    margin:0!important;
+    padding:10px!important;
+    border-radius:8px!important;
+    font-size:10.5px!important;
+  }
+
+  .option-card:last-child{
+    page-break-after:auto;
+    break-after:auto;
+  }
+
+  .option-title{
+    font-size:15px!important;
+    margin-bottom:6px!important;
+  }
+
+  .option-side,
+  .option-leg,
+  .option-cost{
+    padding:8px!important;
+  }
+
+  .option-timeline{
+    grid-template-columns:1fr 1fr!important;
+    gap:6px!important;
+    margin-top:6px!important;
+  }
+
+  .option-timeline-card{
+    padding:7px!important;
+  }
+
+  .option-timeline-main{
+    font-size:11px!important;
+    line-height:1.35!important;
+  }
+
+  .option-timeline-sub,
+  .option-muted,
+  .option-transfer{
+    font-size:9.5px!important;
+    line-height:1.35!important;
+  }
+
+  .option-middle{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+  }
+
+  .option-leg{
+    border-bottom:none!important;
+    border-right:1px solid #ddd!important;
+  }
+
+  .option-leg:last-child{
+    border-right:none!important;
+  }
+
+  .option-times{
+    font-size:12px!important;
+    margin-bottom:6px!important;
+  }
+
+  .option-summary-kpis{
+    gap:6px!important;
+  }
+
+  .option-kpi{
+    padding:6px!important;
+    min-width:105px!important;
+  }
+
+  .option-kpi-label{
+    font-size:8px!important;
+  }
+
+  .option-kpi-value{
+    font-size:11px!important;
+  }
+
+  .cost-row{
+    padding:4px 0!important;
+    font-size:10px!important;
+  }
+
+  .cost-row.total-only strong{
+    font-size:16px!important;
+  }
+
+  .best-label,
+  .option-badge{
+    font-size:9px!important;
+    padding:3px 7px!important;
+  }
+
+  #easteregg-box{
+    display:none!important;
+  }
+}
+
 
 .pdf-button{
   display:inline-flex;
@@ -1219,26 +1359,7 @@ input::placeholder{
   gap:14px;
   align-items:flex-start;
 }
-@media print{
-  body{background:#fff!important;color:#111!important;}
-  .hero, #input-page, #summary-page, .compare-controls, .summary-actions, .pdf-button, .stepbar{display:none!important;}
-  #compare-page{display:block!important;}
-  .card,.option-card,.summary-master{box-shadow:none!important;border:1px solid #ccc!important;background:#fff!important;color:#111!important;}
-  *{color:#111!important;}
-}
 
-@media(max-width:560px){
-  .flight-price-row{grid-template-columns:1fr}
-}
-
-@media(max-width:560px){
-  .price-reservation-row{grid-template-columns:1fr}
-}
-
-@media(max-width:560px){
-  .grid2,.time-grid{grid-template-columns:1fr}
-  .card{padding:20px}
-}
 </style>
 </head>
 <body>
@@ -1329,8 +1450,8 @@ input::placeholder{
 
       <div class="grid2" style="margin-top:14px;">
         <div class="field">
-          <label>Nächster größerer Bahnhof / Hbf</label>
-          <input id="custom-target-station" type="text" placeholder="z. B. Hamburg Hbf oder Stuttgart Hbf">
+          <label>Nächstgelegene Haltestelle</label>
+          <input id="custom-target-station" type="text" placeholder="z. B. Hamburg Hbf">
         </div>
 
         <div class="field">
@@ -1353,7 +1474,7 @@ input::placeholder{
 
       <div class="info-strip" style="margin-top:14px;">
         <span>ⓘ</span>
-        <span>Für freie Ziele möglichst den nächsten größeren Bahnhof/Hbf angeben. Das erleichtert die automatische Suche und stabilisiert die DB-Verlinkung.</span>
+        <span>Für freie Ziele genügt der Name der nächstgelegenen Haltestelle. Wenn die Haltestelle bekannt ist, wird die passende EVA-ID automatisch ergänzt.</span>
       </div>
     </div>
 </section>
@@ -1677,14 +1798,24 @@ input::placeholder{
         
 <div class="summary-master-item">
   <div class="summary-master-label">Hotel</div>
+  <div id="s2-hotel" style="display:none;"></div>
 
-  <div style="margin-top:8px;">
-    <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Preis pro Nacht bearbeiten</div>
-    <input id="hotel-price" type="number" min="0" step="0.01" value="100" oninput="updateHotelBox()" onchange="updateHotelBox()">
+  <div style="display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;margin-top:8px;">
+    <div>
+      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Nächte</div>
+      <div id="hotel-nights-display" class="summary-master-value" style="padding:10px 0;">0</div><input id="hotel-nights" type="hidden" value="0">
+    </div>
+
+    <div>
+      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Preis pro Nacht bearbeiten</div>
+      <input id="hotel-price" type="number" min="0" step="0.01" value="100" oninput="updateHotelBox()" onchange="updateHotelBox()">
+    </div>
+
+    <div>
+      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Gesamt</div>
+      <input id="hotel-total-input" type="text" readonly value="0,00 €">
+    </div>
   </div>
-
-  <input id="hotel-nights" type="hidden" value="0">
-  <input id="hotel-total-input" type="hidden" value="0,00 €">
 
   <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;">
     <input type="checkbox" id="hotel-disable" onchange="updateHotelBox()">
@@ -3743,19 +3874,6 @@ function syncFromPage2(id, value){
   }
 }
 
-function changeComparePersons(delta){
-  tripState.persons = Math.max(1, Math.min(20, (tripState.persons || 1) + delta));
-
-  const p = tripState.persons;
-  const num = document.getElementById("compare-persons-num");
-  const label = document.getElementById("compare-persons-label");
-
-  if(num) num.textContent = p;
-  if(label) label.textContent = p === 1 ? "1 Person reist" : `${p} Personen reisen`;
-
-  renderComparePage();
-}
-
 function optionCostRows(rows, total){
   return `
     ${rows.map(r => `<div class="cost-row"><span>${r[0]}</span><strong>${r[1]}</strong></div>`).join("")}
@@ -4153,7 +4271,7 @@ function renderComparePage(){
       "Rückflug",
       `${flug.rueckDep || "—"} → ${flug.rueckArr || "—"}<br><span class="option-muted">Flugzeit: ${dur(flugRueckRide)}</span>`,
       `Fahrt von ${destinationName} zum Flughafen: ${flug.transferRueck} Min + ${flug.buffer} Min Puffer = <strong>${flug.transferRueck + flug.buffer} Min</strong>`,
-      [["Bahn", formatEuro((bahn.hinPrice+bahn.seatHin)*persons)],["Flug", formatEuro((flug.rueckPrice+flug.bagRueck)*persons)]],
+      [["Bahn Hin inkl. Sitzplatz", formatEuro((bahn.hinPrice+bahn.seatHin)*persons)],["Flug Rück inkl. Gepäck", formatEuro((flug.rueckPrice+flug.bagRueck)*persons)]],
       combo1Cost,
       combo1HotelCost,
       combo1Time,
@@ -4189,7 +4307,7 @@ function renderComparePage(){
       "Rückfahrt Bahn",
       `${bahn.rueckDep || "—"} → ${bahn.rueckArr || "—"}<br><span class="option-muted">Fahrzeit: ${dur(bahnRueckRide)}</span>`,
       `Fahrt von ${destinationName} zur Haltestelle: ${bahn.transferRueck} Min + ${bahn.buffer} Min Puffer = <strong>${bahn.transferRueck + bahn.buffer} Min</strong>`,
-      [["Flug", formatEuro((flug.hinPrice+flug.bagHin)*persons)],["Bahn", formatEuro((bahn.rueckPrice+bahn.seatRueck)*persons)]],
+      [["Flug Hin inkl. Gepäck", formatEuro((flug.hinPrice+flug.bagHin)*persons)],["Bahn Rück inkl. Sitzplatz", formatEuro((bahn.rueckPrice+bahn.seatRueck)*persons)]],
       combo2Cost,
       combo2HotelCost,
       combo2Time,
