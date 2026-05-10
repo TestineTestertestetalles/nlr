@@ -1517,6 +1517,45 @@ input::placeholder{
   margin:10px 0 0 18px;
 }
 
+
+.guide-grid-visible{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.guide-mini-card{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(15,23,42,.55);
+  border-radius:16px;
+  padding:14px;
+}
+.guide-step{
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  background:rgba(96,165,250,.22);
+  border:1px solid rgba(96,165,250,.45);
+  color:#bfdbfe;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+.guide-mini-title{
+  color:#fff;
+  font-weight:900;
+  margin-bottom:4px;
+}
+.guide-mini-text{
+  color:#cbd5e1;
+  font-size:13px;
+  line-height:1.45;
+}
+
 </style>
 </head>
 <body>
@@ -1537,7 +1576,52 @@ input::placeholder{
     <div class="stepitem"><span class="stepnum">3</span><span>Optionenvergleich</span></div>
   </div>
 
-  <section class="card">
+  
+
+  <section id="visible-guide-box" class="card" style="margin-top:18px;margin-bottom:22px;border-color:rgba(96,165,250,.35);">
+    <div class="ctitle"><span class="cdot" style="background:var(--blue)"></span> Erste Schritte mit dem Next Level Reisekostentool</div>
+
+    <div class="info-strip" style="margin-bottom:16px;">
+      <span>ⓘ</span>
+      <span>Diese Kurzanleitung zeigt die empfohlene Reihenfolge, damit die Reiseoptionen korrekt berechnet und verglichen werden.</span>
+    </div>
+
+    <div class="guide-grid-visible">
+      <div class="guide-mini-card">
+        <div class="guide-step">1</div>
+        <div>
+          <div class="guide-mini-title">Reisedaten erfassen</div>
+          <div class="guide-mini-text">Startort, Ziel, Datum und gewünschte Zeiten eingeben.</div>
+        </div>
+      </div>
+
+      <div class="guide-mini-card">
+        <div class="guide-step">2</div>
+        <div>
+          <div class="guide-mini-title">Verbindungen suchen</div>
+          <div class="guide-mini-text">DB- oder Google-Flights-Link öffnen und passende Verbindung auswählen.</div>
+        </div>
+      </div>
+
+      <div class="guide-mini-card">
+        <div class="guide-step">3</div>
+        <div>
+          <div class="guide-mini-title">Zeiten & Preise eintragen</div>
+          <div class="guide-mini-text">Abfahrt, Ankunft, Ticketpreis sowie Sitzplatz oder Gepäck erfassen.</div>
+        </div>
+      </div>
+
+      <div class="guide-mini-card">
+        <div class="guide-step">4</div>
+        <div>
+          <div class="guide-mini-title">Optionen vergleichen & PDF erzeugen</div>
+          <div class="guide-mini-text">Auf Seite 3 Option auswählen und als Entscheidungs- und Buchungsgrundlage speichern.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section class="card">
     <div class="ctitle"><span class="cdot"></span> Reisedaten</div>
     <div class="grid2">
       <div class="field">
@@ -1921,55 +2005,7 @@ input::placeholder{
     <div class="page-head">
       <div class="page-kicker">Seite 2 von 3</div>
       <div class="page-title">Zusammenfassung</div>
-<div id="visible-guide-box" style="margin:22px 0 28px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:22px;padding:22px;">
-  <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:10px;">
-    📘 Erste Schritte mit dem Next Level Reisekostentool
-  </div>
-
-  <div style="color:#cbd5e1;line-height:1.7;font-size:14px;margin-bottom:18px;">
-    Das Tool unterstützt dabei, die optimale Reisevariante anhand von Reisezeit, Kosten, produktiver Reisezeit und Hotelkosten zu finden.
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-    <div style="border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;background:rgba(15,23,42,.75);">
-      <div style="font-size:16px;font-weight:900;color:#fff;margin-bottom:8px;">1. Reisedaten erfassen</div>
-      <div style="color:#cbd5e1;line-height:1.6;">
-        Startort, Ziel, Datum und gewünschte Zeiten eingeben. Danach passende Bahn- oder Flugverbindungen recherchieren und Zeiten sowie Preise übernehmen.
-      </div>
-    </div>
-
-    <div style="border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;background:rgba(15,23,42,.75);">
-      <div style="font-size:16px;font-weight:900;color:#fff;margin-bottom:8px;">2. Zusammenfassung prüfen</div>
-      <div style="color:#cbd5e1;line-height:1.6;">
-        Auf Seite 2 können Preise, Zeiten und Hotelkosten geprüft und angepasst werden.
-      </div>
-    </div>
-
-    <div style="border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;background:rgba(15,23,42,.75);">
-      <div style="font-size:16px;font-weight:900;color:#fff;margin-bottom:8px;">3. Optionen vergleichen</div>
-      <div style="color:#cbd5e1;line-height:1.6;">
-        Die Reiseoptionen werden automatisch nach „günstig“, „schnell“ oder „ausgeglichen“ sortiert.
-      </div>
-    </div>
-
-    <div style="border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;background:rgba(15,23,42,.75);">
-      <div style="font-size:16px;font-weight:900;color:#fff;margin-bottom:8px;">4. PDF-Bericht erzeugen</div>
-      <div style="color:#cbd5e1;line-height:1.6;">
-        Die finale PDF dient sowohl als Entscheidungsgrundlage als auch zur Ticketbuchung und Dokumentation.
-      </div>
-    </div>
-  </div>
-</div>
-
-      <div class="page-sub">Übersicht Ihrer eingegebenen Angaben.</div>
-    </div>
-
-    <div class="info-strip">
-      <span>ⓘ</span>
-      <span>Bitte prüfen Sie Ihre Angaben. Im nächsten Schritt sehen Sie alle Optionen im Detail inklusive Transferzeiten und Gesamtkosten.</span>
-    </div>
-
-    <section class="summary-master">
+<section class="summary-master">
       <div class="summary-master-title">📋 Stammdaten der Reise</div>
 
       <div class="summary-master-grid" style="grid-template-columns:1fr 1fr;">
