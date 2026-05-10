@@ -1360,6 +1360,91 @@ input::placeholder{
   align-items:flex-start;
 }
 
+
+.option-card.selected{
+  box-shadow:0 0 0 2px rgba(96,165,250,.65), 0 16px 45px rgba(0,0,0,.20);
+}
+.select-option-btn{
+  margin-top:10px;
+  width:100%;
+  border:1.5px solid rgba(96,165,250,.35);
+  background:rgba(96,165,250,.10);
+  color:#dbeafe;
+  border-radius:12px;
+  padding:10px 12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.select-option-btn.active{
+  background:rgba(52,211,153,.14);
+  border-color:rgba(52,211,153,.45);
+  color:#bbf7d0;
+}
+.pdf-button{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1.5px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border-radius:12px;
+  padding:10px 13px;
+  font-weight:900;
+  cursor:pointer;
+}
+.compare-head-row{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:flex-start;
+}
+#pdf-report{display:none;}
+.pdf-page{
+  font-family:Arial, Helvetica, sans-serif;
+  color:#111827;
+  background:#fff;
+  padding:12mm;
+  box-sizing:border-box;
+  page-break-after:always;
+}
+.pdf-page:last-child{page-break-after:auto;}
+.pdf-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  border-bottom:2px solid #111827;
+  padding-bottom:8px;
+  margin-bottom:12px;
+}
+.pdf-brand{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#4b5563;font-weight:700;}
+.pdf-title{font-size:24px;font-weight:900;margin:2px 0 4px;}
+.pdf-sub{font-size:12px;color:#4b5563;}
+.pdf-badge{border:1px solid #d1d5db;border-radius:10px;padding:8px 10px;min-width:130px;text-align:right;}
+.pdf-badge-label{font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:800;}
+.pdf-badge-value{font-size:18px;font-weight:900;}
+.pdf-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0;}
+.pdf-kpi{border:1px solid #e5e7eb;border-radius:10px;padding:8px;background:#f9fafb;}
+.pdf-kpi-label{font-size:9px;color:#6b7280;text-transform:uppercase;font-weight:800;letter-spacing:.05em;margin-bottom:3px;}
+.pdf-kpi-value{font-size:15px;font-weight:900;}
+.pdf-section{margin-top:12px;}
+.pdf-section h2{font-size:15px;margin:0 0 6px;}
+.pdf-table{width:100%;border-collapse:collapse;font-size:10.5px;}
+.pdf-table th{background:#111827;color:#fff;text-align:left;padding:6px;font-size:9px;text-transform:uppercase;letter-spacing:.04em;}
+.pdf-table td{border:1px solid #e5e7eb;padding:6px;vertical-align:top;}
+.pdf-table .right{text-align:right;font-weight:800;}
+.pdf-note{font-size:10.5px;color:#374151;line-height:1.45;background:#f3f4f6;border-left:4px solid #2563eb;padding:8px 10px;border-radius:8px;}
+.pdf-two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pdf-small{font-size:9px;color:#6b7280;line-height:1.35;}
+@media print{
+  @page{size:A4 portrait;margin:8mm;}
+  body{background:#fff!important;}
+  body > .app{display:none!important;}
+  #pdf-report{display:block!important;}
+  .pdf-page{page-break-after:always;break-after:page;}
+  .pdf-page:last-child{page-break-after:auto;break-after:auto;}
+}
+
 </style>
 </head>
 <body>
@@ -1450,8 +1535,8 @@ input::placeholder{
 
       <div class="grid2" style="margin-top:14px;">
         <div class="field">
-          <label>Nächstgelegene Haltestelle</label>
-          <input id="custom-target-station" type="text" placeholder="z. B. Hamburg Hbf">
+          <label>Nächster größerer Bahnhof / Hbf</label>
+          <input id="custom-target-station" type="text" placeholder="z. B. Hamburg Hbf oder Stuttgart Hbf">
         </div>
 
         <div class="field">
@@ -1474,7 +1559,7 @@ input::placeholder{
 
       <div class="info-strip" style="margin-top:14px;">
         <span>ⓘ</span>
-        <span>Für freie Ziele genügt der Name der nächstgelegenen Haltestelle. Wenn die Haltestelle bekannt ist, wird die passende EVA-ID automatisch ergänzt.</span>
+        <span>Für freie Ziele möglichst den nächsten größeren Bahnhof/Hbf angeben. Das erleichtert die automatische Suche und stabilisiert die DB-Verlinkung.</span>
       </div>
     </div>
 </section>
@@ -1798,24 +1883,14 @@ input::placeholder{
         
 <div class="summary-master-item">
   <div class="summary-master-label">Hotel</div>
-  <div id="s2-hotel" style="display:none;"></div>
 
-  <div style="display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;margin-top:8px;">
-    <div>
-      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Nächte</div>
-      <div id="hotel-nights-display" class="summary-master-value" style="padding:10px 0;">0</div><input id="hotel-nights" type="hidden" value="0">
-    </div>
-
-    <div>
-      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Preis pro Nacht bearbeiten</div>
-      <input id="hotel-price" type="number" min="0" step="0.01" value="100" oninput="updateHotelBox()" onchange="updateHotelBox()">
-    </div>
-
-    <div>
-      <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Gesamt</div>
-      <input id="hotel-total-input" type="text" readonly value="0,00 €">
-    </div>
+  <div style="margin-top:8px;">
+    <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:4px;">Preis pro Nacht bearbeiten</div>
+    <input id="hotel-price" type="number" min="0" step="0.01" value="100" oninput="updateHotelBox()" onchange="updateHotelBox()">
   </div>
+
+  <input id="hotel-nights" type="hidden" value="0">
+  <input id="hotel-total-input" type="hidden" value="0,00 €">
 
   <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;">
     <input type="checkbox" id="hotel-disable" onchange="updateHotelBox()">
@@ -2723,6 +2798,8 @@ function updateTransportUi(){
 
 
 let compareMode = "balanced";
+let selectedPdfOptionId = null;
+let currentCompareOptions = [];
 let workabilityEnabled = false;
 
 const tripState = {
@@ -3874,6 +3951,19 @@ function syncFromPage2(id, value){
   }
 }
 
+function changeComparePersons(delta){
+  tripState.persons = Math.max(1, Math.min(20, (tripState.persons || 1) + delta));
+
+  const p = tripState.persons;
+  const num = document.getElementById("compare-persons-num");
+  const label = document.getElementById("compare-persons-label");
+
+  if(num) num.textContent = p;
+  if(label) label.textContent = p === 1 ? "1 Person reist" : `${p} Personen reisen`;
+
+  renderComparePage();
+}
+
 function optionCostRows(rows, total){
   return `
     ${rows.map(r => `<div class="cost-row"><span>${r[0]}</span><strong>${r[1]}</strong></div>`).join("")}
@@ -3931,7 +4021,7 @@ function setCompareMode(mode){
 function renderOptionCard(option, rank){
   const best = rank === 1;
   return `
-    <section class="option-card ${option.kind} ${best ? "best" : ""}">
+    <section class="option-card ${option.kind} ${best ? "best" : ""} ${selectedPdfOptionId === option.kind ? "selected" : ""}">
       <div class="option-grid">
         <div class="option-side">
           <div class="option-title">
@@ -3955,6 +4045,9 @@ function renderOptionCard(option, rank){
           <div class="option-topline">
             <span class="option-badge">${option.badge || "Hin & Rück"}</span>
             ${best ? `<div class="best-label">⭐ Beste Option nach aktueller Auswahl</div>` : ""}
+            <button class="select-option-btn ${selectedPdfOptionId === option.kind ? "active" : ""}" type="button" onclick="selectPdfOption('${option.kind}')">
+              ${selectedPdfOptionId === option.kind ? "✓ Für PDF ausgewählt" : "Diese Option für PDF auswählen"}
+            </button>
             <div class="option-summary-kpis">
               <div class="option-kpi">
                 <div class="option-kpi-label">Reisezeit</div>
@@ -4319,6 +4412,10 @@ function renderComparePage(){
   }
 
   const sorted = sortOptions(options);
+  currentCompareOptions = sorted;
+  if(sorted.length && !selectedPdfOptionId){
+    selectedPdfOptionId = sorted[0].kind;
+  }
   document.getElementById("option-list").innerHTML =
     sorted.length
       ? sorted.map((option, idx) => renderOptionCard(option, idx + 1)).join("")
@@ -4328,8 +4425,218 @@ function renderComparePage(){
 }
 
 
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+
+function cleanOptionText(value){
+  return String(value ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function optionPlainTitle(option){
+  return String(option?.title || "")
+    .replace(/[🚆✈️🚗⭐→]/g,"")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function selectPdfOption(kind){
+  selectedPdfOptionId = kind;
+  renderComparePage();
+}
+
+function getSelectedPdfOption(){
+  if(!currentCompareOptions.length){
+    renderComparePage();
+  }
+  return currentCompareOptions.find(o => o.kind === selectedPdfOptionId) || currentCompareOptions[0] || null;
+}
+
+function makePdfCostRows(option){
+  return option.costRows.map(r => `
+    <tr><td>${escapeHtml(r[0])}</td><td class="right">${escapeHtml(r[1])}</td></tr>
+  `).join("") + `
+    <tr><td><strong>Gesamt</strong></td><td class="right"><strong>${formatEuro(option.totalCost)}</strong></td></tr>
+  `;
+}
+
+function makeBookingRows(option){
+  return `
+    <tr>
+      <td><strong>Hinfahrt</strong></td>
+      <td>${escapeHtml(option.hinTitle)}</td>
+      <td>${escapeHtml(cleanOptionText(option.hinTimes))}</td>
+      <td>${escapeHtml(cleanOptionText(option.hinTransfer))}</td>
+    </tr>
+    <tr>
+      <td><strong>Rückfahrt</strong></td>
+      <td>${escapeHtml(option.rueckTitle)}</td>
+      <td>${escapeHtml(cleanOptionText(option.rueckTimes))}</td>
+      <td>${escapeHtml(cleanOptionText(option.rueckTransfer))}</td>
+    </tr>
+  `;
+}
+
+function makeAlternativeRows(options){
+  return options.map((o, idx) => `
+    <tr>
+      <td><strong>${idx + 1}</strong></td>
+      <td>${escapeHtml(optionPlainTitle(o))}<br><span class="pdf-small">${escapeHtml(o.badge || "Hin & Rück")}</span></td>
+      <td class="right">${formatEuro(o.totalCost)}</td>
+      <td class="right">${dur(o.totalTime)}</td>
+      <td class="right">${dur(o.productiveTime || 0)}</td>
+      <td class="right">${o.hotelNights || 0}</td>
+      <td>${idx === 0 ? "Beste Option nach aktueller Sortierung" : "Alternative"}</td>
+    </tr>
+  `).join("");
+}
+
+function buildPdfReport(){
+  const selected = getSelectedPdfOption();
+  const options = currentCompareOptions || [];
+  const dest = getSelectedDestinationData();
+  const start = getStartName();
+  const persons = tripState.persons || 1;
+
+  if(!selected){
+    alert("Es gibt noch keine auswertbare Reiseoption.");
+    return false;
+  }
+
+  const selectedIndex = options.findIndex(o => o.kind === selected.kind);
+  const decisionModeText =
+    compareMode === "cheap" ? "möglichst günstig" :
+    compareMode === "fast" ? "möglichst schnell" :
+    "ausgeglichen";
+
+  const report = `
+    <section class="pdf-page">
+      <div class="pdf-top">
+        <div>
+          <div class="pdf-brand">Next Level Reisekostentool</div>
+          <div class="pdf-title">Reiseentscheidung & Buchungsblatt</div>
+          <div class="pdf-sub">${escapeHtml(start)} → ${escapeHtml(dest?.name || "Ziel")} · ${persons} ${persons === 1 ? "Person" : "Personen"}</div>
+        </div>
+        <div class="pdf-badge">
+          <div class="pdf-badge-label">Gewählte Option</div>
+          <div class="pdf-badge-value">${selectedIndex >= 0 ? selectedIndex + 1 : 1}</div>
+        </div>
+      </div>
+
+      <div class="pdf-grid-3">
+        <div class="pdf-kpi"><div class="pdf-kpi-label">Reisemittel</div><div class="pdf-kpi-value">${escapeHtml(optionPlainTitle(selected))}</div></div>
+        <div class="pdf-kpi"><div class="pdf-kpi-label">Gesamtkosten</div><div class="pdf-kpi-value">${formatEuro(selected.totalCost)}</div></div>
+        <div class="pdf-kpi"><div class="pdf-kpi-label">Reisezeit</div><div class="pdf-kpi-value">${dur(selected.totalTime)}</div></div>
+      </div>
+
+      <div class="pdf-section">
+        <h2>Entscheidungsgrundlage</h2>
+        <div class="pdf-note">
+          Die Reiseoption wurde nach dem Kriterium <strong>${escapeHtml(decisionModeText)}</strong> ausgewählt.
+          Berücksichtigt wurden Ticket-/Fahrzeugkosten, Hotelkosten, Reisezeit, produktive Reisezeit sowie Transfer- und Pufferzeiten.
+        </div>
+      </div>
+
+      <div class="pdf-section pdf-two-col">
+        <div>
+          <h2>Hinfahrt</h2>
+          <table class="pdf-table">
+            <tr><th>Schritt</th><th>Zeit</th></tr>
+            <tr><td>Zuhause starten</td><td>${formatDateTime(selected.timeline?.hinStart)}</td></tr>
+            <tr><td>Verbindung</td><td>${escapeHtml(selected.hinTitle)}<br>${escapeHtml(cleanOptionText(selected.hinTimes))}</td></tr>
+            <tr><td>Ankunft am Ziel</td><td>${formatDateTime(selected.timeline?.hinArrive)}</td></tr>
+          </table>
+        </div>
+        <div>
+          <h2>Rückfahrt</h2>
+          <table class="pdf-table">
+            <tr><th>Schritt</th><th>Zeit</th></tr>
+            <tr><td>Am Ziel starten</td><td>${formatDateTime(selected.timeline?.rueckStart)}</td></tr>
+            <tr><td>Verbindung</td><td>${escapeHtml(selected.rueckTitle)}<br>${escapeHtml(cleanOptionText(selected.rueckTimes))}</td></tr>
+            <tr><td>Zuhause ankommen</td><td>${formatDateTime(selected.timeline?.rueckArrive)}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="pdf-section">
+        <h2>Buchungsdaten</h2>
+        <table class="pdf-table">
+          <tr><th>Richtung</th><th>Verkehrsmittel</th><th>Abfahrt / Ankunft</th><th>Transfer / Puffer</th></tr>
+          ${makeBookingRows(selected)}
+        </table>
+      </div>
+
+      <div class="pdf-section pdf-two-col">
+        <div>
+          <h2>Kosten</h2>
+          <table class="pdf-table">
+            <tr><th>Position</th><th>Kosten</th></tr>
+            ${makePdfCostRows(selected)}
+          </table>
+        </div>
+        <div>
+          <h2>Zeiten & Hotel</h2>
+          <table class="pdf-table">
+            <tr><td>Reisezeit gesamt</td><td class="right">${dur(selected.totalTime)}</td></tr>
+            <tr><td>Produktive Reisezeit</td><td class="right">${dur(selected.productiveTime || 0)}</td></tr>
+            <tr><td>Hotelnächte</td><td class="right">${selected.hotelNights || 0}</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="pdf-page">
+      <div class="pdf-top">
+        <div>
+          <div class="pdf-brand">Next Level Reisekostentool</div>
+          <div class="pdf-title">Alternativenvergleich</div>
+          <div class="pdf-sub">Nachvollziehbare Übersicht für Führungskraft / Genehmigung</div>
+        </div>
+        <div class="pdf-badge">
+          <div class="pdf-badge-label">Kriterium</div>
+          <div class="pdf-badge-value" style="font-size:14px;">${escapeHtml(decisionModeText)}</div>
+        </div>
+      </div>
+
+      <div class="pdf-section">
+        <table class="pdf-table">
+          <tr>
+            <th>Rang</th><th>Option</th><th>Kosten</th><th>Reisezeit</th><th>Produktiv</th><th>Hotel</th><th>Bewertung</th>
+          </tr>
+          ${makeAlternativeRows(options)}
+        </table>
+      </div>
+
+      <div class="pdf-section">
+        <h2>Fazit</h2>
+        <div class="pdf-note">
+          Die gewählte Option ist <strong>${escapeHtml(optionPlainTitle(selected))}</strong>.
+          Die Alternativen wurden tabellarisch dokumentiert, damit Kosten, Zeiten und Produktivität nachvollziehbar verglichen werden können.
+        </div>
+      </div>
+    </section>
+  `;
+
+  const target = document.getElementById("pdf-report");
+  if(target){
+    target.innerHTML = report;
+  }
+  return true;
+}
+
+
 function exportResultPdf(){
-  window.print();
+  if(buildPdfReport()){
+    window.print();
+  }
 }
 
 function showSummaryOnly(){
@@ -4367,5 +4674,6 @@ function updateSummaryPage(){
 
 
 </script>
+<div id="pdf-report" aria-hidden="true"></div>
 </body>
 </html>
