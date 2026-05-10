@@ -1445,6 +1445,78 @@ input::placeholder{
   .pdf-page:last-child{page-break-after:auto;break-after:auto;}
 }
 
+
+.guide-launch{
+  display:flex;
+  gap:12px;
+  margin:18px 0 8px;
+  flex-wrap:wrap;
+}
+.guide-btn{
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border-radius:14px;
+  padding:12px 16px;
+  font-weight:800;
+  cursor:pointer;
+}
+.guide-box{
+  margin:14px 0 20px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  border-radius:18px;
+  overflow:hidden;
+}
+.guide-box summary{
+  list-style:none;
+  cursor:pointer;
+  padding:18px 20px;
+  font-weight:900;
+  color:#fff;
+}
+.guide-box summary::-webkit-details-marker{display:none;}
+.guide-content{
+  padding:0 20px 20px;
+}
+.guide-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.guide-card{
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(15,23,42,.75);
+  border-radius:16px;
+  overflow:hidden;
+}
+.guide-card img{
+  width:100%;
+  display:block;
+}
+.guide-card-body{
+  padding:14px;
+}
+.guide-card-title{
+  color:#fff;
+  font-size:15px;
+  font-weight:900;
+  margin-bottom:6px;
+}
+.guide-card-text{
+  color:#cbd5e1;
+  line-height:1.55;
+  font-size:13px;
+}
+.guide-overview{
+  color:#cbd5e1;
+  line-height:1.7;
+  font-size:14px;
+}
+.guide-overview ul{
+  margin:10px 0 0 18px;
+}
+
 </style>
 </head>
 <body>
@@ -2081,6 +2153,19 @@ function normalizeStationName(name){
     .trim();
 }
 
+
+function stationCandidateNames(station){
+  return [station?.name, ...(station?.aliases || [])].filter(Boolean);
+}
+
+function stationMatchesName(station, raw, norm){
+  return stationCandidateNames(station).some(n =>
+    normalizeStationName(n) === norm ||
+    String(n || "").toLowerCase().replace(/\s+/g," ").trim() === raw
+  );
+}
+
+
 function stationEvaByName(name){
   const raw = String(name || "").toLowerCase().replace(/\s+/g," ").trim();
   const norm = normalizeStationName(name);
@@ -2088,7 +2173,7 @@ function stationEvaByName(name){
   if(fromLookup) return fromLookup;
 
   const local = (typeof LOCAL_RAIL_STATIONS !== "undefined")
-    ? LOCAL_RAIL_STATIONS.find(s => normalizeStationName(s.name) === norm || String(s.name || "").toLowerCase() === raw)
+    ? LOCAL_RAIL_STATIONS.find(s => stationMatchesName(s, raw, norm))
     : null;
 
   return local?.eva || "";
@@ -2144,80 +2229,341 @@ function stationLocationRef(name, info){
   Die eigentliche Bahnhofssuche erfolgt weiterhin dynamisch über Overpass.
 */
 const LOCAL_RAIL_STATIONS = [
-  // Zielregionen Mercedes-Benz BKK / interne Ziele – nur Bahnhöfe mit EVA-ID
-  {name:"Berlin Hbf", eva:"8011160", lat:52.5256, lon:13.3695},
-  {name:"Berlin Südkreuz", eva:"8011113", lat:52.4758, lon:13.3650},
-  {name:"Berlin Ostbahnhof", eva:"8010255", lat:52.5103, lon:13.4345},
-  {name:"Berlin Gesundbrunnen", eva:"8011102", lat:52.5486, lon:13.3894},
-  {name:"Berlin-Spandau", eva:"8010404", lat:52.5347, lon:13.1978},
-  {name:"Berlin Zoologischer Garten", eva:"8010406", lat:52.5072, lon:13.3325},
-
-  {name:"Hamburg Hbf", eva:"8002549", lat:53.5527, lon:10.0069},
-  {name:"Hamburg-Harburg", eva:"8000147", lat:53.4567, lon:9.9910},
-  {name:"Hamburg-Altona", eva:"8002553", lat:53.5526, lon:9.9356},
-  {name:"Hamburg Dammtor", eva:"8002548", lat:53.5608, lon:9.9896},
-  {name:"Hamburg-Bergedorf", eva:"8002554", lat:53.4891, lon:10.2069},
-
-  {name:"Bremen Hbf", eva:"8000050", lat:53.0835, lon:8.8138},
-  {name:"Bremen-Mahndorf", eva:"8007755", lat:53.0347, lon:8.9592},
-  {name:"Bremen-Sebaldsbrück", eva:"8001125", lat:53.0676, lon:8.8893},
-  {name:"Bremen-Hemelingen", eva:"8001118", lat:53.0604, lon:8.8860},
-  {name:"Syke", eva:"8005809", lat:52.9162, lon:8.8098},
-  {name:"Bassum", eva:"8000037", lat:52.8484, lon:8.7320},
-  {name:"Kirchweyhe", eva:"8003328", lat:52.9802, lon:8.8573},
-  {name:"Barrien", eva:"8000735", lat:52.9398, lon:8.8347},
-  {name:"Twistringen", eva:"8005781", lat:52.7930, lon:8.6415},
-
-  {name:"Hannover Hbf", eva:"8000152", lat:52.3768, lon:9.7410},
-  {name:"Kassel-Wilhelmshöhe", eva:"8003200", lat:51.3120, lon:9.4470},
-  {name:"Kassel Hbf", eva:"8000196", lat:51.3188, lon:9.4892},
-
-  {name:"Düsseldorf Hbf", eva:"8000085", lat:51.2196, lon:6.7943},
-  {name:"Düsseldorf Flughafen", eva:"8000082", lat:51.2910, lon:6.7867},
-  {name:"Düsseldorf-Derendorf", eva:"8001587", lat:51.2461, lon:6.8037},
-  {name:"Köln Hbf", eva:"8000207", lat:50.9430, lon:6.9587},
-  {name:"Bonn Hbf", eva:"8000044", lat:50.7319, lon:7.0969},
-  {name:"Dortmund Hbf", eva:"8000080", lat:51.5179, lon:7.4593},
-  {name:"Essen Hbf", eva:"8000098", lat:51.4515, lon:7.0148},
-
-  {name:"Frankfurt(Main)Hbf", eva:"8000105", lat:50.1071, lon:8.6638},
-  {name:"Frankfurt(M) Flughafen Fernbf", eva:"8070003", lat:50.0522, lon:8.5700},
-  {name:"Frankfurt(Main)Süd", eva:"8002041", lat:50.0991, lon:8.6869},
-  {name:"Mainz Hbf", eva:"8000240", lat:50.0010, lon:8.2590},
-  {name:"Wiesbaden Hbf", eva:"8000250", lat:50.0714, lon:8.2433},
-  {name:"Mannheim Hbf", eva:"8000244", lat:49.4792, lon:8.4691},
-  {name:"Ludwigshafen(Rhein)Hbf", eva:"8000236", lat:49.4778, lon:8.4381},
-
-  {name:"Karlsruhe Hbf", eva:"8000191", lat:48.9936, lon:8.4005},
-  {name:"Rastatt", eva:"8000316", lat:48.8586, lon:8.2077},
-  {name:"Baden-Baden", eva:"8000774", lat:48.7903, lon:8.1920},
-  {name:"Gaggenau", eva:"8002184", lat:48.8038, lon:8.3205},
-  {name:"Germersheim", eva:"8002225", lat:49.2145, lon:8.3745},
-  {name:"Wörth(Rhein)", eva:"8006460", lat:49.0516, lon:8.2596},
-  {name:"Landau(Pfalz)Hbf", eva:"8000222", lat:49.1996, lon:8.1232},
-
-  {name:"Stuttgart Hbf", eva:"8000096", lat:48.7834, lon:9.1816},
-  {name:"Stuttgart Neckarpark", eva:"8006743", lat:48.7920, lon:9.2411},
-  {name:"Stuttgart-Bad Cannstatt", eva:"8005769", lat:48.8026, lon:9.2186},
-  {name:"Stuttgart-Vaihingen", eva:"8005779", lat:48.7260, lon:9.1110},
-  {name:"Sindelfingen", eva:"8005557", lat:48.7086, lon:9.0037},
-  {name:"Böblingen", eva:"8000031", lat:48.6857, lon:9.0086},
-  {name:"Leinfelden", eva:"8003634", lat:48.6942, lon:9.1421},
-  {name:"Esslingen(Neckar)", eva:"8001901", lat:48.7391, lon:9.3009},
-  {name:"Ludwigsburg", eva:"8000234", lat:48.8930, lon:9.1910},
-
-  {name:"Ulm Hbf", eva:"8000170", lat:48.3990, lon:9.9823},
-  {name:"Neu-Ulm", eva:"8004266", lat:48.3938, lon:10.0060},
-  {name:"Günzburg", eva:"8000135", lat:48.4549, lon:10.2770},
-  {name:"Augsburg Hbf", eva:"8000013", lat:48.3655, lon:10.8863},
-
-  {name:"München Hbf", eva:"8000261", lat:48.1402, lon:11.5583},
-  {name:"München Ost", eva:"8000262", lat:48.1274, lon:11.6040},
-  {name:"Nürnberg Hbf", eva:"8000284", lat:49.4456, lon:11.0830},
-
-  {name:"Leipzig Hbf", eva:"8010205", lat:51.3454, lon:12.3758},
-  {name:"Dresden Hbf", eva:"8010085", lat:51.0406, lon:13.7320},
-  {name:"Erfurt Hbf", eva:"8010101", lat:50.9727, lon:11.0388}
+  // Fernverkehrsbahnhöfe gemäß bahnhofsuebersicht_fernverkehr.pdf, EVA/Koordinaten aus offenen DB/HAFAS-Daten
+  {name:"Aachen Hbf", eva:"8000001", lat:50.767800, lon:6.091499},
+  {name:"Aalen Hbf", eva:"8000002", lat:48.841013, lon:10.096271, aliases:["Aalen"]},
+  {name:"Ainring", eva:"8000459", lat:47.815033, lon:12.964501},
+  {name:"Alfeld (Leine)", eva:"8000483", lat:51.981417, lon:9.817779},
+  {name:"Altenbeken", eva:"8000004", lat:51.766433, lon:8.943319},
+  {name:"Andernach", eva:"8000331", lat:50.434542, lon:7.404839},
+  {name:"Angermünde", eva:"8010004", lat:53.015221, lon:13.996361},
+  {name:"Anklam", eva:"8011044", lat:53.856102, lon:13.701827},
+  {name:"Ansbach", eva:"8000009", lat:49.298032, lon:10.578239},
+  {name:"Apolda", eva:"8011051", lat:51.030940, lon:11.526136},
+  {name:"Aschaffenburg Hbf", eva:"8000010", lat:49.980557, lon:9.143697},
+  {name:"Augsburg Hbf", eva:"8000013", lat:48.365441, lon:10.885570},
+  {name:"Augustfehn", eva:"8000664", lat:53.220890, lon:7.759659},
+  {name:"Aulendorf", eva:"8000014", lat:47.953052, lon:9.644046},
+  {name:"Bad Bentheim", eva:"8000879", lat:52.309850, lon:7.158539},
+  {name:"Bad Bevensen", eva:"8000935", lat:53.078247, lon:10.574141},
+  {name:"Bad Endorf (Oberbay)", eva:"8001787", lat:47.905066, lon:12.301558, aliases:["Bad Endorf (Oberbayern)"]},
+  {name:"Bad Hersfeld", eva:"8000020", lat:50.869632, lon:9.716182},
+  {name:"Bad Kleinen", eva:"8010018", lat:53.766974, lon:11.466925},
+  {name:"Bad Nauheim", eva:"8000728", lat:50.367904, lon:8.749334},
+  {name:"Bad Oeynhausen", eva:"8000732", lat:52.205398, lon:8.796523},
+  {name:"Bad Reichenhall", eva:"8000737", lat:47.731168, lon:12.881825},
+  {name:"Bad Reichenhall-Kirchberg", eva:"8000738", lat:47.718538, lon:12.874001, aliases:["Bad Reichenh-Kir"]},
+  {name:"Bad Schandau", eva:"8010022", lat:50.919289, lon:14.137538},
+  {name:"Bad Zwischenahn", eva:"8000770", lat:53.182547, lon:8.003123},
+  {name:"Baden-Baden", eva:"8000774", lat:48.790327, lon:8.190831},
+  {name:"Bamberg", eva:"8000025", lat:49.900759, lon:10.899489},
+  {name:"Bansin Seebad", eva:"8011109", lat:53.964389, lon:14.129385},
+  {name:"Basel Bad Bf", eva:"8000026", lat:47.567288, lon:7.607805, aliases:["Basel Badischer Bf"]},
+  {name:"Bayerisch Gmain", eva:"8000831", lat:47.720375, lon:12.895070},
+  {name:"Bebra", eva:"8000029", lat:50.969568, lon:9.797788},
+  {name:"Bensheim", eva:"8000031", lat:49.681329, lon:8.616717},
+  {name:"Berchtesgaden Hbf", eva:"8000885", lat:47.626688, lon:12.999058, aliases:["Berchtesgarden Hbf"]},
+  {name:"Bergen auf Rügen", eva:"8010033", lat:54.420500, lon:13.417821},
+  {name:"Berlin Gesundbrunnen", eva:"8011102", lat:52.548963, lon:13.388513},
+  {name:"Berlin Hbf", eva:"8011160", lat:52.525592, lon:13.369545},
+  {name:"Berlin Ostbahnhof", eva:"8010255", lat:52.510488, lon:13.434681},
+  {name:"Berlin Südkreuz", eva:"8011113", lat:52.475047, lon:13.365319},
+  {name:"Berlin-Spandau", eva:"8010404", lat:52.534648, lon:13.196898, aliases:["Berlin Spandau"]},
+  {name:"Berlin-Wannsee", eva:"8010405", lat:52.420972, lon:13.179528, aliases:["Berlin Wannsee"]},
+  {name:"Bernau (b Berlin)", eva:"8013470", lat:52.675569, lon:13.592641, aliases:["Bernau (bei Berlin)"]},
+  {name:"Biberach (Riß)", eva:"8000943", lat:48.101845, lon:9.793127},
+  {name:"Bielefeld Hbf", eva:"8000036", lat:52.029261, lon:8.532722},
+  {name:"Bingen (Rhein) Hbf", eva:"8000039", lat:49.968729, lon:7.884263},
+  {name:"Bischofswiesen", eva:"8000997", lat:47.651890, lon:12.960141},
+  {name:"Bitterfeld", eva:"8010050", lat:51.622861, lon:12.316850},
+  {name:"Bochum Hbf", eva:"8000041", lat:51.478609, lon:7.223275},
+  {name:"Bonn Hbf", eva:"8000044", lat:50.732008, lon:7.097136},
+  {name:"Boppard Hbf", eva:"8000045", lat:50.231413, lon:7.586102},
+  {name:"Brandenburg Hbf", eva:"8010060", lat:52.400554, lon:12.566138},
+  {name:"Braunschweig Hbf", eva:"8000049", lat:52.252218, lon:10.540295},
+  {name:"Bremen Hbf", eva:"8000050", lat:53.083481, lon:8.813834},
+  {name:"Bruchsal", eva:"8000055", lat:49.124622, lon:8.589649},
+  {name:"Buchloe", eva:"8000057", lat:48.033723, lon:10.716217},
+  {name:"Bullay DB", eva:"8001267", lat:50.054460, lon:7.134584},
+  {name:"Büchen", eva:"8000058", lat:53.474972, lon:10.623298},
+  {name:"Bünde (Westf)", eva:"8000059", lat:52.202075, lon:8.573876, aliases:["Bünde (Westfalen)"]},
+  {name:"Bützow", eva:"8010066", lat:53.837114, lon:11.998194},
+  {name:"Celle", eva:"8000064", lat:52.620455, lon:10.062468},
+  {name:"Cochem (Mosel)", eva:"8001340", lat:50.153092, lon:7.166738},
+  {name:"Cottbus Hbf", eva:"8010073", lat:51.750957, lon:14.324162, aliases:["Cottbus"]},
+  {name:"Crailsheim", eva:"8000067", lat:49.137872, lon:10.064326},
+  {name:"Darmstadt Hbf", eva:"8000068", lat:49.872503, lon:8.629636},
+  {name:"Delmenhorst", eva:"8000070", lat:53.052792, lon:8.629758},
+  {name:"Diepholz", eva:"8001443", lat:52.604771, lon:8.380334},
+  {name:"Donaueschingen", eva:"8000077", lat:47.947786, lon:8.498919},
+  {name:"Donauwörth", eva:"8000078", lat:48.714026, lon:10.771443},
+  {name:"Dortmund Hbf", eva:"8000080", lat:51.517896, lon:7.459290},
+  {name:"Dresden Hbf", eva:"8010085", lat:51.040563, lon:13.732035},
+  {name:"Dresden-Neustadt", eva:"8010089", lat:51.065899, lon:13.740701, aliases:["Dresden Neustadt"]},
+  {name:"Duisburg Hbf", eva:"8000086", lat:51.429785, lon:6.775903},
+  {name:"Düren", eva:"8000084", lat:50.809517, lon:6.482451, aliases:["Düren Pbf"]},
+  {name:"Düsseldorf Flughafen", eva:"8000082", lat:51.292009, lon:6.786836},
+  {name:"Düsseldorf Hbf", eva:"8000085", lat:51.219962, lon:6.794319},
+  {name:"Eberswalde Hbf", eva:"8010093", lat:52.834021, lon:13.797062},
+  {name:"Eisenach", eva:"8010097", lat:50.976922, lon:10.331986},
+  {name:"Ellwangen", eva:"8001751", lat:48.964121, lon:10.129681},
+  {name:"Elmshorn", eva:"8000092", lat:53.754025, lon:9.659408},
+  {name:"Elsterwerda", eva:"8010099", lat:51.459677, lon:13.516428},
+  {name:"Elze (Han)", eva:"8000093", lat:52.120147, lon:9.746894, aliases:["Elze (bei Hannover)"]},
+  {name:"Emden Außenhafen", eva:"8001767", lat:53.344469, lon:7.186179},
+  {name:"Emden Hbf", eva:"8001768", lat:53.369036, lon:7.195176, aliases:["Emden"]},
+  {name:"Erfurt Hbf", eva:"8010101", lat:50.972551, lon:11.038499},
+  {name:"Erla", eva:"8011505", lat:50.519815, lon:12.786940, aliases:["Calau (Niederlande)"]},
+  {name:"Erlangen", eva:"8001844", lat:49.595830, lon:11.001638},
+  {name:"Essen Hbf", eva:"8000098", lat:51.451355, lon:7.014793},
+  {name:"Feldkirch", eva:"8100197", lat:47.240978, lon:9.604102},
+  {name:"Fischen", eva:"8001995", lat:47.456591, lon:10.271717},
+  {name:"Flensburg", eva:"8000103", lat:54.774039, lon:9.436526},
+  {name:"Flughafen BER - Terminal 5 (Schönefeld)", eva:"8010109", lat:52.391062, lon:13.512710, aliases:["Berlin Schönefeld Flh"]},
+  {name:"Forst (Lausitz)", eva:"8010111", lat:51.738882, lon:14.637628},
+  {name:"Frankfurt (Main) Flughafen Regionalbahnhof", eva:"8070004", lat:50.051219, lon:8.571251, aliases:["Frankfurt (Main) Flughafen"]},
+  {name:"Frankfurt (Main) Hbf", eva:"8000105", lat:50.107145, lon:8.663789},
+  {name:"Frankfurt (Main) Süd", eva:"8002041", lat:50.099365, lon:8.686457},
+  {name:"Frankfurt (Main) West", eva:"8002042", lat:50.118864, lon:8.639335},
+  {name:"Frankfurt (Oder)", eva:"8010113", lat:52.336416, lon:14.546496},
+  {name:"Freiburg (Breisgau) Hbf", eva:"8000107", lat:47.997697, lon:7.841170},
+  {name:"Freilassing", eva:"8000108", lat:47.836916, lon:12.977193},
+  {name:"Friedberg (Hess)", eva:"8000111", lat:50.332606, lon:8.762056, aliases:["Friedberg (Hessen)"]},
+  {name:"Friedrichshafen Stadt", eva:"8000112", lat:47.653224, lon:9.473900},
+  {name:"Fulda", eva:"8000115", lat:50.554723, lon:9.683977},
+  {name:"Garmisch-Partenkirchen", eva:"8002187", lat:47.491452, lon:11.097013},
+  {name:"Geislingen (Steige)", eva:"8002218", lat:48.619358, lon:9.841941},
+  {name:"Gelsenkirchen Hbf", eva:"8000118", lat:51.504903, lon:7.102455},
+  {name:"Gemünden (Main)", eva:"8000120", lat:50.050018, lon:9.699894},
+  {name:"Gießen", eva:"8000124", lat:50.579059, lon:8.661462},
+  {name:"Gotha", eva:"8010136", lat:50.939070, lon:10.712568},
+  {name:"Greifswald", eva:"8010139", lat:54.092923, lon:13.370262},
+  {name:"Gunzenhausen", eva:"8000385", lat:49.120444, lon:10.755463},
+  {name:"Göppingen", eva:"8000127", lat:48.700027, lon:9.651969},
+  {name:"Göttingen", eva:"8000128", lat:51.536815, lon:9.926072},
+  {name:"Günzburg", eva:"8000139", lat:48.460563, lon:10.279262},
+  {name:"Gütersloh Hbf", eva:"8002461", lat:51.906941, lon:8.385071},
+  {name:"Haffkrug", eva:"8002504", lat:54.054189, lon:10.742682},
+  {name:"Hagen Hbf", eva:"8000142", lat:51.362747, lon:7.460249},
+  {name:"Halle (Saale) Hbf", eva:"8010159", lat:51.477509, lon:11.987085},
+  {name:"Hamburg Dammtor", eva:"8002548", lat:53.560751, lon:9.989566},
+  {name:"Hamburg Hbf", eva:"8002549", lat:53.552736, lon:10.006909},
+  {name:"Hamburg-Altona", eva:"8002553", lat:53.552695, lon:9.935175, aliases:["Hamburg Altona"]},
+  {name:"Hamburg-Bergedorf", eva:"8002554", lat:53.489832, lon:10.206171, aliases:["Hamburg Bergedorf"]},
+  {name:"Hamburg-Harburg", eva:"8000147", lat:53.455908, lon:9.991701, aliases:["Hamburg Harburg"]},
+  {name:"Hamm (Westf) Hbf", eva:"8000149", lat:51.678078, lon:7.807821, aliases:["Hamm (Westfalen) Pbf"]},
+  {name:"Hammerau", eva:"8002570", lat:47.795883, lon:12.946134},
+  {name:"Hanau Hbf", eva:"8000150", lat:50.120953, lon:8.929000},
+  {name:"Hannover Hbf", eva:"8000152", lat:52.376761, lon:9.741021},
+  {name:"Hausach", eva:"8000333", lat:48.284924, lon:8.181665},
+  {name:"Heide (Holst)", eva:"8000155", lat:54.193563, lon:9.101029, aliases:["Heide (Holstein)"]},
+  {name:"Heidelberg Hbf", eva:"8000156", lat:49.403567, lon:8.675442},
+  {name:"Heilbad Heiligenstadt", eva:"8011849", lat:51.377316, lon:10.124518, aliases:["Heiligenstadt"]},
+  {name:"Helmstedt", eva:"8000159", lat:52.222086, lon:11.010553},
+  {name:"Heppenheim (Bergstr)", eva:"8002757", lat:49.641553, lon:8.633379, aliases:["Heppenheim/Bergstraße"]},
+  {name:"Herford", eva:"8000162", lat:52.119609, lon:8.663643},
+  {name:"Herzogenrath", eva:"8002806", lat:50.870916, lon:6.094486},
+  {name:"Hildesheim Hbf", eva:"8000169", lat:52.160626, lon:9.953497},
+  {name:"Homburg (Saar) Hbf", eva:"8000176", lat:49.328082, lon:7.337035},
+  {name:"Horb", eva:"8000177", lat:48.441471, lon:8.688982},
+  {name:"Hornberg", eva:"8003001", lat:48.211895, lon:8.232940},
+  {name:"Husum", eva:"8000181", lat:54.472271, lon:9.055026},
+  {name:"Hünfeld", eva:"8003016", lat:50.673271, lon:9.762453},
+  {name:"Ibbenbüren", eva:"8003036", lat:52.276867, lon:7.721486},
+  {name:"Immendingen", eva:"8000182", lat:47.936007, lon:8.729536},
+  {name:"Immenstadt", eva:"8003065", lat:47.559203, lon:10.213999},
+  {name:"Ingolstadt Hbf", eva:"8000183", lat:48.744541, lon:11.437337},
+  {name:"Itzehoe", eva:"8003102", lat:53.923873, lon:9.510287},
+  {name:"Jena Paradies", eva:"8011956", lat:50.924856, lon:11.587461},
+  {name:"Kaiserslautern Hbf", eva:"8000189", lat:49.436137, lon:7.768716},
+  {name:"Karlsruhe Hbf", eva:"8000191", lat:48.993515, lon:8.402181},
+  {name:"Karlsruhe-Durlach", eva:"8003184", lat:49.002328, lon:8.462822},
+  {name:"Kassel-Wilhelmshöhe", eva:"8003200", lat:51.313114, lon:9.446898},
+  {name:"Kaufbeuren", eva:"8000194", lat:47.875432, lon:10.629496},
+  {name:"Kehl", eva:"8003218", lat:48.576658, lon:7.806556},
+  {name:"Keitum", eva:"8003222", lat:54.888814, lon:8.368969},
+  {name:"Kempten (Allgäu) Hbf", eva:"8000197", lat:47.711745, lon:10.317610},
+  {name:"Kiel Hbf", eva:"8000199", lat:54.314985, lon:10.131976},
+  {name:"Klanxbüll", eva:"8003303", lat:54.861997, lon:8.676454},
+  {name:"Koblenz Hbf", eva:"8000206", lat:50.350929, lon:7.588345},
+  {name:"Konstanz", eva:"8003400", lat:47.658754, lon:9.177312},
+  {name:"Koserow", eva:"8012086", lat:54.045335, lon:13.999275},
+  {name:"Kreiensen", eva:"8000213", lat:51.851423, lon:9.967798},
+  {name:"Kufstein", eva:"8100001", lat:47.583079, lon:12.165550},
+  {name:"Köln Hbf", eva:"8000207", lat:50.943030, lon:6.958729},
+  {name:"Köln Messe/Deutz", eva:"8003368", lat:50.940874, lon:6.975001},
+  {name:"Köln/Bonn Flughafen", eva:"8003330", lat:50.878901, lon:7.119302},
+  {name:"Kölpinsee", eva:"8012065", lat:54.035290, lon:14.022905},
+  {name:"Köthen", eva:"8010195", lat:51.751929, lon:11.989358},
+  {name:"Landstuhl", eva:"8003515", lat:49.416287, lon:7.565931},
+  {name:"Langenhagen Pferdemarkt", eva:"8003542", lat:52.450993, lon:9.735882, aliases:["Langenhagen Pferde"]},
+  {name:"Langenhagen-Mitte", eva:"8003545", lat:52.440279, lon:9.725427, aliases:["Langenhagen Mitte"]},
+  {name:"Leer (Ostfriesl)", eva:"8000225", lat:53.231650, lon:7.465283, aliases:["Leer/Ostfriesl"]},
+  {name:"Leinefelde", eva:"8010203", lat:51.388836, lon:10.328758},
+  {name:"Leipzig Hbf", eva:"8010205", lat:51.345471, lon:12.382064},
+  {name:"Leipzig/Halle Flughafen", eva:"8012183", lat:51.423338, lon:12.223426},
+  {name:"Lichtenfels", eva:"8000228", lat:50.146452, lon:11.059472},
+  {name:"Limburg Süd", eva:"8003680", lat:50.382498, lon:8.096112},
+  {name:"Lindau-Insel", eva:"8000230", lat:47.544341, lon:9.680469, aliases:["Lindau Hbf"]},
+  {name:"Lingen (Ems)", eva:"8003701", lat:52.519867, lon:7.321731},
+  {name:"Lippstadt", eva:"8000571", lat:51.670687, lon:8.348785},
+  {name:"Ludwigsburg", eva:"8000235", lat:48.891862, lon:9.185420},
+  {name:"Ludwigshafen (Rhein) Hbf", eva:"8000236", lat:49.477987, lon:8.433402},
+  {name:"Ludwigslust", eva:"8010216", lat:53.334671, lon:11.494491},
+  {name:"Lutherstadt Eisleben", eva:"8012279", lat:51.518314, lon:11.550880},
+  {name:"Lutherstadt Wittenberg Hauptbahnhof", eva:"8010222", lat:51.867811, lon:12.662285, aliases:["Lutherstadt Wittenberg"]},
+  {name:"Lübben (Spreewald)", eva:"8010217", lat:51.939737, lon:13.877182, aliases:["Lübben (Spreew)"]},
+  {name:"Lübbenau (Spreewald)", eva:"8010220", lat:51.862169, lon:13.960900, aliases:["Lübbenau Spreew"]},
+  {name:"Lübeck Hbf", eva:"8000237", lat:53.867547, lon:10.669821},
+  {name:"Lüneburg", eva:"8000238", lat:53.249656, lon:10.419890},
+  {name:"Magdeburg Hbf", eva:"8010224", lat:52.130349, lon:11.626891},
+  {name:"Magdeburg-Buckau", eva:"8013456", lat:52.109204, lon:11.630040},
+  {name:"Mainz Hbf", eva:"8000240", lat:50.001117, lon:8.258720},
+  {name:"Mannheim Hbf", eva:"8000244", lat:49.479354, lon:8.468921},
+  {name:"Marburg (Lahn)", eva:"8000337", lat:50.819272, lon:8.775014},
+  {name:"Marienhafe", eva:"8003866", lat:53.519236, lon:7.274360},
+  {name:"Meckenbeuren", eva:"8003930", lat:47.699760, lon:9.558393},
+  {name:"Memmingen", eva:"8000249", lat:47.985581, lon:10.186853},
+  {name:"Meppen", eva:"8003978", lat:52.696021, lon:7.298015},
+  {name:"Metzingen", eva:"8004009", lat:48.539725, lon:9.290156, aliases:["Metzingen (Württemberg)"]},
+  {name:"Minden (Westf)", eva:"8000252", lat:52.290138, lon:8.934728, aliases:["Minden (Westfalen)"]},
+  {name:"Mittenwald", eva:"8004043", lat:47.440030, lon:11.265705},
+  {name:"Montabaur", eva:"8000667", lat:50.444834, lon:7.825333},
+  {name:"Morsum (Sylt)", eva:"8004093", lat:54.872142, lon:8.432464},
+  {name:"Munster (Örtze)", eva:"8004183", lat:52.993312, lon:10.096487},
+  {name:"Mönchengladbach Hbf", eva:"8000253", lat:51.196583, lon:6.446111},
+  {name:"Mühlacker", eva:"8000339", lat:48.953192, lon:8.846101},
+  {name:"Mülheim (Ruhr) Hbf", eva:"8000259", lat:51.431342, lon:6.886510, aliases:["Mülheim Hbf"]},
+  {name:"München Hbf", eva:"8000261", lat:48.140232, lon:11.558335},
+  {name:"München Ost", eva:"8000262", lat:48.127440, lon:11.604971, aliases:["München Ost Pbf"]},
+  {name:"München-Pasing", eva:"8004158", lat:48.149852, lon:11.461872},
+  {name:"Münster (Westf) Hbf", eva:"8000263", lat:51.956566, lon:7.635715, aliases:["Münster (Westfalen) Pbf"]},
+  {name:"Naumburg (Saale) Hbf", eva:"8010240", lat:51.163071, lon:11.796984},
+  {name:"Neu-Ulm", eva:"8006730", lat:48.393039, lon:10.004823},
+  {name:"Neumünster", eva:"8000271", lat:54.075752, lon:9.979816},
+  {name:"Neuss Hbf", eva:"8000274", lat:51.204351, lon:6.684527, aliases:["Neuss Westseite"]},
+  {name:"Neustadt (Aisch) Bahnhof", eva:"8004323", lat:49.576876, lon:10.588032, aliases:["Neust/Aisch Bf"]},
+  {name:"Neustadt (Kr Marburg)", eva:"8004328", lat:50.850447, lon:9.120643, aliases:["Neustadt (Kr Mbg)"]},
+  {name:"Neustadt (Weinstr) Hbf", eva:"8000275", lat:49.349553, lon:8.140757, aliases:["Neustadt (Weinstraße) Hbf"]},
+  {name:"Neustrelitz Hbf", eva:"8010250", lat:53.359255, lon:13.074603},
+  {name:"Niebüll", eva:"8004343", lat:54.789605, lon:8.834572},
+  {name:"Nienburg (Weser)", eva:"8000279", lat:52.645566, lon:9.217753},
+  {name:"Norddeich", eva:"8004449", lat:53.621579, lon:7.160824},
+  {name:"Norddeich Mole", eva:"8007768", lat:53.624315, lon:7.158806},
+  {name:"Norden", eva:"8000800", lat:53.588196, lon:7.218913},
+  {name:"Nordhausen", eva:"8010256", lat:51.492920, lon:10.789249},
+  {name:"Northeim (Han)", eva:"8000283", lat:51.703139, lon:9.986618, aliases:["Northeim (bei Hannover)"]},
+  {name:"Nürnberg Hbf", eva:"8000284", lat:49.445616, lon:11.082989},
+  {name:"Nürtingen", eva:"8004488", lat:48.627997, lon:9.342648},
+  {name:"Oberau", eva:"8004506", lat:47.559273, lon:11.139272},
+  {name:"Oberhausen Hbf", eva:"8000286", lat:51.474878, lon:6.851588},
+  {name:"Oberstdorf", eva:"8004585", lat:47.411032, lon:10.278097},
+  {name:"Offenbach (Main) Hbf", eva:"8000349", lat:50.099264, lon:8.760743},
+  {name:"Offenburg", eva:"8000290", lat:48.476475, lon:7.946723},
+  {name:"Oldenburg (Holst)", eva:"8004669", lat:54.283824, lon:10.882838, aliases:["Oldenburg (Holstein)"]},
+  {name:"Oldenburg (Oldb) Hbf", eva:"8000291", lat:53.144323, lon:8.222713},
+  {name:"Osnabrück Hbf", eva:"8000294", lat:52.272851, lon:8.061781},
+  {name:"Ostseebad Binz", eva:"8011191", lat:54.404819, lon:13.600507},
+  {name:"Paderborn Hbf", eva:"8000297", lat:51.712979, lon:8.740505},
+  {name:"Papenburg (Ems)", eva:"8004751", lat:53.089706, lon:7.386708},
+  {name:"Pasewalk", eva:"8010268", lat:53.515353, lon:13.988875},
+  {name:"Passau Hbf", eva:"8000298", lat:48.573632, lon:13.450776},
+  {name:"Peine", eva:"8004760", lat:52.318942, lon:10.232145},
+  {name:"Pforzheim Hbf", eva:"8000299", lat:48.894152, lon:8.703099},
+  {name:"Piding", eva:"8004815", lat:47.759543, lon:12.911530},
+  {name:"Plattling", eva:"8000301", lat:48.779619, lon:12.863940},
+  {name:"Plochingen", eva:"8000302", lat:48.713080, lon:9.410810},
+  {name:"Potsdam Hbf", eva:"8012666", lat:52.391509, lon:13.066703},
+  {name:"Prenzlau", eva:"8010282", lat:53.321608, lon:13.866532},
+  {name:"Prien am Chiemsee", eva:"8004885", lat:47.855513, lon:12.346615, aliases:["Prien a Chiemsee"]},
+  {name:"Puttgarden", eva:"8004903", lat:54.500370, lon:11.226721},
+  {name:"Radolfzell", eva:"8000880", lat:47.735873, lon:8.968984},
+  {name:"Rastatt", eva:"8000306", lat:48.860483, lon:8.215623},
+  {name:"Ravensburg", eva:"8004965", lat:47.784481, lon:9.606100},
+  {name:"Recklinghausen Hbf", eva:"8000307", lat:51.616359, lon:7.203490},
+  {name:"Regensburg Hbf", eva:"8000309", lat:49.011672, lon:12.099617},
+  {name:"Remagen", eva:"8000310", lat:50.577215, lon:7.229779},
+  {name:"Rendsburg", eva:"8000312", lat:54.302262, lon:9.671134},
+  {name:"Reutlingen Hbf", eva:"8000314", lat:48.496079, lon:9.209116},
+  {name:"Rheine", eva:"8000316", lat:52.276299, lon:7.434255},
+  {name:"Rheydt Hbf", eva:"8000318", lat:51.163027, lon:6.439564, aliases:["Rheydt Pbf"]},
+  {name:"Ribnitz-Damgarten West", eva:"8012763", lat:54.239176, lon:12.436965},
+  {name:"Riesa", eva:"8010297", lat:51.309654, lon:13.287734},
+  {name:"Rosenheim", eva:"8000320", lat:47.850018, lon:12.119202},
+  {name:"Rostock Hbf", eva:"8010304", lat:54.078246, lon:12.131079},
+  {name:"Rottweil", eva:"8000322", lat:48.165304, lon:8.639295},
+  {name:"Saalfeld (Saale)", eva:"8010309", lat:50.650273, lon:11.374583},
+  {name:"Saarbrücken Hbf", eva:"8000323", lat:49.241065, lon:6.991021},
+  {name:"Salzburg Hbf", eva:"8100002", lat:47.813049, lon:13.045820},
+  {name:"Salzwedel", eva:"8010310", lat:52.858113, lon:11.162035},
+  {name:"Sangerhausen", eva:"8010312", lat:51.479891, lon:11.294515},
+  {name:"Schaffhausen", eva:"8503424", lat:47.698282, lon:8.632756, aliases:["Schaffhausen PB"]},
+  {name:"Scharbeutz", eva:"8005321", lat:54.018743, lon:10.745762},
+  {name:"Schleswig", eva:"8005362", lat:54.499457, lon:9.538140},
+  {name:"Schlüchtern", eva:"8000891", lat:50.341177, lon:9.510039},
+  {name:"Schmollensee", eva:"8012892", lat:53.982272, lon:14.077246},
+  {name:"Schorndorf", eva:"8005424", lat:48.807150, lon:9.526310},
+  {name:"Schwerin Hbf", eva:"8010324", lat:53.634739, lon:11.407455},
+  {name:"Schwäbisch Gmünd", eva:"8000329", lat:48.801011, lon:9.787795},
+  {name:"Schönebeck (Elbe)", eva:"8010318", lat:52.018794, lon:11.733157, aliases:["Schönebeck(Elbe)"]},
+  {name:"Seebad Heringsdorf", eva:"8012963", lat:53.949836, lon:14.169586, aliases:["Seebad Heringsdf"]},
+  {name:"Siegburg/Bonn", eva:"8005556", lat:50.793915, lon:7.203026},
+  {name:"Sierksdorf", eva:"8005561", lat:54.068523, lon:10.769108},
+  {name:"Singen (Hohentwiel)", eva:"8000073", lat:47.758438, lon:8.840383, aliases:["Singen (Htw)"]},
+  {name:"Soest", eva:"8000076", lat:51.578419, lon:8.104589},
+  {name:"Solingen Hbf", eva:"8000087", lat:51.160766, lon:7.004187},
+  {name:"Sonthofen", eva:"8005609", lat:47.513241, lon:10.272344},
+  {name:"St. Georgen (Schwarzw)", eva:"8005644", lat:48.123813, lon:8.341955, aliases:["St. Georgen/Schwarzwald"]},
+  {name:"Stadtallendorf", eva:"8005661", lat:50.825432, lon:9.015278},
+  {name:"Steina", eva:"8013033", lat:51.103359, lon:13.022657, aliases:["Steinach/R o d T"]},
+  {name:"Stendal Hbf", eva:"8010334", lat:52.594723, lon:11.854412, aliases:["Stendal"]},
+  {name:"Stralsund Hbf", eva:"8010338", lat:54.308626, lon:13.077321, aliases:["Stralsund"]},
+  {name:"Straubing", eva:"8000095", lat:48.876978, lon:12.574094},
+  {name:"Stubbenfelde", eva:"8087027", lat:54.028074, lon:14.033515},
+  {name:"Stuttgart Hbf", eva:"8000096", lat:48.784084, lon:9.181635},
+  {name:"Tantow", eva:"8013090", lat:53.269275, lon:14.347926},
+  {name:"Timmendorfer Strand", eva:"8005874", lat:53.994212, lon:10.762270},
+  {name:"Trassenheide", eva:"8013132", lat:54.081378, lon:13.868517},
+  {name:"Traunstein", eva:"8000116", lat:47.869727, lon:12.638801},
+  {name:"Treuchtlingen", eva:"8000122", lat:48.961267, lon:10.908159},
+  {name:"Treysa", eva:"8000129", lat:50.910661, lon:9.185673},
+  {name:"Triberg", eva:"8005902", lat:48.140004, lon:8.236806},
+  {name:"Trier Hbf", eva:"8000134", lat:49.756846, lon:6.652453},
+  {name:"Tuttlingen", eva:"8000163", lat:47.980579, lon:8.798542},
+  {name:"Tutzing", eva:"8005927", lat:47.907142, lon:11.272890},
+  {name:"Tübingen Hbf", eva:"8000141", lat:48.515811, lon:9.055407},
+  {name:"Uelzen", eva:"8000168", lat:52.969781, lon:10.553053},
+  {name:"Ulm Hbf", eva:"8000170", lat:48.399437, lon:9.982227},
+  {name:"Unterlüß", eva:"8006001", lat:52.834869, lon:10.300262},
+  {name:"Vaihingen (Enz)", eva:"8006053", lat:48.948118, lon:8.957632},
+  {name:"Velgast", eva:"8010355", lat:54.277316, lon:12.803137},
+  {name:"Verden (Aller)", eva:"8006076", lat:52.920818, lon:9.237855},
+  {name:"Villingen (Schwarzw)", eva:"8000366", lat:48.058022, lon:8.465261, aliases:["Villingen (Schwarzwald)"]},
+  {name:"Wabern (Bz Kassel)", eva:"8000368", lat:51.103134, lon:9.358040},
+  {name:"Wanne-Eickel Hbf", eva:"8000192", lat:51.531256, lon:7.165783},
+  {name:"Warburg (Westf)", eva:"8000196", lat:51.492953, lon:9.163845, aliases:["Warburg (Westfalen)"]},
+  {name:"Waren (Müritz)", eva:"8010361", lat:53.521512, lon:12.680678},
+  {name:"Warnemünde", eva:"8013236", lat:54.176852, lon:12.091271},
+  {name:"Weimar", eva:"8010366", lat:50.991487, lon:11.326458},
+  {name:"Weinheim (Bergstr)", eva:"8000377", lat:49.553302, lon:8.665351, aliases:["Weinheim (Bergstraße)"]},
+  {name:"Weißenfels", eva:"8010368", lat:51.204615, lon:11.970926},
+  {name:"Westerland (Sylt)", eva:"8006369", lat:54.906839, lon:8.310925},
+  {name:"Westerstede-Ocholt", eva:"8004610", lat:53.202166, lon:7.886468},
+  {name:"Wiesbaden Hbf", eva:"8000250", lat:50.070791, lon:8.243731},
+  {name:"Wiesloch-Walldorf", eva:"8006421", lat:49.291353, lon:8.664146},
+  {name:"Wittenberge", eva:"8010382", lat:53.003115, lon:11.762871},
+  {name:"Wittlich Hbf", eva:"8000379", lat:49.973121, lon:6.943557},
+  {name:"Wolfsburg Hbf", eva:"8006552", lat:52.429498, lon:10.787784},
+  {name:"Wolgast", eva:"8013339", lat:54.043949, lon:13.769087},
+  {name:"Wolgaster Fähre", eva:"8013341", lat:54.056376, lon:13.790624},
+  {name:"Worms Hbf", eva:"8000257", lat:49.634940, lon:8.356448},
+  {name:"Wuppertal Hbf", eva:"8000266", lat:51.254363, lon:7.149543},
+  {name:"Würzburg Hbf", eva:"8000260", lat:49.801796, lon:9.935780},
+  {name:"Zempin", eva:"8013385", lat:54.065980, lon:13.959447},
+  {name:"Zinnowitz", eva:"8010392", lat:54.075564, lon:13.903359},
+  {name:"Züssow", eva:"8010396", lat:53.973879, lon:13.548191},
+  {name:"Übersee", eva:"8005940", lat:47.822047, lon:12.487338},
+  {name:"Ückeritz", eva:"8013161", lat:54.013918, lon:14.049809},
 ];
 
 function mergeLocalStations(stations, geo, radiusKm=70){
@@ -2272,9 +2618,13 @@ function stationAliasKeys(name){
 }
 
 function regionalStationByName(name){
+  const raw = String(name || "").toLowerCase().replace(/\s+/g," ").trim();
+  const norm = normalizeStationName(name);
   const keys = stationAliasKeys(name);
+
   return LOCAL_RAIL_STATIONS.find(s => {
-    const skeys = stationAliasKeys(s.name);
+    if(stationMatchesName(s, raw, norm)) return true;
+    const skeys = stationCandidateNames(s).flatMap(stationAliasKeys);
     return keys.some(k => skeys.includes(k));
   }) || null;
 }
