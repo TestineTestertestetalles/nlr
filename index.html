@@ -1584,6 +1584,26 @@ input::placeholder{
 .show-all-options-btn:hover{background:rgba(255,255,255,.12);}
 @media(max-width:900px){.option-hero-kpis{grid-template-columns:1fr 1fr;}}
 
+
+.option-easteregg{
+  margin-top:14px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
+  color:#dbeafe;
+  font-style:italic;
+  line-height:1.5;
+  font-size:13px;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.option-easteregg-icon{
+  flex-shrink:0;
+  opacity:.9;
+}
+
 </style>
 </head>
 <body>
@@ -4531,6 +4551,79 @@ function setCompareMode(mode){
   }
 
   renderComparePage();
+}
+
+
+function getOptionEasterEgg(option, allOptions, rank){
+  if(rank !== 1) return null;
+
+  const compareFlight = allOptions.find(o => o.kind === "flug");
+  const compareTrain = allOptions.find(o => o.kind === "bahn");
+
+  // 0€ auto / management hint
+  if(option.kind === "auto" && (option.vehicleCost || 0) === 0){
+    return {
+      icon:"👔",
+      text:"Diese Reise profitiert offenbar von organisatorischer Hierarchie."
+    };
+  }
+
+  // Bahn und Flug fast gleich schnell
+  if(compareFlight && compareTrain){
+    const diff = Math.abs((compareFlight.totalTime || 0) - (compareTrain.totalTime || 0));
+    if(diff <= 30){
+      return {
+        icon:"⚖️",
+        text:"Bahn und Flug liefern sich ein bemerkenswert knappes Rennen."
+      };
+    }
+  }
+
+  // günstigste Option
+  const minCost = Math.min(...allOptions.map(o => o.totalCost || 0));
+  if(option.totalCost === minCost){
+    return {
+      icon:"💰",
+      text:"Der Finanzbereich beobachtet diese Entscheidung mit auffälliger Zufriedenheit."
+    };
+  }
+
+  // productive rail
+  if(option.kind === "bahn" && (option.productiveTime || 0) >= 90){
+    return {
+      icon:"🚆",
+      text:"Diese Verbindung setzt Vertrauen in Steckdosen und Mobilfunk voraus."
+    };
+  }
+
+  // balanced
+  if(compareMode === "balanced"){
+    return {
+      icon:"🧠",
+      text:"Balanced Scorecard der Mobilität erfüllt."
+    };
+  }
+
+  // auto
+  if(option.kind === "auto"){
+    return {
+      icon:"🚗",
+      text:"Maximale Kontrolle bei gleichzeitig erhöhtem Podcast-Potenzial."
+    };
+  }
+
+  return null;
+}
+
+function renderOptionEasterEgg(option, allOptions, rank){
+  const egg = getOptionEasterEgg(option, allOptions, rank);
+  if(!egg) return "";
+  return `
+    <div class="option-easteregg">
+      <div class="option-easteregg-icon">${egg.icon}</div>
+      <div>${egg.text}</div>
+    </div>
+  `;
 }
 
 function renderOptionCard(option, rank){
