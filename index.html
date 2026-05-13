@@ -1585,24 +1585,7 @@ input::placeholder{
 @media(max-width:900px){.option-hero-kpis{grid-template-columns:1fr 1fr;}}
 
 
-.option-easteregg{
-  margin-top:14px;
-  padding:12px 14px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.10);
-  background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
-  color:#dbeafe;
-  font-style:italic;
-  line-height:1.5;
-  font-size:13px;
-  display:flex;
-  gap:10px;
-  align-items:flex-start;
-}
-.option-easteregg-icon{
-  flex-shrink:0;
-  opacity:.9;
-}
+
 
 </style>
 </head>
@@ -2161,7 +2144,7 @@ input::placeholder{
       <button class="compare-control active" type="button" data-mode="balanced" onclick="setCompareMode('balanced')">⚖️ Ausgeglichen</button>
       <button class="compare-control" type="button" data-mode="fast" onclick="setCompareMode('fast')">⚡ Möglichst schnell</button>
     </div>
-    <div class="score-note" id="score-note">Sortierung: Ausgeglichen bewertet Kosten je Person und reale Reisezeit gleich stark.</div>
+    <div class="score-note" id="score-note">Sortierung: Ausgeglichen bewertet stabile Kosten je Person und reale Reisezeit gleich stark.</div>
 
     <div id="option-list" class="option-list"></div>
 <div id="easteregg-box"></div>
@@ -2879,18 +2862,18 @@ const DEFAULT_STATIONS = [
 ];
 
 const FLEET_LOCATIONS = [
-  {name:"Fuhrpark Bremen", lat:53.0758, lon:8.8072},
-  {name:"Fuhrpark Hamburg", lat:53.5511, lon:9.9937},
-  {name:"Fuhrpark Berlin", lat:52.5200, lon:13.4050},
-  {name:"Fuhrpark Hannover", lat:52.3759, lon:9.7320},
+  {name:"BKK Bremen", lat:53.0758, lon:8.8072},
+  {name:"BKK Hamburg", lat:53.5511, lon:9.9937},
+  {name:"BKK Berlin", lat:52.5200, lon:13.4050},
+  {name:"BKK Hannover", lat:52.3759, lon:9.7320},
   {name:"Fuhrpark Düsseldorf", lat:51.2277, lon:6.7735},
-  {name:"Fuhrpark Frankfurt", lat:50.1109, lon:8.6821},
-  {name:"Fuhrpark Stuttgart", lat:48.7758, lon:9.1829},
-  {name:"Fuhrpark München", lat:48.1351, lon:11.5820},
+  {name:"BKK Frankfurt", lat:50.1109, lon:8.6821},
+  {name:"BKK Sindelfingen", lat:48.7758, lon:9.1829},
+  {name:"BKK München", lat:48.1351, lon:11.5820},
   {name:"Fuhrpark Dresden", lat:51.0504, lon:13.7373},
   {name:"Fuhrpark Leipzig", lat:51.3397, lon:12.3731},
   {name:"Fuhrpark Nürnberg", lat:49.4521, lon:11.0767},
-  {name:"Fuhrpark Köln", lat:50.9375, lon:6.9603}
+  {name:"BKK Köln", lat:50.9375, lon:6.9603}
 ];
 
 let selectedStartGeo = null;
@@ -4260,7 +4243,8 @@ function renderWorkabilitySection(){
 
   const levels = `
     <option value="0">Nicht möglich (0%)</option>
-    <option value="50">Eingeschränkt möglich (50%)</option>
+    <option value="25">Kaum möglich (25%)</option>
+<option value="50">Eingeschränkt möglich (50%)</option>
     <option value="75">Gut möglich (75%)</option>
     <option value="100">Voll möglich (100%)</option>
   `;
@@ -4446,51 +4430,55 @@ function optionCostRows(rows, total){
   `;
 }
 
+
 function optionScore(options, option){
-  const costs = options.map(o => Number.isFinite(o.decisionCostPerPerson) ? o.decisionCostPerPerson : (o.totalCost / Math.max(1, tripState.persons || 1)));
-  const minCost = Math.min(...costs);
-  const maxCost = Math.max(...costs);
-  const minTime = Math.min(...options.map(o => o.totalTime));
-  const maxTime = Math.max(...options.map(o => o.totalTime));
+  const bestCost = Math.min(...options.map(o => o.decisionCostPerPerson));
+  const bestTime = Math.min(...options.map(o => o.totalTime));
 
-  const optionCost = Number.isFinite(option.decisionCostPerPerson)
-    ? option.decisionCostPerPerson
-    : (option.totalCost / Math.max(1, tripState.persons || 1));
+  const costRatio = option.decisionCostPerPerson / bestCost;
+  const timeRatio = option.totalTime / bestTime;
 
-  const costNorm = maxCost === minCost ? 0 : (optionCost - minCost) / (maxCost - minCost);
-  const timeNorm = maxTime === minTime ? 0 : (option.totalTime - minTime) / (maxTime - minTime);
+  if(compareMode === "cheap"){
+    return option.decisionCostPerPerson;
+  }
 
-  if(compareMode === "cheap") return costNorm;
-  if(compareMode === "fast") return timeNorm;
-  return (costNorm * 0.5) + (timeNorm * 0.5);
+  if(compareMode === "fast"){
+    return option.totalTime;
+  }
+
+  // stabile ausgewogene Bewertung:
+  // Verhältnis statt dynamischer Normalisierung.
+  // Dadurch bleiben Bahn/Flug/Kombi bei Personenänderung stabil,
+  // solange sich deren relative Kostenstruktur nicht verändert.
+  return (costRatio * 0.5) + (timeRatio * 0.5);
 }
 
 function sortOptions(options){
   const scored = options.map(o => ({...o, score: optionScore(options, o)}));
 
-  if(compareMode === "cheap"){
-    return scored.sort((a,b) =>
+  return scored.sort((a,b) => {
+    if(compareMode === "cheap"){
+      return (
+        (a.decisionCostPerPerson - b.decisionCostPerPerson) ||
+        (a.totalTime - b.totalTime)
+      );
+    }
+
+    if(compareMode === "fast"){
+      return (
+        (a.totalTime - b.totalTime) ||
+        (a.decisionCostPerPerson - b.decisionCostPerPerson)
+      );
+    }
+
+    return (
+      (a.score - b.score) ||
       (a.decisionCostPerPerson - b.decisionCostPerPerson) ||
-      (a.totalCost - b.totalCost) ||
       (a.totalTime - b.totalTime)
     );
-  }
-
-  if(compareMode === "fast"){
-    return scored.sort((a,b) =>
-      (a.totalTime - b.totalTime) ||
-      (a.decisionCostPerPerson - b.decisionCostPerPerson) ||
-      (a.totalCost - b.totalCost)
-    );
-  }
-
-  return scored.sort((a,b) =>
-    (a.score - b.score) ||
-    (a.decisionCostPerPerson - b.decisionCostPerPerson) ||
-    (a.totalCost - b.totalCost) ||
-    (a.totalTime - b.totalTime)
-  );
+  });
 }
+
 
 function toggleShowAllOptions(){
   showAllOptions = !showAllOptions;
@@ -4547,84 +4535,14 @@ function setCompareMode(mode){
       ? "Sortierung: niedrigste Gesamtkosten zuerst."
       : mode === "fast"
         ? "Sortierung: geringste Gesamtzeit zuerst."
-        : "Sortierung: Ausgeglichen bewertet Kosten je Person und reale Reisezeit gleich stark.";
+        : "Sortierung: Ausgeglichen bewertet stabile Kosten je Person und reale Reisezeit gleich stark.";
   }
 
   renderComparePage();
 }
 
 
-function getOptionEasterEgg(option, allOptions, rank){
-  if(rank !== 1) return null;
 
-  const compareFlight = allOptions.find(o => o.kind === "flug");
-  const compareTrain = allOptions.find(o => o.kind === "bahn");
-
-  // 0€ auto / management hint
-  if(option.kind === "auto" && (option.vehicleCost || 0) === 0){
-    return {
-      icon:"👔",
-      text:"Diese Reise profitiert offenbar von organisatorischer Hierarchie."
-    };
-  }
-
-  // Bahn und Flug fast gleich schnell
-  if(compareFlight && compareTrain){
-    const diff = Math.abs((compareFlight.totalTime || 0) - (compareTrain.totalTime || 0));
-    if(diff <= 30){
-      return {
-        icon:"⚖️",
-        text:"Bahn und Flug liefern sich ein bemerkenswert knappes Rennen."
-      };
-    }
-  }
-
-  // günstigste Option
-  const minCost = Math.min(...allOptions.map(o => o.totalCost || 0));
-  if(option.totalCost === minCost){
-    return {
-      icon:"💰",
-      text:"Der Finanzbereich beobachtet diese Entscheidung mit auffälliger Zufriedenheit."
-    };
-  }
-
-  // productive rail
-  if(option.kind === "bahn" && (option.productiveTime || 0) >= 90){
-    return {
-      icon:"🚆",
-      text:"Diese Verbindung setzt Vertrauen in Steckdosen und Mobilfunk voraus."
-    };
-  }
-
-  // balanced
-  if(compareMode === "balanced"){
-    return {
-      icon:"🧠",
-      text:"Balanced Scorecard der Mobilität erfüllt."
-    };
-  }
-
-  // auto
-  if(option.kind === "auto"){
-    return {
-      icon:"🚗",
-      text:"Maximale Kontrolle bei gleichzeitig erhöhtem Podcast-Potenzial."
-    };
-  }
-
-  return null;
-}
-
-function renderOptionEasterEgg(option, allOptions, rank){
-  const egg = getOptionEasterEgg(option, allOptions, rank);
-  if(!egg) return "";
-  return `
-    <div class="option-easteregg">
-      <div class="option-easteregg-icon">${egg.icon}</div>
-      <div>${egg.text}</div>
-    </div>
-  `;
-}
 
 function renderOptionCard(option, rank){
   const best = rank === 1;
