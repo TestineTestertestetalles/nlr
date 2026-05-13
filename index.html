@@ -2161,7 +2161,7 @@ input::placeholder{
       <button class="compare-control active" type="button" data-mode="balanced" onclick="setCompareMode('balanced')">⚖️ Ausgeglichen</button>
       <button class="compare-control" type="button" data-mode="fast" onclick="setCompareMode('fast')">⚡ Möglichst schnell</button>
     </div>
-    <div class="score-note" id="score-note">Sortierung: Ausgeglichen bewertet Vergleichskosten pro Person und reale Reisezeit gleich stark.</div>
+    <div class="score-note" id="score-note">Sortierung: Ausgeglichen bewertet Kosten je Person und reale Reisezeit gleich stark.</div>
 
     <div id="option-list" class="option-list"></div>
 <div id="easteregg-box"></div>
@@ -4447,21 +4447,21 @@ function optionCostRows(rows, total){
 }
 
 function optionScore(options, option){
-  const rankingCosts = options.map(o => Number.isFinite(o.decisionCost) ? o.decisionCost : o.totalCost);
-  const minCost = Math.min(...rankingCosts);
-  const maxCost = Math.max(...rankingCosts);
+  const costs = options.map(o => Number.isFinite(o.decisionCostPerPerson) ? o.decisionCostPerPerson : (o.totalCost / Math.max(1, tripState.persons || 1)));
+  const minCost = Math.min(...costs);
+  const maxCost = Math.max(...costs);
   const minTime = Math.min(...options.map(o => o.totalTime));
   const maxTime = Math.max(...options.map(o => o.totalTime));
 
-  const optionCost = Number.isFinite(option.decisionCost) ? option.decisionCost : option.totalCost;
+  const optionCost = Number.isFinite(option.decisionCostPerPerson)
+    ? option.decisionCostPerPerson
+    : (option.totalCost / Math.max(1, tripState.persons || 1));
+
   const costNorm = maxCost === minCost ? 0 : (optionCost - minCost) / (maxCost - minCost);
   const timeNorm = maxTime === minTime ? 0 : (option.totalTime - minTime) / (maxTime - minTime);
 
   if(compareMode === "cheap") return costNorm;
   if(compareMode === "fast") return timeNorm;
-
-  // Ausgeglichen = Kosten und reale Reisezeit.
-  // Produktive Reisezeit bleibt sichtbar, verändert aber nicht versteckt die Sortierung.
   return (costNorm * 0.5) + (timeNorm * 0.5);
 }
 
@@ -4470,7 +4470,7 @@ function sortOptions(options){
 
   if(compareMode === "cheap"){
     return scored.sort((a,b) =>
-      (a.decisionCost - b.decisionCost) ||
+      (a.decisionCostPerPerson - b.decisionCostPerPerson) ||
       (a.totalCost - b.totalCost) ||
       (a.totalTime - b.totalTime)
     );
@@ -4479,14 +4479,14 @@ function sortOptions(options){
   if(compareMode === "fast"){
     return scored.sort((a,b) =>
       (a.totalTime - b.totalTime) ||
-      (a.decisionCost - b.decisionCost) ||
+      (a.decisionCostPerPerson - b.decisionCostPerPerson) ||
       (a.totalCost - b.totalCost)
     );
   }
 
   return scored.sort((a,b) =>
     (a.score - b.score) ||
-    (a.decisionCost - b.decisionCost) ||
+    (a.decisionCostPerPerson - b.decisionCostPerPerson) ||
     (a.totalCost - b.totalCost) ||
     (a.totalTime - b.totalTime)
   );
@@ -4547,7 +4547,7 @@ function setCompareMode(mode){
       ? "Sortierung: niedrigste Gesamtkosten zuerst."
       : mode === "fast"
         ? "Sortierung: geringste Gesamtzeit zuerst."
-        : "Sortierung: Ausgeglichen bewertet Vergleichskosten pro Person und reale Reisezeit gleich stark.";
+        : "Sortierung: Ausgeglichen bewertet Kosten je Person und reale Reisezeit gleich stark.";
   }
 
   renderComparePage();
@@ -4700,7 +4700,7 @@ function renderOptionCard(option, rank){
 }
 
 
-function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, travelCost, hotelCost, totalTime, productiveTime, badge, timeline, hotelNights, decisionCost){
+function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueckTitle, rueckTimes, rueckTransfer, costRows, travelCost, hotelCost, totalTime, productiveTime, badge, timeline, hotelNights, decisionCostPerPerson){
   return {
     kind,
     title,
@@ -4717,7 +4717,7 @@ function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueck
     hotelNights,
     timeline,
     totalCost: travelCost + hotelCost,
-    decisionCost: Number.isFinite(decisionCost) ? decisionCost : (travelCost + hotelCost),
+    decisionCostPerPerson: Number.isFinite(decisionCostPerPerson) ? decisionCostPerPerson : ((travelCost + hotelCost) / Math.max(1, tripState.persons || 1)),
     totalTime,
     productiveTime,
     effectiveLoss: Math.max(0, totalTime - productiveTime),
@@ -4816,13 +4816,15 @@ function calcTimelineForLeg(dateVal, departTime, arriveTime, transferBefore, buf
 }
 
 
-function rankingCostPerPerson(travelCost, hotelCost, persons){
+function decisionCostPerPerson(travelCost, hotelCost, persons){
   // Für die Bewertung wird pro Person verglichen:
   // Bahn/Flug/Kombi bleiben dadurch bei anderer Personenzahl stabil,
   // Auto wird dagegen sinnvoll günstiger, weil Fahrzeugkosten geteilt werden.
   const p = Math.max(1, persons || 1);
   return (travelCost + hotelCost) / p;
 }
+
+
 
 function renderComparePage(){
   const dest = getSelectedDestinationData();
@@ -4873,7 +4875,7 @@ function renderComparePage(){
       undefined,
       bahnTimeline,
       bahnHotelNights,
-      rankingCostPerPerson(travelCost, bahnHotelCost, persons)
+      decisionCostPerPerson(travelCost, bahnHotelCost, persons)
     ));
   }
 
@@ -4914,7 +4916,7 @@ function renderComparePage(){
       undefined,
       flugTimeline,
       flugHotelNights,
-      rankingCostPerPerson(travelCost, flugHotelCost, persons)
+      decisionCostPerPerson(travelCost, flugHotelCost, persons)
     ));
   }
 
@@ -4958,7 +4960,7 @@ function renderComparePage(){
       undefined,
       autoTimeline,
       autoHotelNights,
-      rankingCostPerPerson(travelCost, autoHotelCost, persons)
+      decisionCostPerPerson(travelCost, autoHotelCost, persons)
     ));
   }
 
@@ -4997,7 +4999,7 @@ function renderComparePage(){
       "Bahn hin · Flug zurück",
       combo1Timeline,
       combo1HotelNights,
-      rankingCostPerPerson(combo1Cost, combo1HotelCost, persons)
+      decisionCostPerPerson(combo1Cost, combo1HotelCost, persons)
     ));
 
     const flugHinRide = timeDiffMin(flug.hinDep,flug.hinArr);
@@ -5034,7 +5036,7 @@ function renderComparePage(){
       "Flug hin · Bahn zurück",
       combo2Timeline,
       combo2HotelNights,
-      rankingCostPerPerson(combo2Cost, combo2HotelCost, persons)
+      decisionCostPerPerson(combo2Cost, combo2HotelCost, persons)
     ));
   }
 
