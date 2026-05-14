@@ -1573,7 +1573,7 @@ input::placeholder{
 .option-hero-kpi.cost{background:linear-gradient(135deg,rgba(52,211,153,.18),rgba(52,211,153,.055));border-color:rgba(52,211,153,.32);}
 .option-hero-kpi.time{background:linear-gradient(135deg,rgba(96,165,250,.18),rgba(96,165,250,.055));border-color:rgba(96,165,250,.32);}
 .option-hero-kpi.work{background:linear-gradient(135deg,rgba(168,85,247,.16),rgba(168,85,247,.045));border-color:rgba(168,85,247,.28);}
-.option-hero-kpi.hotel{background:linear-gradient(135deg,rgba(251,191,36,.17),rgba(251,191,36,.05));border-color:rgba(251,191,36,.30);}
+.option-hero-kpi.avg{background:linear-gradient(135deg,rgba(251,191,36,.17),rgba(251,191,36,.05));border-color:rgba(251,191,36,.30);}
 .option-hero-label{color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px;}
 .option-hero-value{color:#fff;font-size:20px;line-height:1.1;font-weight:950;font-variant-numeric:tabular-nums;}
 .option-hero-sub{color:#94a3b8;font-size:11px;margin-top:5px;line-height:1.3;}
@@ -1586,6 +1586,30 @@ input::placeholder{
 
 
 
+
+
+.option-cost{
+  background:rgba(255,255,255,.035);
+  border-left:1px solid rgba(255,255,255,.08);
+}
+.option-cost-title{
+  color:#fff;
+  font-size:13px;
+  font-weight:950;
+  margin-bottom:10px;
+  letter-spacing:.02em;
+}
+.cost-row{
+  gap:10px;
+}
+.cost-row span:first-child{
+  color:#cbd5e1;
+}
+.cost-row span:last-child{
+  text-align:right;
+  font-weight:850;
+  color:#fff;
+}
 
 </style>
 </head>
@@ -2144,10 +2168,10 @@ input::placeholder{
       <button class="compare-control active" type="button" data-mode="balanced" onclick="setCompareMode('balanced')">⚖️ Ausgeglichen</button>
       <button class="compare-control" type="button" data-mode="fast" onclick="setCompareMode('fast')">⚡ Möglichst schnell</button>
     </div>
-    <div class="score-note" id="score-note">Sortierung: Ausgeglichen bewertet stabile Kosten je Person und reale Reisezeit gleich stark.</div>
+    <div class="score-note" id="score-note">Sortierung: Ausgeglichen bewertet Kosten je Person und reale Reisezeit; Kosten werden leicht stärker gewichtet.</div>
 
     <div id="option-list" class="option-list"></div>
-<div id="easteregg-box"></div>
+<div id="easteregg-box" style="display:none"></div>
 
     <div class="summary-actions">
       <button class="btn-secondary" type="button" onclick="showSummaryOnly()">← Zurück zur Zusammenfassung</button>
@@ -4207,6 +4231,7 @@ function getModeData(){
 function getWorkFactor(value){
   const map = {
     "0": 0,
+    "25": 0.25,
     "50": 0.5,
     "75": 0.75,
     "100": 1
@@ -4453,11 +4478,9 @@ function optionScore(options, option){
     return option.totalTime;
   }
 
-  // stabile ausgewogene Bewertung:
-  // Verhältnis statt dynamischer Normalisierung.
-  // Dadurch bleiben Bahn/Flug/Kombi bei Personenänderung stabil,
-  // solange sich deren relative Kostenstruktur nicht verändert.
-  return (costRatio * 0.5) + (timeRatio * 0.5);
+  // Ausgeglichen: Kosten je Person stehen bewusst leicht im Vordergrund,
+  // damit geteilte Fuhrparkkosten bei mehreren Reisenden sichtbar wirken.
+  return (costRatio * 0.6) + (timeRatio * 0.4);
 }
 
 function sortOptions(options){
@@ -4520,10 +4543,10 @@ function optionHeroKpis(option){
         <div class="option-hero-value">${dur(option.productiveTime || 0)}</div>
         <div class="option-hero-sub">nutzbare Arbeitszeit</div>
       </div>
-      <div class="option-hero-kpi hotel">
-        <div class="option-hero-label">Hotel</div>
-        <div class="option-hero-value">${option.hotelNights || 0}</div>
-        <div class="option-hero-sub">Nacht/Nächte je Person</div>
+      <div class="option-hero-kpi avg">
+        <div class="option-hero-label">Ø Kosten p. P.</div>
+        <div class="option-hero-value">${formatEuro(option.decisionCostPerPerson)}</div>
+        <div class="option-hero-sub">inkl. Hotel je Person</div>
       </div>
     </div>
   `;
@@ -4542,7 +4565,7 @@ function setCompareMode(mode){
       ? "Sortierung: niedrigste Gesamtkosten zuerst."
       : mode === "fast"
         ? "Sortierung: geringste Gesamtzeit zuerst."
-        : "Sortierung: Ausgeglichen bewertet stabile Kosten je Person und reale Reisezeit gleich stark.";
+        : "Sortierung: Ausgeglichen bewertet Kosten je Person und reale Reisezeit; Kosten werden leicht stärker gewichtet.";
   }
 
   renderComparePage();
@@ -4616,6 +4639,7 @@ function renderOptionCard(option, rank){
         </div>
 
         <div class="option-cost">
+          <div class="option-cost-title">Kostenzusammensetzung</div>
           ${option.costRows.map(r => `<div class="cost-row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join("")}
           <div class="cost-row total-only"><span>Gesamt inkl. Hotel</span><strong>${formatEuro(option.totalCost)}</strong></div>
         </div>
@@ -4651,73 +4675,7 @@ function createOption(kind, title, route, hinTitle, hinTimes, hinTransfer, rueck
 }
 
 
-function renderEasterEgg(options){
-  const box = document.getElementById("easteregg-box");
-  if(!box) return;
-
-  const {persons, bahn, flug, auto} = getModeData();
-  const cheapest = [...options].sort((a,b)=>a.totalCost-b.totalCost)[0];
-  const fastest = [...options].sort((a,b)=>a.effectiveLoss-b.effectiveLoss)[0];
-
-  const eggs = [];
-
-  if(bahn.active && bahn.totalTime > 240){
-    eggs.push("🚆 Optimistische Reiseplanung aktiviert.");
-  }
-
-  if(bahn.active && getWorkability('bahn','hin') >= 0.75){
-    eggs.push("💼 Mobiles Büro erfolgreich aktiviert.");
-  }
-
-  if(flug.active && bahn.active){
-    const train = options.find(o => o.kind === "train");
-    const flight = options.find(o => o.kind === "flight");
-
-    if(train && flight){
-      if((flight.effectiveLoss < train.effectiveLoss) && (flight.totalCost > train.totalCost * 1.4)){
-        eggs.push("📶 Für diese Strecke gewinnt vermutlich das WLAN.");
-      }
-
-      if(flight.totalTime >= train.totalTime){
-        eggs.push("🛂 Sicherheitskontrolle übernimmt die Zeitoptimierung.");
-      }
-    }
-  }
-
-  if(auto.active && persons === 1){
-    eggs.push("☕ Kaffee- und Podcast-Pausen nicht eingerechnet.");
-  }
-
-  if(cheapest && cheapest.totalTime > 500){
-    eggs.push("💶 Finanzabteilung zufrieden.");
-  }
-
-  if(fastest && fastest.totalCost > cheapest.totalCost * 1.8){
-    eggs.push("📈 Budget verlässt den Chat.");
-  }
-
-  const hotel = getHotelData();
-  if(hotel.active && hotel.price > 250){
-    eggs.push("🏨 Frühstück hoffentlich inklusive.");
-  }
-
-  if(Math.random() < 0.03){
-    eggs.push("🚄 Alle Angaben ohne Gewähr und ohne Schienenersatzverkehr.");
-  }
-
-  if(!eggs.length){
-    box.innerHTML = "";
-    return;
-  }
-
-  const msg = eggs[Math.floor(Math.random() * eggs.length)];
-
-  box.innerHTML = `
-    <div class="easteregg">
-      ${msg}
-    </div>
-  `;
-}
+function renderEasterEgg(options){}
 
 
 
