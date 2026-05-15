@@ -1611,6 +1611,37 @@ input::placeholder{
   color:#fff;
 }
 
+
+.link-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.link-row a{
+  flex:1 1 auto;
+}
+.copy-link-btn{
+  border:1.5px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  font-weight:900;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.copy-link-btn:hover{background:rgba(255,255,255,.12);}
+.copy-link-btn.copied{
+  border-color:rgba(52,211,153,.45);
+  background:rgba(52,211,153,.16);
+  color:#bbf7d0;
+}
+.option-card.selected{
+  box-shadow:0 0 0 5px rgba(96,165,250,.90), 0 20px 60px rgba(0,0,0,.28)!important;
+  border-color:rgba(96,165,250,.85)!important;
+}
+
 </style>
 </head>
 <body>
@@ -1852,7 +1883,7 @@ input::placeholder{
         <span class="arrow">→</span>
         <span id="hin-to">Ziel</span>
       </div>
-      <a id="hin-db-link" class="db-link" href="#" target="_blank" rel="noopener">🔗 Hinreise bei Deutsche Bahn suchen ↗</a>
+      <div class="link-row"><a id="hin-db-link" class="db-link" href="#" target="_blank" rel="noopener">🔗 Hinreise bei Deutsche Bahn suchen ↗</a><button class="copy-link-btn" type="button" onclick="copyPreparedLink('hin-db-link', this)">Link kopieren</button></div>
 
       <div class="time-grid">
         <div class="field">
@@ -1889,7 +1920,7 @@ input::placeholder{
         <span class="arrow">→</span>
         <span id="rueck-to">Start</span>
       </div>
-      <a id="rueck-db-link" class="db-link" href="#" target="_blank" rel="noopener">🔗 Rückreise bei Deutsche Bahn suchen ↗</a>
+      <div class="link-row"><a id="rueck-db-link" class="db-link" href="#" target="_blank" rel="noopener">🔗 Rückreise bei Deutsche Bahn suchen ↗</a><button class="copy-link-btn" type="button" onclick="copyPreparedLink('rueck-db-link', this)">Link kopieren</button></div>
 
       <div class="time-grid">
         <div class="field">
@@ -1942,7 +1973,7 @@ input::placeholder{
         <span id="flug-hin-from">Startflughafen</span>
         <span class="arrow">→</span>
         <span id="flug-hin-to">Zielflughafen</span>
-      </div>      <a id="flug-hin-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Hinflug bei Google Flights suchen ↗</a>
+      </div>      <div class="link-row"><a id="flug-hin-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Hinflug bei Google Flights suchen ↗</a><button class="copy-link-btn" type="button" onclick="copyPreparedLink('flug-hin-link', this)">Link kopieren</button></div>
 
       <div class="time-grid">
         <div class="field">
@@ -1977,7 +2008,7 @@ input::placeholder{
         <span id="flug-rueck-from">Zielflughafen</span>
         <span class="arrow">→</span>
         <span id="flug-rueck-to">Startflughafen</span>
-      </div>      <a id="flug-rueck-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Rückflug bei Google Flights suchen ↗</a>
+      </div>      <div class="link-row"><a id="flug-rueck-link" class="flight-link" href="#" target="_blank" rel="noopener">🔗 Rückflug bei Google Flights suchen ↗</a><button class="copy-link-btn" type="button" onclick="copyPreparedLink('flug-rueck-link', this)">Link kopieren</button></div>
 
       <div class="time-grid">
         <div class="field">
@@ -2176,7 +2207,6 @@ input::placeholder{
     <div class="summary-actions">
       <button class="btn-secondary" type="button" onclick="showSummaryOnly()">← Zurück zur Zusammenfassung</button>
       <button class="btn-secondary" type="button" onclick="exportResultPdf()">📄 Ergebnis als PDF speichern</button>
-      <button class="btn-primary" type="button" onclick="alert('Auswahlfunktion wird im nächsten Schritt ergänzt.')">Beste Option wählen →</button>
     </div>
   </section>
 </main>
@@ -4929,10 +4959,10 @@ function renderComparePage(){
     selectedPdfOptionId = sorted[0].kind;
   }
 
-  const visibleOptions = showAllOptions ? sorted : sorted.slice(0, 3);
+  const visibleOptions = showAllOptions ? sorted : sorted.slice(0, 1);
   const hiddenCount = Math.max(0, sorted.length - visibleOptions.length);
   const showAllButton = hiddenCount > 0
-    ? `<div class="show-all-options-wrap"><button class="show-all-options-btn" type="button" onclick="toggleShowAllOptions()">Alle Optionen anzeigen (${hiddenCount} weitere)</button></div>`
+    ? `<div class="show-all-options-wrap"><button class="show-all-options-btn" type="button" onclick="toggleShowAllOptions()">Alle Optionen anzeigen</button></div>`
     : (showAllOptions && sorted.length > 3
       ? `<div class="show-all-options-wrap"><button class="show-all-options-btn" type="button" onclick="toggleShowAllOptions()">Weniger anzeigen</button></div>`
       : "");
@@ -5173,6 +5203,37 @@ function showComparePage(){
   document.getElementById("compare-page").classList.add("active");
   renderComparePage();
   window.scrollTo(0, 0);
+}
+
+
+async function copyPreparedLink(linkId, button){
+  const a = document.getElementById(linkId);
+  const url = a?.href || "";
+  if(!url || url === "#"){
+    alert("Der Link ist noch nicht vorbereitet.");
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(url);
+    if(button){
+      const old = button.textContent;
+      button.textContent = "✓ Kopiert";
+      button.classList.add("copied");
+      setTimeout(() => {
+        button.textContent = old;
+        button.classList.remove("copied");
+      }, 1600);
+    }
+  }catch(e){
+    const tmp = document.createElement("textarea");
+    tmp.value = url;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand("copy");
+    document.body.removeChild(tmp);
+    if(button) button.textContent = "✓ Kopiert";
+  }
 }
 
 function showSummaryPage(){
