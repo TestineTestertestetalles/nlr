@@ -6,6 +6,7 @@
 <title>Reisekostentool – Bahn Ablauf</title>
 <style>
 :root{
+  --purple:#a78bfa;
   --bg:#151528;
   --card:rgba(255,255,255,0.07);
   --card2:rgba(255,255,255,0.10);
@@ -1380,24 +1381,8 @@ input::placeholder{
   border-color:rgba(52,211,153,.45);
   color:#bbf7d0;
 }
-.pdf-button{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  border:1.5px solid rgba(255,255,255,.18);
-  background:rgba(255,255,255,.06);
-  color:#fff;
-  border-radius:12px;
-  padding:10px 13px;
-  font-weight:900;
-  cursor:pointer;
-}
-.compare-head-row{
-  display:flex;
-  justify-content:space-between;
-  gap:14px;
-  align-items:flex-start;
-}
+
+
 #pdf-report{display:none;}
 .pdf-page{
   font-family:Arial, Helvetica, sans-serif;
@@ -1747,19 +1732,19 @@ input::placeholder{
       </div>
       <div class="field">
         <label>Hinreise Datum</label>
-        <input id="hin-date" type="date" value="" placeholder="TT.MM.JJJJ">>
+        <input id="hin-date" type="date" value="" placeholder="TT.MM.JJJJ">
       </div>
       <div class="field">
         <label>Gewünschte Ankunft</label>
-        <input id="hin-arrival-target" type="time" value="" placeholder="HH:MM">>
+        <input id="hin-arrival-target" type="time" value="" placeholder="HH:MM">
       </div>
       <div class="field">
         <label>Rückreise Datum</label>
-        <input id="rueck-date" type="date" value="" placeholder="TT.MM.JJJJ">>
+        <input id="rueck-date" type="date" value="" placeholder="TT.MM.JJJJ">
       </div>
       <div class="field">
         <label>Geplante Abfahrt</label>
-        <input id="rueck-departure-target" type="time" value="" placeholder="HH:MM">>
+        <input id="rueck-departure-target" type="time" value="" placeholder="HH:MM">
       </div>
     </div>
     <div id="custom-target-box" class="custom-target-box" style="display:none;margin-top:16px;">
@@ -2727,7 +2712,7 @@ const LOCAL_RAIL_STATIONS = [
   {name:"Ückeritz", eva:"8013161", lat:54.013918, lon:14.049809},
 ];
 
-function mergeLocalStations(stations, geo, radiusKm=70){
+function mergeLocalStations(stations, geo, radiusMeters=70){
   const byKey = new Map();
 
   for(const st of stations || []){
@@ -2736,7 +2721,7 @@ function mergeLocalStations(stations, geo, radiusKm=70){
 
   for(const st of LOCAL_RAIL_STATIONS){
     const km = havKm(geo.lat, geo.lon, st.lat, st.lon);
-    if(km > radiusKm) continue;
+    if(km > radiusMeters) continue;
 
     const local = {
       ...st,
@@ -2790,7 +2775,7 @@ function regionalStationByName(name){
   }) || null;
 }
 
-function enrichWithEvaRequired(stations, geo, radiusKm){
+function enrichWithEvaRequired(stations, geo, radiusMeters){
   const byKey = new Map();
 
   function add(st, source){
@@ -2803,7 +2788,7 @@ function enrichWithEvaRequired(stations, geo, radiusKm){
     if(!lat || !lon) return;
 
     const km = Number.isFinite(st.km) ? st.km : havKm(geo.lat, geo.lon, lat, lon);
-    if(km > radiusKm / 1000 + 0.1) return;
+    if(km > radiusMeters / 1000 + 0.1) return;
 
     const enriched = {
       ...st,
@@ -2830,7 +2815,7 @@ function enrichWithEvaRequired(stations, geo, radiusKm){
   // und eine EVA-ID besitzen. Dadurch wird die alte lokale Overpass-Suche nicht übersteuert.
   for(const st of LOCAL_RAIL_STATIONS){
     const km = havKm(geo.lat, geo.lon, st.lat, st.lon);
-    if(km <= radiusKm / 1000 + 0.1){
+    if(km <= radiusMeters / 1000 + 0.1){
       add({...st, km, minutes:minutesFromKm(km,35), score:25}, "regional-eva");
     }
   }
@@ -3441,19 +3426,16 @@ function initBaggage(){
 function hasFilledTravelMode(){
   const bahnFilled = transportState.bahn.active && (
     parseEuroInput("bahn-hin-price") > 0 ||
-    parseEuroInput("bahn-rueck-price") > 0 ||
-    !!document.getElementById("seat-hin")?.checked ||
-    !!document.getElementById("seat-rueck")?.checked
+    parseEuroInput("bahn-rueck-price") > 0
   );
 
   const flugFilled = transportState.flug.active && (
     parseEuroInput("flug-hin-price") > 0 ||
-    parseEuroInput("flug-rueck-price") > 0 ||
-    !!document.getElementById("baggage-hin")?.checked ||
-    !!document.getElementById("baggage-rueck")?.checked
+    parseEuroInput("flug-rueck-price") > 0
   );
 
-  const autoFilled = transportState.auto.active && parseEuroInput("auto-price") > 0;
+  const autoPriceEl = document.getElementById("auto-price");
+  const autoFilled = transportState.auto.active && autoPriceEl && autoPriceEl.value !== "";
 
   return bahnFilled || flugFilled || autoFilled;
 }
@@ -3525,17 +3507,18 @@ function toggleCustomTarget(){
 }
 
 function getCustomTargetData(){
-  const stationName = document.getElementById("custom-target-station")?.value || "";
+  const stationNameRaw = document.getElementById("custom-target-station")?.value || "";
+  const stationName = safeText(stationNameRaw);
 
   return {
-    name: document.getElementById("custom-target-name")?.value || "Freies Ziel",
-    address: document.getElementById("custom-target-address")?.value || "",
+    name: safeText(document.getElementById("custom-target-name")?.value || "Freies Ziel"),
+    address: safeText(document.getElementById("custom-target-address")?.value || ""),
     stationName,
-    stationEva: stationEvaByName(stationName) || regionalStationByName(stationName)?.eva || "",
-    airportCode: document.getElementById("custom-target-airport")?.value || "",
-    airportName: document.getElementById("custom-target-airport")?.value || "",
-    stationTransferMin: Number(document.getElementById("custom-target-station-min")?.value || 0),
-    airportTransferMin: Number(document.getElementById("custom-target-airport-min")?.value || 0),
+    stationEva: stationEvaByName(stationNameRaw) || regionalStationByName(stationNameRaw)?.eva || "",
+    airportCode: safeText(document.getElementById("custom-target-airport")?.value || ""),
+    airportName: safeText(document.getElementById("custom-target-airport")?.value || ""),
+    stationTransferMin: Math.max(0, Number(document.getElementById("custom-target-station-min")?.value || 0)),
+    airportTransferMin: Math.max(0, Number(document.getElementById("custom-target-airport-min")?.value || 0)),
     lat: 0,
     lon: 0
   };
@@ -3548,16 +3531,37 @@ function getCustomTargetRaw(){
   return [
     d.name,
     d.address,
-    d.stationName || "",
-    d.stationName || "",
-    d.stationEva || "",
-    d.airportCode || "",
-    d.airportName || d.airportCode || "",
-    d.stationTransferMin || 0,
-    d.airportTransferMin || 0,
-    d.lat || 0,
-    d.lon || 0
-  ].join("|");
+    d.stationName,
+    d.stationName,
+    d.stationEva,
+    d.airportCode,
+    d.airportName,
+    d.stationTransferMin,
+    d.airportTransferMin,
+    d.lat,
+    d.lon
+  ].map(v => String(v ?? "")).join("|");
+}
+
+function validateDateOrder(){
+  const hinDate = document.getElementById("hin-date")?.value || "";
+  const rueckDate = document.getElementById("rueck-date")?.value || "";
+
+  if(hinDate && rueckDate && new Date(rueckDate + "T00:00:00") < new Date(hinDate + "T00:00:00")){
+    alert("Das Rückreisedatum liegt vor dem Hinreisedatum. Bitte prüfen.");
+    return false;
+  }
+
+  return true;
+}
+
+function validateTransferRange(value, label){
+  const n = Number(value);
+  if(!Number.isFinite(n) || n < 0 || n > 240){
+    alert(`${label} muss zwischen 0 und 240 Minuten liegen.`);
+    return false;
+  }
+  return true;
 }
 
 function validateCustomTarget(){
@@ -3568,10 +3572,14 @@ function validateCustomTarget(){
     return false;
   }
 
+  if(!validateTransferRange(d.stationTransferMin, "Entfernung zur Haltestelle")) return false;
+
   if(transportState.flug.active && (!d.airportCode || !d.airportTransferMin)){
     alert("Bitte für die Flugoption auch den nächstgelegenen Flughafen und die Entfernung zum Flughafen eintragen.");
     return false;
   }
+
+  if(transportState.flug.active && !validateTransferRange(d.airportTransferMin, "Entfernung zum Flughafen")) return false;
 
   return true;
 }
@@ -3635,7 +3643,12 @@ function renderTransferSummary(){
   const rows = [];
 
   const bahnActive = !!transportState.bahn.active && document.getElementById("bahn-card")?.style.display !== "none";
-  const flugActive = !!transportState.flug.active && document.getElementById("flight-card")?.style.display !== "none";
+  const flugIataAvailable = !!(
+    transportState.flug.iata ||
+    document.getElementById("flug-station")?.selectedOptions?.[0]?.dataset?.iata ||
+    getSelectedDestinationData()?.airportCode
+  );
+  const flugActive = !!transportState.flug.active && flugIataAvailable && document.getElementById("flight-card")?.style.display !== "none";
   const autoActive = !!transportState.auto.active && document.getElementById("auto-card")?.style.display !== "none";
 
   if(bahnActive){
@@ -3800,16 +3813,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSeatReservations();
   initBaggage();
   initSummaryButtonWatchers();
-
-  ["hin-date","rueck-date","hotel-price","hotel-disable"].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){
-      el.addEventListener("change", updateHotelBox);
-      el.addEventListener("input", updateHotelBox);
-    }
-  });
-
-  const zielSelect = document.getElementById("ziel");
+const zielSelect = document.getElementById("ziel");
   if(zielSelect){
     zielSelect.addEventListener("change", toggleCustomTarget);
     toggleCustomTarget();
@@ -3881,6 +3885,8 @@ async function ensureStartGeoFromText(){
 }
 
 async function showBahnSearch(){
+  if(!validateDateOrder()) return;
+
   await ensureStartGeoFromText();
 
   const startCity = document.getElementById("start").value.trim();
@@ -3961,16 +3967,7 @@ async function showBahnSearch(){
   setupFlightSearch(zielRaw, flugHinDate, flugRueckDate);
   setupAutoOption(zielRaw);
   initSummaryButtonWatchers();
-
-  ["hin-date","rueck-date","hotel-price","hotel-disable"].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){
-      el.addEventListener("change", updateHotelBox);
-      el.addEventListener("input", updateHotelBox);
-    }
-  });
-
-  updateHotelBox();
+updateHotelBox();
   updateSummaryButtonVisibility();
 
   const firstVisible = ["bahn-card","flight-card","auto-card"]
@@ -3981,11 +3978,9 @@ async function showBahnSearch(){
   }
 }
 function parseEuroInput(id){
-  const el = document.getElementById(id);
-  if(!el) return 0;
-  const raw = String(el.value || "").replace(",", ".").trim();
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : 0;
+  const raw = document.getElementById(id)?.value ?? "";
+  const n = Number(String(raw).replace(",", "."));
+  return Number.isFinite(n) ? Math.max(0, n) : 0;
 }
 
 function formatEuro(value){
@@ -4052,6 +4047,19 @@ function formatDateTime(dt){
     hour:"2-digit",
     minute:"2-digit"
   });
+}
+
+function arrivalDateTime(dateVal, departTime, arriveTime){
+  const dep = minutesToClock(dateVal, departTime);
+  const arr = minutesToClock(dateVal, arriveTime);
+
+  if(!dep || !arr) return arr;
+
+  if(arr < dep){
+    arr.setDate(arr.getDate() + 1);
+  }
+
+  return arr;
 }
 
 function formatTimeOnly(dt){
@@ -4167,15 +4175,15 @@ function getSelectedOptionLatLon(selectId){
 }
 
 function getAutoDriveMinutes(){
+  const start = selectedStartGeo;
   const dest = getSelectedDestinationData();
-  const start = getSelectedOptionLatLon("auto-station");
 
-  if(!dest || !dest.lat || !dest.lon || !start){
-    return 0;
-  }
+  if(!start || !dest || !dest.lat || !dest.lon) return 0;
 
-  const km = havKm(start.lat, start.lon, dest.lat, dest.lon);
-  return minutesFromKm(km, 70);
+  const airlineKm = havKm(start.lat, start.lon, dest.lat, dest.lon);
+  const estimatedRoadKm = airlineKm * 1.35;
+
+  return minutesFromKm(estimatedRoadKm, 70);
 }
 
 
@@ -4494,22 +4502,32 @@ function optionCostRows(rows, total){
 
 
 function optionScore(options, option){
-  const bestCost = Math.min(...options.map(o => o.decisionCostPerPerson));
-  const bestTime = Math.min(...options.map(o => o.totalTime));
+  const validCosts = options
+    .map(o => Number(o.decisionCostPerPerson))
+    .filter(v => Number.isFinite(v) && v > 0);
 
-  const costRatio = option.decisionCostPerPerson / bestCost;
-  const timeRatio = option.totalTime / bestTime;
+  const validTimes = options
+    .map(o => Number(o.totalTime))
+    .filter(v => Number.isFinite(v) && v > 0);
+
+  const bestCost = validCosts.length ? Math.min(...validCosts) : 0;
+  const bestTime = validTimes.length ? Math.min(...validTimes) : 0;
+
+  const optionCost = Number.isFinite(option.decisionCostPerPerson) ? Math.max(0, option.decisionCostPerPerson) : 0;
+  const optionTime = Number.isFinite(option.totalTime) ? Math.max(0, option.totalTime) : 0;
+
+  const costRatio = bestCost > 0 ? optionCost / bestCost : 1;
+  const timeRatio = bestTime > 0 ? optionTime / bestTime : 1;
 
   if(compareMode === "cheap"){
-    return option.decisionCostPerPerson;
+    return optionCost;
   }
 
   if(compareMode === "fast"){
-    return option.totalTime;
+    return optionTime;
   }
 
-  // Ausgeglichen: Kosten je Person stehen bewusst leicht im Vordergrund,
-  // damit geteilte Fuhrparkkosten bei mehreren Reisenden sichtbar wirken.
+  // Ausgeglichen bleibt fachlich gleich, aber robust gegen 0 €/fehlende Preise.
   return (costRatio * 0.6) + (timeRatio * 0.4);
 }
 
@@ -4517,25 +4535,20 @@ function sortOptions(options){
   const scored = options.map(o => ({...o, score: optionScore(options, o)}));
 
   return scored.sort((a,b) => {
+    const aCost = Number.isFinite(a.decisionCostPerPerson) ? Math.max(0, a.decisionCostPerPerson) : 0;
+    const bCost = Number.isFinite(b.decisionCostPerPerson) ? Math.max(0, b.decisionCostPerPerson) : 0;
+    const aTime = Number.isFinite(a.totalTime) ? Math.max(0, a.totalTime) : 0;
+    const bTime = Number.isFinite(b.totalTime) ? Math.max(0, b.totalTime) : 0;
+
     if(compareMode === "cheap"){
-      return (
-        (a.decisionCostPerPerson - b.decisionCostPerPerson) ||
-        (a.totalTime - b.totalTime)
-      );
+      return (aCost - bCost) || (aTime - bTime);
     }
 
     if(compareMode === "fast"){
-      return (
-        (a.totalTime - b.totalTime) ||
-        (a.decisionCostPerPerson - b.decisionCostPerPerson)
-      );
+      return (aTime - bTime) || (aCost - bCost);
     }
 
-    return (
-      (a.score - b.score) ||
-      (a.decisionCostPerPerson - b.decisionCostPerPerson) ||
-      (a.totalTime - b.totalTime)
-    );
+    return (a.score - b.score) || (aCost - bCost) || (aTime - bTime);
   });
 }
 
@@ -4723,7 +4736,7 @@ function optionHotelCost(hinDate, rueckDate, personsOverride){
 
 function calcTimelineForLeg(dateVal, departTime, arriveTime, transferBefore, bufferBefore, modeLabel){
   const dep = minutesToClock(dateVal, departTime);
-  const arr = minutesToClock(dateVal, arriveTime);
+  const arr = arrivalDateTime(dateVal, departTime, arriveTime);
   const startHome = subMinutesDate(dep, transferBefore + bufferBefore);
   return {start:startHome, depart:dep, arrive:arr, modeLabel};
 }
@@ -4763,9 +4776,9 @@ function renderComparePage(){
     const productiveTime = (hinRide * getWorkability('bahn','hin')) + (rueckRide * getWorkability('bahn','rueck'));
     const bahnTimeline = {
       hinStart: subMinutesDate(minutesToClock(bahn.hinDate, bahn.hinDep), hinTransferTotal),
-      hinArrive: minutesToClock(bahn.hinDate, bahn.hinArr),
+      hinArrive: arrivalDateTime(bahn.hinDate, bahn.hinDep, bahn.hinArr),
       rueckStart: subMinutesDate(minutesToClock(bahn.rueckDate, bahn.rueckDep), rueckTransferTotal),
-      rueckArrive: minutesToClock(bahn.rueckDate, bahn.rueckArr),
+      rueckArrive: arrivalDateTime(bahn.rueckDate, bahn.rueckDep, bahn.rueckArr),
       hinNote: `inkl. ${hinTransferTotal} Min Transfer/Puffer zum Startbahnhof`,
       rueckNote: `Start am Ziel ca. ${rueckTransferTotal} Min vor Abfahrt`
     };
@@ -4804,9 +4817,9 @@ function renderComparePage(){
     const productiveTime = (hinFlight * getWorkability('flug','hin')) + (rueckFlight * getWorkability('flug','rueck'));
     const flugTimeline = {
       hinStart: subMinutesDate(minutesToClock(flug.hinDate, flug.hinDep), hinTransferTotal),
-      hinArrive: minutesToClock(flug.hinDate, flug.hinArr),
+      hinArrive: arrivalDateTime(flug.hinDate, flug.hinDep, flug.hinArr),
       rueckStart: subMinutesDate(minutesToClock(flug.rueckDate, flug.rueckDep), rueckTransferTotal),
-      rueckArrive: minutesToClock(flug.rueckDate, flug.rueckArr),
+      rueckArrive: arrivalDateTime(flug.rueckDate, flug.rueckDep, flug.rueckArr),
       hinNote: `inkl. ${hinTransferTotal} Min Transfer/Puffer zum Startflughafen`,
       rueckNote: `Start am Ziel ca. ${rueckTransferTotal} Min vor Abflug`
     };
@@ -4887,9 +4900,9 @@ function renderComparePage(){
     const combo1Productive = (bahnHinRide * getWorkability('bahn','hin')) + (flugRueckRide * getWorkability('flug','rueck'));
     const combo1Timeline = {
       hinStart: subMinutesDate(minutesToClock(bahn.hinDate, bahn.hinDep), bahn.transferHin + bahn.buffer),
-      hinArrive: minutesToClock(bahn.hinDate, bahn.hinArr),
+      hinArrive: arrivalDateTime(bahn.hinDate, bahn.hinDep, bahn.hinArr),
       rueckStart: subMinutesDate(minutesToClock(flug.rueckDate, flug.rueckDep), flug.transferRueck + flug.buffer),
-      rueckArrive: minutesToClock(flug.rueckDate, flug.rueckArr),
+      rueckArrive: arrivalDateTime(flug.rueckDate, flug.rueckDep, flug.rueckArr),
       hinNote: `Bahn hin inkl. Transfer/Puffer`,
       rueckNote: `Flug zurück inkl. Transfer/Puffer`
     };
@@ -4924,9 +4937,9 @@ function renderComparePage(){
     const combo2Productive = (flugHinRide * getWorkability('flug','hin')) + (bahnRueckRide * getWorkability('bahn','rueck'));
     const combo2Timeline = {
       hinStart: subMinutesDate(minutesToClock(flug.hinDate, flug.hinDep), flug.transferHin + flug.buffer),
-      hinArrive: minutesToClock(flug.hinDate, flug.hinArr),
+      hinArrive: arrivalDateTime(flug.hinDate, flug.hinDep, flug.hinArr),
       rueckStart: subMinutesDate(minutesToClock(bahn.rueckDate, bahn.rueckDep), bahn.transferRueck + bahn.buffer),
-      rueckArrive: minutesToClock(bahn.rueckDate, bahn.rueckArr),
+      rueckArrive: arrivalDateTime(bahn.rueckDate, bahn.rueckDep, bahn.rueckArr),
       hinNote: `Flug hin inkl. Transfer/Puffer`,
       rueckNote: `Bahn zurück inkl. Transfer/Puffer`
     };
@@ -4977,12 +4990,17 @@ function renderComparePage(){
 
 
 
+function safeText(value){ return escapeHtml(value); }
+function safeAttr(value){ return escapeHtml(value); }
+function safeNumber(value, fallback=0){ const n = Number(value); return Number.isFinite(n) ? n : fallback; }
+
 function escapeHtml(value){
   return String(value ?? "")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;");
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
 }
 
 function cleanOptionText(value){
@@ -5199,6 +5217,8 @@ function showSummaryOnly(){
 }
 
 function showComparePage(){
+  if(!validateDateOrder()) return;
+
   document.getElementById("summary-page").classList.remove("active");
   document.getElementById("compare-page").classList.add("active");
   renderComparePage();
@@ -5237,6 +5257,8 @@ async function copyPreparedLink(linkId, button){
 }
 
 function showSummaryPage(){
+  if(!validateDateOrder()) return;
+
   try{
     renderPage2Summary();
     document.getElementById("input-page").classList.add("hidden");
