@@ -932,7 +932,9 @@ input[type=date],input[type=time]{color-scheme:dark}
   color:var(--gold);
 }
 .option-card.best{
-  box-shadow:0 0 0 2px rgba(251,191,36,.55), 0 16px 45px rgba(0,0,0,.18);
+  border:4px solid rgba(52,211,153,.95)!important;
+  box-shadow:0 0 0 6px rgba(52,211,153,.24), 0 24px 64px rgba(0,0,0,.30)!important;
+  transform:translateY(-2px);
 }
 .rank-badge{
   display:inline-flex;
@@ -1363,7 +1365,8 @@ input::placeholder{
 
 
 .option-card.selected{
-  box-shadow:0 0 0 2px rgba(96,165,250,.65), 0 16px 45px rgba(0,0,0,.20);
+  border:4px solid rgba(96,165,250,.95)!important;
+  box-shadow:0 0 0 4px rgba(96,165,250,.32), 0 18px 48px rgba(0,0,0,.26)!important;
 }
 .select-option-btn{
   margin-top:10px;
@@ -1623,8 +1626,8 @@ input::placeholder{
   color:#bbf7d0;
 }
 .option-card.selected{
-  box-shadow:0 0 0 5px rgba(96,165,250,.90), 0 20px 60px rgba(0,0,0,.28)!important;
-  border-color:rgba(96,165,250,.85)!important;
+  border:4px solid rgba(96,165,250,.95)!important;
+  box-shadow:0 0 0 4px rgba(96,165,250,.32), 0 18px 48px rgba(0,0,0,.26)!important;
 }
 
 </style>
@@ -4967,6 +4970,11 @@ function renderComparePage(){
   }
 
   const sorted = sortOptions(options);
+
+  // PDF-Auswahl automatisch mit aktueller Best-Option synchronisieren
+  if(sorted.length > 0){
+    selectedPdfOptionId = sorted[0].kind;
+  }
   currentCompareOptions = sorted;
   if(sorted.length && !selectedPdfOptionId){
     selectedPdfOptionId = sorted[0].kind;
