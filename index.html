@@ -1758,9 +1758,26 @@ input::placeholder{
         </div>
 
         <div class="field">
-          <label>Vollständige Anschrift</label>
-          <input id="custom-target-address" type="text" placeholder="Straße Hausnummer, PLZ Ort">
+          <label>Straße und Hausnummer</label>
+          <input id="custom-target-street" type="text" placeholder="z. B. Musterstraße 12">
         </div>
+      </div>
+
+      <div class="grid2" style="margin-top:14px;">
+        <div class="field">
+          <label>PLZ</label>
+          <input id="custom-target-zip" type="text" inputmode="numeric" maxlength="5" placeholder="z. B. 20457">
+        </div>
+
+        <div class="field">
+          <label>Ort</label>
+          <input id="custom-target-city" type="text" placeholder="z. B. Hamburg">
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:14px;">
+        <label>Adresszusatz / Gebäude / Tor (optional)</label>
+        <input id="custom-target-address-extra" type="text" placeholder="z. B. Gebäude 551, Tor 80">
       </div>
 
       <div class="grid2" style="margin-top:14px;">
@@ -1840,7 +1857,7 @@ input::placeholder{
 </div>
     </div>
 <div class="source-note">
-      <strong>Datenquellen:</strong> Startstadt- und Umkreissuche über OpenStreetMap/Nominatim/Overpass. EVA-/IBNR-Zuordnung zunächst als lokale Lookup-Tabelle aus frei nutzbaren Open-Data-Quellen; später erweiterbar. Keine kostenpflichtige oder inoffizielle DB-API.
+      <strong>Datenquellen:</strong> Startstadt- und Umkreissuche über OpenStreetMap/Nominatim/Overpass. Stationszuordnung erfolgt intern über frei nutzbare Open-Data-Quellen. Keine kostenpflichtige oder inoffizielle DB-API.
     </div>
   </section>
 
@@ -2079,6 +2096,7 @@ input::placeholder{
     <div class="page-head">
       <div class="page-kicker">Seite 2 von 3</div>
       <div class="page-title">Zusammenfassung</div>
+    </div>
 <section class="summary-master">
       <div class="summary-master-title">📋 Stammdaten der Reise</div>
 
@@ -2370,10 +2388,10 @@ function stationLocationRef(name, info){
   - Overpass bleibt aktiv und liefert aktuelle lokale Treffer.
   - Diese lokale Liste wird zusätzlich eingemischt.
   - Deduplizierung und Entfernungssortierung bleiben bestehen.
-  - EVA-IDs sind für DB-Links hinterlegt, wenn bekannt.
+  - interne Stationskennungs sind für DB-Links hinterlegt, wenn bekannt.
 */
 /*
-  Lokale Bahnhofsdatenbank wird ausschließlich zur EVA-ID-Anreicherung
+  Lokale Bahnhofsdatenbank wird ausschließlich zur interne Stationskennung-Anreicherung
   und stabileren DB-Link-Erzeugung genutzt.
   Die eigentliche Bahnhofssuche erfolgt weiterhin dynamisch über Overpass.
 */
@@ -2815,7 +2833,7 @@ function enrichWithEvaRequired(stations, geo, radiusMeters){
   for(const st of stations || []) add(st, "overpass");
 
   // Regionale Zielbahnhöfe nur ergänzen, wenn sie wirklich im Suchradius liegen
-  // und eine EVA-ID besitzen. Dadurch wird die alte lokale Overpass-Suche nicht übersteuert.
+  // und eine interne Stationskennung besitzen. Dadurch wird die alte lokale Overpass-Suche nicht übersteuert.
   for(const st of LOCAL_RAIL_STATIONS){
     const km = havKm(geo.lat, geo.lon, st.lat, st.lon);
     if(km <= radiusMeters / 1000 + 0.1){
@@ -2960,7 +2978,7 @@ function fillSelect(type, items, placeholder, autoSelectNearest=false){
       if(type === "bahn" && !eva) return "";
       const iata = x.iata || x.code || "";
       const codeText = type === "flug" && iata ? ` · ${iata}` : "";
-      return `<option value="${x.name}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" data-iata="${iata}" data-lat="${x.lat || ""}" data-lon="${x.lon || ""}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${x.name}${codeText} · ca. ${x.minutes} min · ${Math.round(x.km)} km</option>`;
+      return `<option value="${escapeHtml(x.name)}" data-min="${x.minutes}" data-km="${x.km}" data-eva="${eva}" data-iata="${iata}" data-lat="${x.lat || ""}" data-lon="${x.lon || ""}" class="${type === "bahn" ? "station-local" : ""}">${idx === 0 && autoSelectNearest ? "✓ " : ""}${escapeHtml(x.name)}${escapeHtml(codeText)} · ca. ${x.minutes} min · ${Math.round(x.km)} km</option>`;
     })
     .join("");
 
@@ -3126,7 +3144,7 @@ async function updateNearbyStations(){
       fillSelect("bahn", nearby, "— Bahnhof/Haltestelle auswählen —", true);
       const note = document.getElementById("bahn-note");
       if(note){
-        note.textContent = `${nearby.length} Bahnhöfe/Haltepunkte mit EVA-ID gefunden · nächster Bahnhof vorausgewählt`;
+        note.textContent = `${nearby.length} Bahnhöfe/Haltepunkte mit interne Stationskennung gefunden · nächster Bahnhof vorausgewählt`;
       }
       return;
     }
@@ -3197,7 +3215,7 @@ function setupStartAutocomplete(){
 
   function render(items){
     drop.innerHTML = items.map((x,i) =>
-      `<div class="ditem" data-idx="${i}"><div class="dmain">${x.short}</div><div class="dsub">${x.display || ""}</div></div>`
+      `<div class="ditem" data-idx="${i}"><div class="dmain">${escapeHtml(x.short)}</div><div class="dsub">${escapeHtml(x.display || "")}</div></div>`
     ).join("");
     drop.classList.add("open");
 
@@ -3230,7 +3248,7 @@ function setupStartAutocomplete(){
       }catch(e){
         render(CITY_FALLBACKS.filter(c => c.short.toLowerCase().includes(q.toLowerCase())));
       }
-    }, 280);
+    }, 1000);
   });
 
   inp.addEventListener("blur", () => {
@@ -3479,7 +3497,10 @@ function initSummaryButtonWatchers(){
     "baggage-hin",
     "baggage-rueck",
     "custom-target-name",
-    "custom-target-address",
+    "custom-target-street",
+    "custom-target-zip",
+    "custom-target-city",
+    "custom-target-address-extra",
     "custom-target-station",
     "custom-target-station-min",
     "custom-target-airport",
@@ -3509,13 +3530,27 @@ function toggleCustomTarget(){
   box.style.display = val === "custom" ? "block" : "none";
 }
 
+function buildCustomAddress(){
+  const street = safeText(document.getElementById("custom-target-street")?.value || "");
+  const zip = safeText(document.getElementById("custom-target-zip")?.value || "");
+  const city = safeText(document.getElementById("custom-target-city")?.value || "");
+  const extra = safeText(document.getElementById("custom-target-address-extra")?.value || "");
+
+  const base = [street, [zip, city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  return extra ? `${base} (${extra})` : base;
+}
+
 function getCustomTargetData(){
   const stationNameRaw = document.getElementById("custom-target-station")?.value || "";
   const stationName = safeText(stationNameRaw);
 
   return {
     name: safeText(document.getElementById("custom-target-name")?.value || "Freies Ziel"),
-    address: safeText(document.getElementById("custom-target-address")?.value || ""),
+    address: buildCustomAddress(),
+    street: safeText(document.getElementById("custom-target-street")?.value || ""),
+    zip: safeText(document.getElementById("custom-target-zip")?.value || ""),
+    city: safeText(document.getElementById("custom-target-city")?.value || ""),
+    addressExtra: safeText(document.getElementById("custom-target-address-extra")?.value || ""),
     stationName,
     stationEva: stationEvaByName(stationNameRaw) || regionalStationByName(stationNameRaw)?.eva || "",
     airportCode: safeText(document.getElementById("custom-target-airport")?.value || ""),
@@ -3570,8 +3605,13 @@ function validateTransferRange(value, label){
 function validateCustomTarget(){
   const d = getCustomTargetData();
 
-  if(!d.name || !d.address || !d.stationName || !d.stationTransferMin){
-    alert("Bitte beim freien Ziel mindestens Name, Anschrift, nächstgelegene Haltestelle und Entfernung zur Haltestelle eintragen.");
+  if(!d.name || !d.street || !d.zip || !d.city || !d.stationName || !d.stationTransferMin){
+    alert("Bitte beim freien Ziel mindestens Name, Straße/Hausnummer, PLZ, Ort, nächstgelegene Haltestelle und Entfernung zur Haltestelle eintragen.");
+    return false;
+  }
+
+  if(!/^\d{5}$/.test(String(d.zip))){
+    alert("Bitte eine gültige fünfstellige PLZ eintragen.");
     return false;
   }
 
@@ -3930,7 +3970,7 @@ async function showBahnSearch(){
   }
 
   if(transportState.bahn.active && (!bahnStartInfo || !bahnStartInfo.eva)){
-    alert("Für den Startbahnhof fehlt die EVA-ID. Bitte einen Bahnhof aus der Liste mit EVA-ID auswählen.");
+    alert("Für den Startbahnhof fehlt die interne Stationskennung. Bitte einen Bahnhof aus der Liste mit interne Stationskennung auswählen.");
     return;
   }
 
@@ -3941,7 +3981,7 @@ async function showBahnSearch(){
   const isCustomTarget = document.getElementById("ziel")?.value === "custom";
 
   if(transportState.bahn.active && !isCustomTarget && (!bahnZielInfo || !bahnZielInfo.eva)){
-    alert("Für die Zielhaltestelle fehlt die EVA-ID. Bitte Ziel-Datenbank prüfen.");
+    alert("Für die Zielhaltestelle fehlt die interne Stationskennung. Bitte Ziel-Datenbank prüfen.");
     return;
   }
 
